@@ -62,7 +62,7 @@ function sectionsOf(action) {
   if (/^chat-/.test(action)) return ['chat'];
   if (/^cc-/.test(action)) return ['club'];   // 💚 Club check-ups
   if (/^car-/.test(action)) return ['cars'];
-  if (/^tc-/.test(action)) return ['cars'];
+  if (/^(tc|wk)-/.test(action)) return ['cars'];
   if (/^sc-/.test(action)) return ['cars'];   // 🎨 Style Match carousels
   if (/^lq-/.test(action)) return ['app'];   // 🇬🇧 Life in the UK question review
   if (/^qv-/.test(action)) return ['cars'];
@@ -84,8 +84,13 @@ const appFor = (who, list) => who.isAdmin ? list : list.map(p => { const c = { .
 exports.handler = handler(async (ctx) => {
   const { event, body } = ctx;
   if (event.httpMethod === 'GET') {
-    const whoG = await requireHq(ctx);
     const q = event.queryStringParameters || {};
+    if (q.wsrc) {   // 🚶 the private, expiring link fal.ai uses to fetch an uploaded walking clip (no sign-in)
+      const src = await require('../walk').srcPublic(q.wsrc, q.t);
+      if (!src) return { statusCode: 404, headers: { 'Content-Type': 'text/plain' }, body: 'Not found' };
+      return { statusCode: 200, headers: { 'Content-Type': src.mime, 'Cache-Control': 'no-store' }, body: src.b64, isBase64Encoded: true };
+    }
+    const whoG = await requireHq(ctx);
     if (q.vfinal || q.vaudio) mustAllow(whoG, ['vads']);
     else if (q.subimg) mustAllow(whoG, ['app', 'subs', 'cars', 'vads']);
     if (q.vva) {   // 🎧 a piece of an uploaded voiceover audio file
@@ -99,6 +104,11 @@ exports.handler = handler(async (ctx) => {
       const rec = q.fint ? await fin.getThumb(q.fint) : await fin.getPart(q.fin, q.part || '0');
       if (!rec) throw new HttpError(404, 'not_found', 'Not found.');
       if (q.fint) { const m = /^data:([^;]+);base64,(.*)$/.exec(rec.dataUrl); return { statusCode: 200, headers: { 'Content-Type': m[1], 'Cache-Control': 'private, max-age=86400' }, body: m[2], isBase64Encoded: true }; }
+      return { statusCode: 200, headers: { 'Content-Type': 'application/octet-stream', 'Cache-Control': 'private, max-age=86400' }, body: rec.b64, isBase64Encoded: true };
+    }
+    if (q.wk) {   // 🚶 a piece of a walker clip (v = cut-out video, m = its mask)
+      mustAllow(whoG, ['cars']); const rec = await require('../walk').part(q.wk, q.k, q.part || '0');
+      if (!rec) throw new HttpError(404, 'not_found', 'Not found.');
       return { statusCode: 200, headers: { 'Content-Type': 'application/octet-stream', 'Cache-Control': 'private, max-age=86400' }, body: rec.b64, isBase64Encoded: true };
     }
     if (q.vfinal) {
@@ -428,6 +438,14 @@ exports.handler = handler(async (ctx) => {
       await core.rateLimit('hq-cut', who.email, 120, 60 * 60 * 1000, 'That\u2019s a lot of cut-outs this hour — please wait a little.');
       return require('../cutout').start(body.dataUrl);
     }
+    // 🚶 walk-through carousel walkers
+    case 'wk-list': return require('../walk').list();
+    case 'wk-src-start': return require('../walk').srcStart(body);
+    case 'wk-src-part': return require('../walk').srcPart(body);
+    case 'wk-cut': await core.rateLimit('hq-wkcut', who.email, 40, 60 * 60 * 1000, 'That’s a lot of clips this hour — please wait a little.'); return require('../walk').cut(body);
+    case 'wk-check': return require('../walk').check(body, who.email);
+    case 'wk-rename': return require('../walk').rename(body);
+    case 'wk-del': return require('../walk').remove(body);
     case 'tc-cut-check': return require('../cutout').check(body.job);
     case 'sc-analyze': {
       await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI requests this hour — please wait a little.');

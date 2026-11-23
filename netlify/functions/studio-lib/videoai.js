@@ -116,7 +116,7 @@ function clipLength(family, seconds) {
 }
 async function submitClip({ tier, imgId, prompt, seconds, negative, aspect }) {
   const s = await needKey();
-  const img = await require('./eventsub').getImage(imgId), image = img && img.dataUrl;
+  const img = /^i[a-z0-9]{6,30}$/.test(String(imgId || '')) ? await require('./hq').getImage(imgId) : await require('./eventsub').getImage(imgId), image = img && img.dataUrl;   // HQ pictures (i…) work too
   const t = TIERS[tier] && tier !== 'draft' ? tier : 'budget', T = TIERS[t], model = s.models[t];
   if (!/^data:image\/(jpeg|png|webp);base64,/.test(String(image || ''))) throw new HttpError(400, 'no_frame', 'This scene needs a start picture first.');
   const len = clipLength(T.family, seconds), gbp = Math.round(len * T.usdPerSec * USD_GBP * 100) / 100;

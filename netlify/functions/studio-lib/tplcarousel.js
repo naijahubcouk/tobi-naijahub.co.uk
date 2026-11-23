@@ -47,6 +47,7 @@ function cleanSlide(x) {
     // ✋ where the emoji was dragged to (on its slide / on the cover), and this slide's heading letters
     ...['ex', 'ey', 'cvx', 'cvy'].reduce((o, k) => { const v = Number(x[k]); if (x[k] != null && x[k] !== '' && Number.isFinite(v)) o[k] = Math.max(0, Math.min(1, v)); return o; }, {}),
     ...(['up', 'as', 'title'].includes(x.caps) ? { caps: x.caps } : {}),
+    ...(x.nowalk === true ? { nowalk: true } : {}),   // 🚶 no walker on this slide
     ...(cleanDeco(x.deco).length ? { deco: cleanDeco(x.deco) } : {}),
   };
 }
@@ -85,6 +86,13 @@ function cleanLook(l) {
       btn: cleanText(P.btn, 40), handle: cleanText(P.handle, 40), icons: P.icons !== false, pattern: P.pattern !== false,
       brand: typeof P.brand === 'string' ? cleanText(P.brand, 40) : 'Auntie Tobi', brandOn: P.brandOn !== false,
       vpos: ['top', 'middle', 'bottom'].includes(P.vpos) ? P.vpos : 'top', hpos: ['auto', 'left', 'center', 'right'].includes(P.hpos) ? P.hpos : 'auto' } };
+  }
+  if (l && typeof l === 'object' && l.kind === 'walk') {   // 🚶 Walk-through
+    const F = l.walk && typeof l.walk === 'object' ? l.walk : {}, hex = (v, d) => /^#[0-9a-f]{6}$/i.test(String(v || '')) ? v : d, num = (v, lo, hi, d) => { const x = Number(v); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : d; };
+    return { kind: 'walk', id: 'walk', name: 'Walk-through', walk: { bg: /^i[a-z0-9]{6,30}$/.test(String(F.bg || '')) ? F.bg : '', walker: /^w[a-f0-9]{12}$/.test(String(F.walker || '')) ? F.walker : '',
+      sky: hex(F.sky, '#9DB8C8'), ground: hex(F.ground, '#B9A27E'), ink: hex(F.ink, '#FFFFFF'), hl: hex(F.hl, '#FFE27A'), alt: hex(F.alt, '#BFEAF2'),
+      size: num(F.size, 0.2, 1.2, 0.62), feet: num(F.feet, 0.4, 1.3, 0.97), speed: num(F.speed, 1.5, 12, 4), still: F.still === null ? null : num(F.still, -0.5, 1.5, 0.55), flip: F.flip === true, shadow: F.shadow !== false,
+      hFont: ['poppins', 'londrina', 'marker', 'archivo', 'anton', 'playfair'].includes(F.hFont) ? F.hFont : 'poppins', sFont: ['caveat', 'kaushan', 'vibes', 'dmsans', 'playfair'].includes(F.sFont) ? F.sFont : 'caveat' } };
   }
   if (l && typeof l === 'object' && l.kind === 'ftl') {   // 🧵 Follow the line
     const F = l.ftl && typeof l.ftl === 'object' ? l.ftl : {}, hex = (v, d) => /^#[0-9a-f]{6}$/i.test(String(v || '')) ? v : d, num = (v, lo, hi, d) => { const x = Number(v); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : d; };

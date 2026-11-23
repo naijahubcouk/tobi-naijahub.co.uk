@@ -188,8 +188,10 @@
   function loadPics(car) {
     var lk = car.look && car.look.kind === 'spec' && car.look.spec && car.look.spec.bg && car.look.spec.bg.type === 'image' ? car.look.spec.bg.img : '';
     var bgp = lk ? new Promise(function (ok) { if (lookImg(lk)) return ok(); var q = LIMG[lk]; q.im.addEventListener('load', ok, { once: true }); q.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); }) : Promise.resolve();
+    var wkw = isWalk(car) && wkOf(car).walker && WKF[wkOf(car).walker] ? [WKF[wkOf(car).walker].p.catch(function () {})] : [];
     var stick = car.slides.filter(function (sl) { return sl.emoImg; }).map(function (sl) { return new Promise(function (ok) { if (picImg(sl.emoImg)) return ok(); var p = PIC[sl.emoImg]; p.im.addEventListener('load', ok, { once: true }); p.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); }); });
-    return Promise.all([bgp].concat(stick).concat(car.slides.map(function (sl) { return new Promise(function (ok) { if (!sl.pic || !sl.pic.img) return ok(); var im = picImg(sl.pic.img); if (im) return ok(); var p = PIC[sl.pic.img]; p.im.addEventListener('load', ok, { once: true }); p.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); }); }))); }
+    var wbg = isWalk(car) && wkOf(car).bg ? [new Promise(function (ok) { if (picImg(wkOf(car).bg)) return ok(); var p = PIC[wkOf(car).bg]; p.im.addEventListener('load', ok, { once: true }); p.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); })] : [];
+    return Promise.all([bgp].concat(stick).concat(wkw).concat(wbg).concat(car.slides.map(function (sl) { return new Promise(function (ok) { if (!sl.pic || !sl.pic.img) return ok(); var im = picImg(sl.pic.img); if (im) return ok(); var p = PIC[sl.pic.img]; p.im.addEventListener('load', ok, { once: true }); p.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); }); }))); }
   function picDraw(ctx, pic, x, y, w, h, radius) {
     var im = picImg(pic.img); if (!im) return;
     var z = clamp(Number(pic.z) || 1, 1, 2.5), s = Math.max(w / im.naturalWidth, h / im.naturalHeight) * z, dw = im.naturalWidth * s, dh = im.naturalHeight * s;
@@ -215,6 +217,7 @@
     { id: 'white', name: 'Auntie Tobi White', sw: ['#FFFFFF', '#057A44'] },
     { id: 'purple', name: '💜 Bold Purple Pro', purple: true },
     { id: 'ftl', name: '🧵 Follow the line', ftl: true },
+    { id: 'walk', name: '🚶 Walk-through', walk: true },
     { id: 'green', name: 'Auntie Tobi Green', spec: baseSpec({ bg: { type: 'gradient', c1: '#057A44', c2: '#03532E' }, ink: '#FFFFFF', sub: '#E6F4EC', accent: '#FFB81C', hl: '#FFB81C', hlInk: '#0F1E36', font: { head: 'poppins' }, hlStyle: 'bar', shapes: 'circles' }) },
     { id: 'yellow', name: 'Bold Yellow', spec: baseSpec({ bg: { c1: '#FFC928' }, ink: '#111111', sub: '#2B2B2B', accent: '#111111', hl: '#FFFFFF', hlInk: '#111111', font: { head: 'archivo', caps: true }, hlStyle: 'bar', frame: { on: true, color: '#111111', width: 8, inset: 30, radius: 18 }, numbers: 'pill', shapes: 'dots' }) },
     { id: 'cream', name: 'Soft Cream', spec: baseSpec({ bg: { c1: '#F7F1E6' }, ink: '#2B2118', sub: '#5C4F42', accent: '#C2652A', hl: '#C2652A', font: { head: 'playfair', body: 'dmsans' }, hlStyle: 'color', align: 'center', shapes: 'blob', numbers: 'big' }) },
@@ -634,6 +637,113 @@
         { kind: 'end', heading: 'Which one did **you** pick?', body: 'Tell me in the comments 👇🏾 and save this for Monday 💚', align: 'center' }
       ] };
   }
+  // ── 🚶 Walk-through: one wide photo split across the slides, and a cut-out person who walks through every slide (video slides) ──
+  function isWalk(car) { return !!(car.look && car.look.kind === 'walk'); }
+  var WALK = { bg: '', sky: '#9DB8C8', ground: '#B9A27E', walker: '', size: 0.62, feet: 0.97, speed: 4, flip: false, still: 0.55, hFont: 'poppins', sFont: 'caveat', ink: '#FFFFFF', hl: '#FFE27A', alt: '#BFEAF2', shadow: true };
+  var WK_HEAD = { poppins: ['Poppins (chunky)', function (z) { return '800 ' + Math.round(z) + 'px Poppins, Arial, sans-serif'; }], londrina: ['Londrina (rounded, fun)', function (z) { return '900 ' + Math.round(z) + 'px "Londrina Solid", Poppins, Arial, sans-serif'; }], marker: ['Permanent Marker', function (z) { return '400 ' + Math.round(z) + 'px "Permanent Marker", cursive'; }], archivo: ['Archivo Black', function (z) { return '400 ' + Math.round(z) + 'px "Archivo Black", Arial, sans-serif'; }],
+    anton: ['Anton (tall)', function (z) { return '400 ' + Math.round(z) + 'px Anton, Arial, sans-serif'; }], playfair: ['Playfair Display', function (z) { return '900 ' + Math.round(z) + 'px "Playfair Display", Georgia, serif'; }] };
+  var WK_SCRIPT = { caveat: ['Caveat (handwriting)', function (z) { return '700 ' + Math.round(z) + 'px Caveat, cursive'; }], kaushan: ['Kaushan Script', function (z) { return '400 ' + Math.round(z) + 'px "Kaushan Script", cursive'; }], vibes: ['Great Vibes (fancy)', function (z) { return '400 ' + Math.round(z * 1.15) + 'px "Great Vibes", cursive'; }], dmsans: ['DM Sans', function (z) { return '600 ' + Math.round(z) + 'px "DM Sans", Arial, sans-serif'; }],
+    playfair: ['Playfair italic', function (z) { return 'italic 900 ' + Math.round(z) + 'px "Playfair Display", Georgia, serif'; }] };
+  function wkOf(car) { return Object.assign({}, WALK, (car.look && car.look.walk) || {}); }
+  // walker frames: decoded once from the cut-out clip (+ its mask) into transparent canvases
+  var WKF = {};
+  function wkFrames(id) { var w = WKF[id]; return w && w.ready ? w : null; }
+  function wkLoad(id, info) {
+    if (!id) return Promise.resolve(null); if (WKF[id]) return WKF[id].p;
+    var rec = WKF[id] = { ready: false, frames: [], fps: 12 };
+    rec.p = (async function () {
+      var grab = async function (k, n) { var parts = []; for (var i = 0; i < n; i++) { var r = await fetch('/.netlify/functions/studio-hq?wk=' + id + '&k=' + k + '&part=' + i, { credentials: 'same-origin' }); if (!r.ok) throw new Error('Couldn’t load the walker'); parts.push(await r.arrayBuffer()); } return URL.createObjectURL(new Blob(parts, { type: 'video/mp4' })); };
+      var vu = await grab('v', info.vp || 1), mu = info.mp ? await grab('m', info.mp) : '';
+      var mk = function (u) { return new Promise(function (ok, bad) { var v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = u; v.onloadeddata = function () { ok(v); }; v.onerror = function () { bad(new Error('This browser can’t open the walker clip')); }; }); };
+      var vv = await mk(vu), mv = mu ? await mk(mu) : null;
+      var seek = function (v, t) { return new Promise(function (ok) { var done = false, f = function () { if (!done) { done = true; ok(); } }; v.onseeked = f; v.currentTime = Math.min(t, Math.max(0, v.duration - 0.05)); setTimeout(f, 1500); }); };
+      var dur = Math.min(6, vv.duration || 5), n = Math.max(6, Math.round(dur * rec.fps)), hh = Math.min(900, vv.videoHeight || 900), ww = Math.round((vv.videoWidth || 506) * hh / (vv.videoHeight || 900));
+      var c = document.createElement('canvas'), m = document.createElement('canvas'); c.width = m.width = ww; c.height = m.height = hh; var cx = c.getContext('2d', { willReadFrequently: true }), mx = m.getContext('2d', { willReadFrequently: true });
+      for (var f = 0; f < n; f++) {
+        var t = f / rec.fps; await seek(vv, t); if (mv) await seek(mv, t);
+        cx.clearRect(0, 0, ww, hh); cx.drawImage(vv, 0, 0, ww, hh); var d = cx.getImageData(0, 0, ww, hh);
+        if (mv) { mx.drawImage(mv, 0, 0, ww, hh); var md = mx.getImageData(0, 0, ww, hh).data; for (var p = 0; p < d.data.length; p += 4) d.data[p + 3] = Math.min(d.data[p + 3], md[p]); }
+        var fc = document.createElement('canvas'); fc.width = ww; fc.height = hh; fc.getContext('2d').putImageData(d, 0, 0); rec.frames.push(fc);
+      }
+      // trim empty space around the person (same box for every frame, so they don't jump)
+      var x0 = ww, y0 = hh, x1 = 0, y1 = 0; rec.frames.forEach(function (fc, k) { if (k % 3) return; var dd = fc.getContext('2d').getImageData(0, 0, ww, hh).data; for (var y = 0; y < hh; y += 3) for (var x = 0; x < ww; x += 3) if (dd[(y * ww + x) * 4 + 3] > 60) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } });
+      rec.box = x1 > x0 ? [x0, y0, x1 - x0 + 1, y1 - y0 + 1] : [0, 0, ww, hh];
+      rec.ready = true; try { URL.revokeObjectURL(vu); if (mu) URL.revokeObjectURL(mu); } catch (e) {}
+      picWaiters.slice().forEach(function (fn) { try { fn(); } catch (e) {} });
+      return rec;
+    })().catch(function (e) { delete WKF[id]; throw e; });
+    return rec.p;
+  }
+  function wkGeom(car, rec) { var F = wkOf(car), b = rec.box, h = H * clamp(Number(F.size) || 0.62, 0.2, 1.2), w = h * b[2] / b[3]; return { w: w, h: h, y: H * clamp(Number(F.feet) || 0.97, 0.4, 1.3) - h }; }
+  // where the walker is at time t on a slide (t in seconds; null = the still picture)
+  function wkDrawWalker(ctx, car, t) {
+    var F = wkOf(car), rec = wkFrames(F.walker); if (!rec || !rec.frames.length) return;
+    var g = wkGeom(car, rec), sp = clamp(Number(F.speed) || 4, 1.5, 12), x, fi;
+    if (t == null) { x = W * clamp(Number(F.still), -0.5, 1.5) - g.w / 2; fi = Math.floor(rec.frames.length / 3); }
+    else { x = -g.w + (W + g.w) * (t / sp); fi = Math.floor(t * rec.fps) % rec.frames.length; }
+    if (F.flip) x = W - x - g.w;
+    var fr = rec.frames[fi], b = rec.box;
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (F.flip) { ctx.translate(x + g.w, 0); ctx.scale(-1, 1); ctx.drawImage(fr, b[0], b[1], b[2], b[3], 0, g.y, g.w, g.h); }
+    else ctx.drawImage(fr, b[0], b[1], b[2], b[3], x, g.y, g.w, g.h);
+    ctx.restore();
+  }
+  function wkBg(ctx, car, i) {
+    var F = wkOf(car), n = car.slides.length, im = F.bg ? picImg(F.bg) : null;
+    if (im) { var s = Math.max(n * W / im.naturalWidth, H / im.naturalHeight), dw = im.naturalWidth * s, dh = im.naturalHeight * s; ctx.drawImage(im, (n * W - dw) / 2 - i * W, (H - dh) / 2, dw, dh); return; }
+    var g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, F.sky); g.addColorStop(0.62, '#DCE6EA'); g.addColorStop(0.66, F.ground); g.addColorStop(1, F.ground); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  }
+  // t: seconds into this slide's video (undefined = still picture)
+  function drawWalk(ctx, car, i, t) {
+    var F = wkOf(car), sl = car.slides[i] || { kind: 'tip', heading: '', body: '' }, e = eff(car, sl), HF = (WK_HEAD[F.hFont] || WK_HEAD.poppins)[1], SF = (WK_SCRIPT[F.sFont] || WK_SCRIPT.caveat)[1];
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.textBaseline = 'alphabetic';
+    wkBg(ctx, car, i);
+    var bp = boxPic(sl); if (bp && bp.mode === 'bg') picDraw(ctx, bp, 0, 0, W, H, 0);
+    if (F.shadow) { var sg = ctx.createLinearGradient(0, 0, 0, H * 0.6); sg.addColorStop(0, 'rgba(0,0,0,0.28)'); sg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H * 0.6); }
+    ctx.shadowColor = F.shadow ? 'rgba(0,0,0,0.35)' : 'transparent'; ctx.shadowBlur = F.shadow ? 18 : 0; ctx.shadowOffsetY = F.shadow ? 4 : 0;
+    var cw = W * 0.82, x0 = (W - cw) / 2, y = H * 0.08, al = sl.align === 'left' ? 'left' : 'center';
+    var hf = rtFit(ctx, sl.heading, HF, cw, H * 0.3, 130 * e.hs, 40, 0.98, true); rtDraw(ctx, hf, HF, x0, y, cw, al, F.alt, F.hl); y += hf.h + 26;
+    if (sl.body) { var bf = rtFit(ctx, sl.body, SF, cw * 0.9, H * 0.28, 64 * e.bs, 30, 1.18, false); rtDraw(ctx, bf, SF, x0 + cw * 0.05, y, cw * 0.9, al, F.ink, F.hl); }
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    if (bp && bp.mode !== 'bg') { var pb = picBox(bp); picDraw(ctx, bp, pb.x, pb.y, pb.w, pb.h, 22); }
+    if (!sl.nowalk && (t != null || F.still != null)) wkDrawWalker(ctx, car, t);
+    if (car.handle !== false) { ctx.font = '600 24px "DM Sans", Arial'; ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.textAlign = 'center'; ctx.fillText('@auntietobi_uk', W / 2, H - 34); }
+    ctx.restore();
+    return { over: false, shrunk: false };
+  }
+  // the words to start with — Auntie Tobi's "reintroduce myself"
+  function wkStarter() {
+    return { title: 'Allow me to reintroduce myself', numbers: false, handle: true, swipe: true, swipeMode: 'off', caption: 'Allow me to reintroduce myself 💚 Swipe to walk with me 👉🏾', hashtags: '#NigeriansInUK #AuntieTobi',
+      look: { kind: 'walk', id: 'walk', name: 'Walk-through', walk: Object.assign({}, WALK) },
+      slides: [
+        { kind: 'cover', heading: 'allow me to **reintroduce** myself', body: 'my name is…', align: 'center' },
+        { kind: 'tip', heading: '**Auntie Tobi**', body: 'I help Nigerians in the UK find what they need — fast.', align: 'center' },
+        { kind: 'tip', heading: 'before Auntie Tobi', body: 'finding Nigerian businesses, events and answers in the UK took **forever**…', align: 'center' },
+        { kind: 'tip', heading: 'what I’ve done', body: '[add an achievement — and a screenshot below]', align: 'center' },
+        { kind: 'tip', heading: '**fun fact**', body: '[add a fun fact about you or your business]', align: 'center' },
+        { kind: 'end', heading: 'thank you for **following**', body: 'Comment “TOBI” to get [this thing] 💚', align: 'center' }
+      ] };
+  }
+  // 🎬 one slide as an MP4: the walker crosses the slide, then it holds for a moment
+  async function wkSlideVideo(car, i, onPct) {
+    if (!window.Mp4Muxer) await new Promise(function (ok, bad) { var s = document.createElement('script'); s.src = '/vendor/mp4-muxer-5.2.2.js'; s.onload = ok; s.onerror = function () { bad(new Error('Couldn’t load the video maker')); }; document.head.appendChild(s); });
+    if (typeof VideoEncoder !== 'function' || !window.Mp4Muxer) throw new Error('This browser can’t make videos — please use Chrome or Edge on a laptop.');
+    var F = wkOf(car), FPSV = 30, secs = clamp(Number(F.speed) || 4, 1.5, 12) + 0.6, frames = Math.round(secs * FPSV), cv = document.createElement('canvas'); cv.width = W; cv.height = H; var cx = cv.getContext('2d');
+    var codec = null; for (var c of ['avc1.640028', 'avc1.4d0028', 'avc1.42002a']) { try { var r = await VideoEncoder.isConfigSupported({ codec: c, width: W, height: H, bitrate: 6e6, framerate: FPSV }); if (r && r.supported) { codec = c; break; } } catch (e) {} }
+    if (!codec) throw new Error('This browser can’t make MP4 videos — please use Chrome or Edge.');
+    var mux = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: W, height: H, frameRate: FPSV }, fastStart: 'in-memory' }), failed = null;
+    var enc = new VideoEncoder({ output: function (ch, meta) { mux.addVideoChunk(ch, meta); }, error: function (e) { failed = e; } });
+    enc.configure({ codec: codec, width: W, height: H, bitrate: 6e6, framerate: FPSV, avc: { format: 'avc' } });
+    for (var f = 0; f < frames; f++) {
+      if (failed) throw failed;
+      cx.clearRect(0, 0, W, H); draw(cx, car, i, f / FPSV);
+      var vf = new VideoFrame(cv, { timestamp: Math.round(f * 1e6 / FPSV), duration: Math.round(1e6 / FPSV) }); enc.encode(vf, { keyFrame: f % 60 === 0 }); vf.close();
+      if (enc.encodeQueueSize > 8) await new Promise(function (ok) { setTimeout(ok, 5); });
+      if (f % 10 === 0) { if (onPct) onPct(f / frames); await new Promise(function (ok) { setTimeout(ok, 0); }); }
+    }
+    await enc.flush(); enc.close(); mux.finalize();
+    return new Blob([mux.target.buffer], { type: 'video/mp4' });
+  }
   // 👉 the Swipe sign — one setting for every look: cover only / every slide but the last / off
   function swipeOf(car) {
     var m = car.swipeMode || (isSpec(car) ? (car.look.spec.swipe ? 'all' : 'off') : (car.swipe !== false ? 'cover' : 'off'));
@@ -670,11 +780,11 @@
     ctx.beginPath(); ctx.moveTo(ax, yMid); ctx.lineTo(ax + arrowW - 4, yMid); ctx.moveTo(ax + arrowW - 16, yMid - 12); ctx.lineTo(ax + arrowW - 3, yMid); ctx.lineTo(ax + arrowW - 16, yMid + 12); ctx.stroke();
     ctx.restore();
   }
-  function draw(ctx, car0, i) {
+  function draw(ctx, car0, i, wt) {
     // the looks' own swipe text is switched off — drawSwipe draws the one the user chose
     var car = Object.assign({}, car0, { swipe: false });
     if (isSpec(car0)) car.look = Object.assign({}, car0.look, { spec: Object.assign({}, car0.look.spec, { swipe: false }) });
-    var sl0 = car.slides[i], r = isFtl(car) ? drawFtl(ctx, car, i) : sl0 && NEWK[sl0.kind] ? drawLayout(ctx, car, i) : isPurple(car) ? drawPurple(ctx, car, i) : isSpec(car) ? drawSpec(ctx, car, i) : drawWhite(ctx, car, i), sl = sl0;
+    var sl0 = car.slides[i], r = isWalk(car) ? drawWalk(ctx, car, i, wt) : isFtl(car) ? drawFtl(ctx, car, i) : sl0 && NEWK[sl0.kind] ? drawLayout(ctx, car, i) : isPurple(car) ? drawPurple(ctx, car, i) : isSpec(car) ? drawSpec(ctx, car, i) : drawWhite(ctx, car, i), sl = sl0;
     drawSwipe(ctx, car0, i);
     if (sl && sl.deco && sl.deco.length) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); sl.deco.forEach(function (d) { drawDeco(ctx, d); }); ctx.restore(); }
     return r;
@@ -770,7 +880,7 @@
 
   function fontsReady() {
     if (!document.fonts || !document.fonts.load) return Promise.resolve();
-    return Promise.all(['900 100px "Inter Tight"', '500 40px Inter', '700 30px Inter', '400 100px Anton', '800 100px Poppins', '900 100px "Playfair Display"', 'italic 900 100px "Playfair Display"', '400 100px "Archivo Black"', '700 100px Caveat', '700 60px "DM Sans"', '500 30px "DM Sans"', '400 30px "DM Sans"', '700 60px Fraunces', '600 30px "DM Sans"'].map(function (f) { return document.fonts.load(f).catch(function () {}); }));
+    return Promise.all(['900 100px "Inter Tight"', '500 40px Inter', '700 30px Inter', '400 100px Anton', '800 100px Poppins', '900 100px "Playfair Display"', 'italic 900 100px "Playfair Display"', '400 100px "Archivo Black"', '700 100px Caveat', '700 60px "DM Sans"', '500 30px "DM Sans"', '400 30px "DM Sans"', '700 60px Fraunces', '600 30px "DM Sans"', '900 60px "Londrina Solid"', '400 60px "Permanent Marker"', '400 60px "Kaushan Script"', '400 60px "Great Vibes"'].map(function (f) { return document.fonts.load(f).catch(function () {}); }));
   }
   async function pngOf(car, i) {
     await loadPics(car);
@@ -855,7 +965,7 @@
         '<textarea id="tnP" rows="9" placeholder="5 small ways to make life in the UK feel **less stressful!**\nPlan your **week on Sunday** | Check your shifts, bills and appointments for the week ahead.\nSet up **direct debits** | Never miss a bill again.\n..."></textarea></div>' +
       '<label class="chk" style="margin-top:10px"><input type="checkbox" id="tnE" checked> Add a “Save &amp; share” last slide</label>' +
       '<div class="err hidden" id="tnErr"></div>' +
-      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn ghost" id="tnX">Cancel</button><button class="btn ghost" id="tnFtl">🧵 Follow the line</button><button class="btn ghost" id="tnBlank">Start blank</button><button class="btn primary" id="tnGo">✨ Write the slides</button></div>');
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn ghost" id="tnX">Cancel</button><button class="btn ghost" id="tnFtl">🧵 Follow the line</button><button class="btn ghost" id="tnWalk">🚶 Walk-through</button><button class="btn ghost" id="tnBlank">Start blank</button><button class="btn primary" id="tnGo">✨ Write the slides</button></div>');
     var mode = 'ai', $ = function (q) { return s.querySelector(q); };
     Array.prototype.forEach.call(s.querySelectorAll('#tnTab [data-v]'), function (b) {
       b.onclick = function () {
@@ -867,6 +977,7 @@
     });
     $('#tnX').onclick = function () { s.remove(); };
     $('#tnFtl').onclick = function () { s.remove(); editor(ftlStarter(), true); };
+    $('#tnWalk').onclick = function () { s.remove(); editor(wkStarter(), true); };
     $('#tnBlank').onclick = function () {
       s.remove();
       var slides = [{ kind: 'cover', heading: 'Your hook goes **here!**', body: '', align: 'center' }, { kind: 'tip', heading: 'First **tip**', body: 'A short explanation of the tip.', align: 'left' }];
@@ -910,6 +1021,7 @@
       '<div class="note hidden" id="teShrunk" style="margin-top:8px">Some text on this slide was made a little smaller so it fits inside the frame.</div>' +
       '<div class="carthumbs" id="teThumbs"></div>' +
       '<div class="card" style="margin-top:10px"><div style="font-weight:800;margin-bottom:6px">⬇️ Download</div>' +
+      '<button class="btn primary hidden" id="teVid" style="width:100%;margin-bottom:8px">🎬 All slides as videos (MP4) — for the walk</button>' +
       '<button class="btn primary" id="teAll" style="width:100%">⬇️ All slides as separate pictures</button><div class="muted" id="teAllMsg" style="font-size:12px;margin-top:4px"></div>' +
       '<button class="btn ghost" id="teOne" style="width:100%;margin-top:8px">⬇️ Just this slide (PNG)</button><button class="btn ghost" id="teDl" style="width:100%;margin-top:8px">🗜️ All slides as one .zip</button>' +
       '<p class="muted" style="font-size:12.5px;margin-top:8px">1080×1350 — Instagram’s portrait size. On Instagram: New post → pick the images in order (01, 02…) → paste the caption.</p>' +
@@ -971,13 +1083,14 @@
             '<div><label>Words side to side</label><select data-f="hpos"><option value="">Same as carousel</option>' + [['auto', 'Away from the person'], ['left', 'Left'], ['center', 'Centre'], ['right', 'Right']].map(function (o) { return '<option value="' + o[0] + '"' + (sl.hpos === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div></div>' : '') +
           (sl.kind === 'tip' ? '<div class="f2"><div><label>Number</label><select data-f="num"><option value="">Same as carousel</option><option value="on"' + (sl.num === 'on' ? ' selected' : '') + '>Show</option><option value="off"' + (sl.num === 'off' ? ' selected' : '') + '>Hide</option></select></div>' +
             (isPurple(car) ? '<div><label>Number circle sits</label><select data-f="npos"><option value="">Same as carousel</option>' + NPOS.map(function (o) { return '<option value="' + o[0] + '"' + (sl.npos === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' : '<div></div>') + '</div>' : '') +
+          (isWalk(car) ? '<label class="chk" style="margin-top:6px"><input type="checkbox" data-nowalk' + (sl.nowalk ? ' checked' : '') + '> 🚶 No walker on this slide</label>' : '') +
           (isFtl(car) && sl.kind !== 'ftlt' ? '<div class="f2"><div><label>Heading letters</label><select data-f="caps"><option value="">Same as carousel</option><option value="up"' + (sl.caps === 'up' ? ' selected' : '') + '>ABC All capitals</option><option value="as"' + (sl.caps === 'as' ? ' selected' : '') + '>Abc As I type it</option><option value="title"' + (sl.caps === 'title' ? ' selected' : '') + '>Abc Def Each Word</option></select></div><div></div></div>' : '') +
           '<div class="f2"><div><label>Heading size <span class="muted" data-pv="hs">' + pct(sl.hs) + '</span></label><input type="range" data-f="hs" min="50" max="160" step="5" value="' + Math.round((sl.hs || 1) * 100) + '"></div>' +
           '<div><label>Body text size <span class="muted" data-pv="bs">' + pct(sl.bs) + '</span></label><input type="range" data-f="bs" min="50" max="160" step="5" value="' + Math.round((sl.bs || 1) * 100) + '"></div></div>' +
           '<button class="btn link" data-reset style="margin-top:4px">↺ Reset this slide’s options</button></details>' + picHtml(sl, i) + decoHtml(sl, i) + '</div>';
     }
     // ── 🎨 the look of the whole carousel ──
-    function sw(l) { var s = l.spec; if (l.purple) return 'linear-gradient(135deg,#fff 0 55%,#4B14A6 55%)'; if (l.ftl) return 'linear-gradient(135deg,#F2C6C9 0 55%,#5B4A8A 55%)'; return s ? 'linear-gradient(135deg,' + s.bg.c1 + ' 0 55%,' + s.accent + ' 55%)' : 'linear-gradient(135deg,#fff 0 55%,#057A44 55%)'; }
+    function sw(l) { var s = l.spec; if (l.purple) return 'linear-gradient(135deg,#fff 0 55%,#4B14A6 55%)'; if (l.ftl) return 'linear-gradient(135deg,#F2C6C9 0 55%,#5B4A8A 55%)'; if (l.walk) return 'linear-gradient(180deg,#9DB8C8 0 60%,#B9A27E 60%)'; return s ? 'linear-gradient(135deg,' + s.bg.c1 + ' 0 55%,' + s.accent + ' 55%)' : 'linear-gradient(135deg,#fff 0 55%,#057A44 55%)'; }
     function whitePanel() {
       return '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:10px"><label class="chk"><input type="checkbox" id="teN"' + (car.numbers !== false ? ' checked' : '') + '> Number the tips (01, 02…)</label>' +
         '<label class="chk"><input type="checkbox" id="teH"' + (car.handle !== false ? ' checked' : '') + '> Show @auntietobi_uk</label>' +
@@ -1022,21 +1135,21 @@
           '<div class="lbl">Where</div>' + g('pos', [['br', '↘ Bottom right'], ['bc', '↓ Bottom centre'], ['mr', '→ Middle right edge']])) +
         '<div class="muted" style="font-size:12.5px;margin-top:4px">Never shows on the last slide.</div></details>';
     }
-    function lookName() { return isSpec(car) ? car.look.name : isPurple(car) ? 'Bold Purple Pro' : isFtl(car) ? 'Follow the line' : 'Auntie Tobi White'; }
+    function lookName() { return isSpec(car) ? car.look.name : isPurple(car) ? 'Bold Purple Pro' : isFtl(car) ? 'Follow the line' : isWalk(car) ? 'Walk-through' : 'Auntie Tobi White'; }
     function renderLook() {
-      var curId = isSpec(car) ? (car.look.id || '') : isPurple(car) ? 'purple' : isFtl(car) ? 'ftl' : 'white', box = $('#teLook'), opn = {}; Array.prototype.forEach.call(box.querySelectorAll('.lsec'), function (d) { var t = d.querySelector('summary'); if (t) opn[t.textContent.slice(0, 8)] = d.open; });
+      var curId = isSpec(car) ? (car.look.id || '') : isPurple(car) ? 'purple' : isFtl(car) ? 'ftl' : isWalk(car) ? 'walk' : 'white', box = $('#teLook'), opn = {}; Array.prototype.forEach.call(box.querySelectorAll('.lsec'), function (d) { var t = d.querySelector('summary'); if (t) opn[t.textContent.slice(0, 8)] = d.open; });
       box.innerHTML = '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>🎨 Look</b><span class="muted" style="font-size:13px">— now: <b>' + X.esc(lookName()) + '</b></span></div>' +
         '<div class="chipbar" style="margin-top:8px">' + LOOKS.map(function (l) { return '<button class="chip" data-look="' + l.id + '" aria-pressed="' + (curId === l.id) + '"><i class="lsw" style="background:' + sw(l) + '"></i>' + l.name + '</button>'; }).join('') +
         '<button class="chip" id="teMy">⭐ My styles</button><label class="chip" style="cursor:pointer;margin:0">🎨 Match a style…<input type="file" id="teRef" accept="image/jpeg,image/png,image/webp" multiple hidden></label>' + (isSpec(car) ? '<button class="chip" id="teSaveLook">💾 Save this look</button>' : '') + '</div>' +
-        '<div class="muted" id="teLookMsg" style="font-size:12.5px;margin-top:4px"></div>' + (isSpec(car) ? specPanel() : isPurple(car) ? purplePanel() : isFtl(car) ? ftlPanel() : whitePanel()) + swipePanel() +
+        '<div class="muted" id="teLookMsg" style="font-size:12.5px;margin-top:4px"></div>' + (isSpec(car) ? specPanel() : isPurple(car) ? purplePanel() : isFtl(car) ? ftlPanel() : isWalk(car) ? walkPanel() : whitePanel()) + swipePanel() +
         '<div class="muted" style="font-size:12.5px;margin-top:8px">Put highlighted words in <b>**double stars**</b>. Press Enter in a heading to choose where a line breaks.</div>';
       Array.prototype.forEach.call(box.querySelectorAll('.lsec'), function (d) { var t = d.querySelector('summary'), k = t ? t.textContent.slice(0, 8) : ''; if (opn[k] !== undefined) d.open = opn[k]; });
-      bindLook();
+      bindLook(); var tv = $('#teVid'); if (tv) tv.classList.toggle('hidden', !isWalk(car));
     }
     function lookChanged(full) { mark(); if (full) renderLook(); fontsReady().then(function () { paint(); paintThumbs(); }); paint(); paintThumbs(); }
     function bindLook() {
       var box = $('#teLook'), q = function (s) { return box.querySelector(s); }, qa = function (s) { return Array.prototype.slice.call(box.querySelectorAll(s)); };
-      qa('[data-look]').forEach(function (b) { b.onclick = function () { var l = LOOKS.filter(function (x) { return x.id === b.dataset.look; })[0]; if (l.ftl) { toFtl(); lookChanged(true); paintSlides(); setSel(0); paintThumbs(); return; } car.look = l.purple ? { kind: 'purple', id: 'purple', name: 'Bold Purple Pro', purple: Object.assign({}, PURPLE) } : l.spec ? { kind: 'spec', id: l.id, name: l.name, styleId: '', spec: JSON.parse(JSON.stringify(l.spec)) } : null; lookChanged(true); paintSlides(); setSel(Math.min(sel, car.slides.length - 1)); }; });
+      qa('[data-look]').forEach(function (b) { b.onclick = function () { var l = LOOKS.filter(function (x) { return x.id === b.dataset.look; })[0]; if (l.ftl) { toFtl(); lookChanged(true); paintSlides(); setSel(0); paintThumbs(); return; } if (l.walk) { toWalk(); lookChanged(true); paintSlides(); setSel(0); paintThumbs(); return; } car.look = l.purple ? { kind: 'purple', id: 'purple', name: 'Bold Purple Pro', purple: Object.assign({}, PURPLE) } : l.spec ? { kind: 'spec', id: l.id, name: l.name, styleId: '', spec: JSON.parse(JSON.stringify(l.spec)) } : null; lookChanged(true); paintSlides(); setSel(Math.min(sel, car.slides.length - 1)); }; });
       q('#teMy').onclick = mySheet;
       qa('[data-swp]').forEach(function (b) { b.onclick = function () { var o = swipeOf(car), k = b.dataset.swp; car.swipeMode = o.mode; car.swipeStyle = o.style; car.swipePos = o.pos; car['swipe' + k.charAt(0).toUpperCase() + k.slice(1)] = b.dataset.v; if (k === 'mode') car.swipe = b.dataset.v !== 'off'; lookChanged(true); }; });
       q('#teRef').onchange = async function () {
@@ -1057,6 +1170,7 @@
         if (q('#teB')) q('#teB').onchange = function () { car.brush = this.checked; lookChanged(); };
         if (isPurple(car)) bindPurple(q, qa);
         if (isFtl(car)) bindFtl(q, qa);
+        if (isWalk(car)) bindWalk(q, qa);
         qa('#teSt [data-v]').forEach(function (b) { b.onclick = function () { car.style = b.dataset.v; qa('#teSt [data-v]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); lookChanged(); }; });
         var sizeUi = function () { q('#teHs').value = Math.round((car.hs || 1) * 100); q('#teBs').value = Math.round((car.bs || 1) * 100); q('#teHsV').textContent = pct(car.hs); q('#teBsV').textContent = pct(car.bs); };
         q('#teHs').oninput = function () { car.hs = Number(this.value) / 100; sizeUi(); lookChanged(); };
@@ -1099,7 +1213,7 @@
             '<div class="f2" style="margin-top:4px"><div><div class="lbl" style="margin:0">Size</div><input type="range" data-ds="' + k + '" min="20" max="400" value="' + Math.round((d.s || 1) * 100) + '"></div><div><div class="lbl" style="margin:0">Turn</div><input type="range" data-dr="' + k + '" min="-180" max="180" value="' + Math.round(d.r || 0) + '"></div></div></div>';
         }).join('') + (ds.length ? '<div class="muted" style="font-size:12.5px;margin-top:6px">✋ Drag them on the big preview to move them.</div>' : '') + '</details>';
     }
-    function decoColour() { return isSpec(car) ? car.look.spec.accent : isPurple(car) ? pur(car).acc : isFtl(car) ? ftlOf(car).hl : '#057A44'; }
+    function decoColour() { return isSpec(car) ? car.look.spec.accent : isPurple(car) ? pur(car).acc : isFtl(car) ? ftlOf(car).hl : isWalk(car) ? wkOf(car).hl : '#057A44'; }
     function bindDeco(el, i) {
       var d = el.querySelector('.sdeco'); if (!d) return; d.addEventListener('toggle', function () { openDeco[i] = d.open; });
       var sl = car.slides[i], re = function () { mark(); paintSlides(); setSel(i); paintThumbs(); }, live = function () { mark(); paint(); paintThumbs(); };
@@ -1273,6 +1387,148 @@
     // 💜 Bold Purple Pro look settings
     var NPOS = [['auto', 'With the words'], ['tl', '↖ Top left'], ['tc', '⬆ Top middle'], ['tr', '↗ Top right'], ['bl', '↙ Bottom left'], ['bc', '⬇ Bottom middle'], ['br', '↘ Bottom right']];
     // 🧵 Follow the line — look settings
+    // 🚶 Walk-through — look settings, the walker library, AI / upload / copy prompts, MP4 slides
+    var WKL = null, WKPLAY = false, WKT0 = 0;
+    function wkList() { return X.api('wk-list').then(function (r) { WKL = r.items || []; return WKL; }).catch(function () { WKL = WKL || []; return WKL; }); }
+    function wkUse(id) {
+      var it = (WKL || []).filter(function (x) { return x.id === id; })[0]; if (!it) return;
+      var m = $('#teLookMsg'); if (m) m.textContent = '🚶 Getting the walker ready… (a few seconds)';
+      wkLoad(id, it).then(function () { if (m) m.textContent = '🚶 ' + it.name + ' is ready — press ▶️ Play the walk to see it move.'; paint(); paintThumbs(); }).catch(function (e) { if (m) m.textContent = '⚠️ ' + e.message; });
+    }
+    function walkPanel() {
+      var F = wkOf(car), col = function (k, l) { return '<label class="sccol"><input type="color" data-wcol="' + k + '" value="' + F[k] + '"><span>' + l + '</span></label>'; };
+      var sel = function (k, opts) { return '<select data-wsel="' + k + '" style="width:auto">' + Object.keys(opts).map(function (x) { return '<option value="' + x + '"' + (F[k] === x ? ' selected' : '') + '>' + opts[x][0] + '</option>'; }).join('') + '</select>'; };
+      var rng = function (k, l, mn, mx, st, val, sh) { return '<div><div class="lbl">' + l + ' <span class="muted">' + sh + '</span></div><input type="range" data-wrng="' + k + '" min="' + mn + '" max="' + mx + '" step="' + st + '" value="' + val + '"></div>'; };
+      var wl = WKL == null ? '<span class="muted">Loading your walkers…</span>' : WKL.length ? WKL.map(function (w) { return '<button class="btn ' + (F.walker === w.id ? 'primary' : 'ghost') + ' sm" data-wpick="' + w.id + '">🚶 ' + X.esc(w.name) + '</button>'; }).join('') : '<span class="muted" style="font-size:12.5px">No walkers yet — make one below.</span>';
+      return '<details class="lsec" open style="margin-top:8px"><summary>🚶 Walker</summary><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">' + wl + '</div>' +
+          '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn ghost sm" id="wkAi">✨ Make with AI</button><label class="btn ghost sm" style="margin:0;cursor:pointer">📤 Upload a clip<input type="file" accept="video/mp4,video/quicktime,video/webm" id="wkUp" hidden></label><button class="btn ghost sm" id="wkPr">📋 Copy prompts (make it outside HQ)</button>' + (F.walker ? '<button class="btn ghost sm" id="wkRen">✏️ Rename</button><button class="btn ghost sm" id="wkDel" style="color:#B42318">🗑️</button>' : '') + '</div>' +
+          '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn ' + (WKPLAY ? 'primary' : 'ghost') + ' sm" id="wkPlay">' + (WKPLAY ? '⏸ Stop the walk' : '▶️ Play the walk') + '</button><label class="chk" style="margin:0"><input type="checkbox" data-wchk="flip"' + (F.flip ? ' checked' : '') + '> ↔ Walk right to left</label><label class="chk" style="margin:0"><input type="checkbox" id="wkStill"' + (F.still != null ? ' checked' : '') + '> Show the person on still pictures too</label></div>' +
+          '<div class="f2" style="margin-top:6px">' + rng('size', 'Size', 20, 120, 1, Math.round(F.size * 100), Math.round(F.size * 100) + '%') + rng('feet', 'Up / down', 40, 130, 1, Math.round(F.feet * 100), '') + '</div>' +
+          '<div class="f2">' + rng('speed', 'Time to cross a slide', 15, 120, 1, Math.round(F.speed * 10), F.speed + 's') + (F.still != null ? rng('still', 'Where it stands on still pictures', -20, 120, 1, Math.round(F.still * 100), '') : '<div></div>') + '</div>' +
+          '<div class="muted" style="font-size:12.5px;margin-top:6px">Each slide becomes a short video: the person walks in from one side and out of the other, so they seem to walk through your carousel as people swipe. A slide can skip the walker in its ⚙️ Slide options.</div></details>' +
+        '<details class="lsec" open><summary>🏞️ Background</summary><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><label class="btn ghost sm" style="margin:0;cursor:pointer">📷 ' + (F.bg ? 'Change' : 'Upload') + ' a wide photo<input type="file" accept="image/*" id="wkBg" hidden></label>' + (F.bg ? '<button class="btn ghost sm" id="wkBgX">✕ Remove photo</button>' : '') + '<button class="btn ghost sm" id="wkBgPr">📋 Copy a background prompt</button></div>' +
+          '<div class="muted" style="font-size:12.5px;margin-top:6px">One wide photo is spread across all the slides, so it joins up when people swipe. Wider is better (e.g. 4000×1000). Without a photo, a simple sky and ground is used:</div><div class="sccols" style="margin-top:4px">' + col('sky', 'Sky') + col('ground', 'Ground') + '</div></details>' +
+        '<details class="lsec" open><summary>🎨 Words</summary><div class="sccols" style="margin-top:6px">' + col('alt', 'Headings') + col('hl', 'Highlighted words') + col('ink', 'Small writing') + '</div>' +
+          '<div class="f2" style="margin-top:6px"><div><div class="lbl">Heading font</div>' + sel('hFont', WK_HEAD) + '</div><div><div class="lbl">Small writing font</div>' + sel('sFont', WK_SCRIPT) + '</div></div>' +
+          '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:8px"><label class="chk"><input type="checkbox" data-wchk="shadow"' + (F.shadow ? ' checked' : '') + '> Soft shadow behind the words</label><label class="chk"><input type="checkbox" id="teH"' + (car.handle !== false ? ' checked' : '') + '> Show @auntietobi_uk</label></div>' +
+          '<div class="f2" style="margin-top:6px"><div><div class="lbl">Heading size <span id="teHsV"></span></div><input type="range" id="teHs" min="60" max="140" step="5"></div><div><div class="lbl">Small writing size <span id="teBsV"></span></div><input type="range" id="teBs" min="60" max="140" step="5"></div></div>' +
+          '<div class="muted" style="font-size:12.5px;margin-top:6px">💡 For a screenshot (like your followers number): open 🖼️ Picture on that slide → “Photo box at the bottom”.</div></details>';
+    }
+    function bindWalk(q, qa) {
+      var F = car.look.walk = Object.assign({}, WALK, car.look.walk || {}), re = function (full) { car.look.walk = F; lookChanged(full); };
+      if (WKL == null) wkList().then(function () { renderLook(); if (F.walker) wkUse(F.walker); });
+      qa('[data-wcol]').forEach(function (x) { x.oninput = function () { F[x.dataset.wcol] = x.value.toUpperCase(); re(); }; });
+      qa('[data-wsel]').forEach(function (x) { x.onchange = function () { F[x.dataset.wsel] = x.value; re(); }; });
+      qa('[data-wchk]').forEach(function (x) { x.onchange = function () { F[x.dataset.wchk] = x.checked; re(); }; });
+      qa('[data-wrng]').forEach(function (x) { x.oninput = function () { var k = x.dataset.wrng; F[k] = k === 'speed' ? Number(x.value) / 10 : Number(x.value) / 100; var s = x.previousElementSibling && x.previousElementSibling.querySelector('.muted'); if (s) s.textContent = k === 'speed' ? F[k] + 's' : k === 'size' ? x.value + '%' : ''; re(); }; });
+      q('#wkStill').onchange = function () { F.still = this.checked ? 0.55 : null; re(true); };
+      qa('[data-wpick]').forEach(function (b) { b.onclick = function () { F.walker = b.dataset.wpick; re(true); wkUse(F.walker); }; });
+      q('#wkPlay').onclick = function () { WKPLAY = !WKPLAY; WKT0 = performance.now(); renderLook(); if (WKPLAY) wkTick(); else paint(); };
+      if (q('#wkRen')) q('#wkRen').onclick = function () { var it = (WKL || []).filter(function (x) { return x.id === F.walker; })[0], nm = prompt('Name this walker', it ? it.name : ''); if (nm) X.api('wk-rename', { id: F.walker, name: nm }).then(function (r) { WKL = r.items; renderLook(); }).catch(function (e) { X.toast(e.message); }); };
+      if (q('#wkDel')) q('#wkDel').onclick = function () { if (!confirm('Delete this walker? Carousels using it will show no walker.')) return; X.api('wk-del', { id: F.walker }).then(function (r) { WKL = r.items; F.walker = ''; re(true); }).catch(function (e) { X.toast(e.message); }); };
+      q('#wkBg').onchange = function () { var f = this.files && this.files[0]; if (!f) return; q('#teLookMsg').textContent = 'Adding the photo…'; shrinkPic(f, 4000).then(function (d) { if (d.length > 2100000) return shrinkPic(f, 2800); return d; }).then(function (d) { return X.api('img', { dataUrl: d }); }).then(function (r) { F.bg = r.id; re(true); paintThumbs(); }).catch(function (e) { X.toast(e.message || 'Couldn’t add that photo'); }); };
+      if (q('#wkBgX')) q('#wkBgX').onclick = function () { F.bg = ''; re(true); paintThumbs(); };
+      q('#wkBgPr').onclick = function () { copyText('A wide panoramic landscape photograph, extra-wide 4:1 format, a calm open path or road running left to right across the whole picture, soft natural light, gentle blue sky in the top half (room for text), warm earthy ground in the bottom third. Photorealistic, no people, no text, no logos, no watermark.', 'Background prompt copied — make it in ChatGPT, Gemini or Dzine, then 📷 Upload a wide photo'); };
+      q('#wkPr').onclick = promptsSheet;
+      q('#wkAi').onclick = aiSheet;
+      q('#wkUp').onchange = function () { var f = this.files && this.files[0]; if (f) uploadClip(f); this.value = ''; };
+    }
+    function wkTick() {
+      if (!WKPLAY || !isWalk(car) || !document.body.contains(cv)) { WKPLAY = false; return; }
+      var F = wkOf(car), D = clamp(Number(F.speed) || 4, 1.5, 12) + 0.6, t = ((performance.now() - WKT0) / 1000) % D;
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H); draw(ctx, car, sel, t); requestAnimationFrame(wkTick);
+    }
+    function copyText(t, msg) { navigator.clipboard.writeText(t).then(function () { X.toast('📋 ' + msg); }, function () { prompt('Copy this:', t); }); }
+    var WKDESC = 'a smiling Nigerian woman in her 30s wearing a green ankara dress and white trainers';
+    function wkPrompts(desc) {
+      desc = desc || WKDESC;
+      return {
+        pic: 'Full-body photo of ' + desc + ', seen exactly from the side (profile view), mid-step walking from left to right, arms relaxed and natural. Standing on a plain flat light-grey studio floor in front of a plain light-grey wall — nothing else in the picture. Whole body in frame from head to shoes with space above the head and below the feet. Soft even lighting, sharp focus, photorealistic. Tall 9:16 portrait format. No text, no logo, no watermark, no shadows on the wall.',
+        vid: desc.charAt(0).toUpperCase() + desc.slice(1) + ' walks naturally from left to right at a relaxed, confident pace, seen from the side. The camera moves sideways with them (a smooth tracking shot) so they stay in the centre of the frame the whole time. Full body visible from head to shoes. Plain light-grey studio background that stays the same. Natural arm swing and steps, realistic feet touching the floor. 5 seconds, 9:16, no cuts, no zoom, no text.',
+        neg: 'camera cuts, zoom, people in the background, text, watermark, extra limbs, distorted hands, floating, sliding feet, blurry, cropped feet, changing background'
+      };
+    }
+    function promptsSheet() {
+      var s = X.sheet('<h2>📋 Prompts for your walker</h2><p class="muted" style="margin:0 0 8px">Make the walking clip in Kling, Dzine, Runway or any AI video tool, then come back and press <b>📤 Upload a clip</b> — HQ removes the background.</p>' +
+        '<label>Who is walking?</label><input id="wpD" value="' + X.esc(WKDESC) + '">' +
+        '<div style="margin-top:10px"><b>1 · Start picture</b> <span class="muted">(ChatGPT, Gemini, Dzine…)</span><textarea id="wpP" rows="5" readonly></textarea><button class="btn ghost sm" data-wcp="wpP">📋 Copy</button></div>' +
+        '<div style="margin-top:10px"><b>2 · Video</b> <span class="muted">(image-to-video from the start picture, 5 seconds, 9:16)</span><textarea id="wpV" rows="5" readonly></textarea><button class="btn ghost sm" data-wcp="wpV">📋 Copy</button></div>' +
+        '<div style="margin-top:10px"><b>Negative prompt</b> <span class="muted">(if the tool has one)</span><textarea id="wpN" rows="2" readonly></textarea><button class="btn ghost sm" data-wcp="wpN">📋 Copy</button></div>' +
+        '<div class="muted" style="font-size:12.5px;margin-top:8px">💡 Tips: a plain background cuts out best · keep the whole body in view · 4–6 seconds is plenty · download it as MP4 (720p is fine, under 4 MB).</div>' +
+        '<div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn ghost" id="wpX">Close</button></div>');
+      var fill = function () { var p = wkPrompts(s.querySelector('#wpD').value.trim()); s.querySelector('#wpP').value = p.pic; s.querySelector('#wpV').value = p.vid; s.querySelector('#wpN').value = p.neg; WKDESC = s.querySelector('#wpD').value.trim() || WKDESC; };
+      fill(); s.querySelector('#wpD').oninput = fill; s.querySelector('#wpX').onclick = function () { s.remove(); };
+      Array.prototype.forEach.call(s.querySelectorAll('[data-wcp]'), function (b) { b.onclick = function () { copyText(s.querySelector('#' + b.dataset.wcp).value, 'Copied'); }; });
+    }
+    // ✨ make the walker in HQ: start picture (GPT Image) → Kling clip → background removed
+    function aiSheet() {
+      var chars = [], img = '';
+      var s = X.sheet('<h2>✨ Make a walker with AI</h2><label>Who is walking?</label><input id="waD" value="' + X.esc(WKDESC) + '">' +
+        (window.HQChars ? '<div class="row" style="gap:6px;margin-top:6px;align-items:center"><button class="btn ghost sm" id="waCh">👥 Use a character</button><span class="muted" id="waChN" style="font-size:12.5px"></span></div>' : '') +
+        '<div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap"><button class="btn primary" id="waPic">1 · ✨ Make the start picture <span style="font-weight:400">(a few pence)</span></button><label class="btn ghost" style="margin:0;cursor:pointer">…or upload one<input type="file" accept="image/*" id="waUp" hidden></label></div>' +
+        '<div id="waImg" style="margin-top:8px"></div><button class="btn primary hidden" id="waVid" style="margin-top:8px">2 · 🎬 Make it walk with Kling <span style="font-weight:400">(5 seconds · about £1.75)</span></button>' +
+        '<div class="muted" id="waMsg" style="font-size:13px;margin-top:8px"></div><div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn ghost" id="waX">Close</button></div>');
+      var $s = function (q) { return s.querySelector(q); }, msg = function (t) { $s('#waMsg').innerHTML = t; };
+      $s('#waX').onclick = function () { s.remove(); };
+      var show = function (id) { img = id; $s('#waImg').innerHTML = '<img src="' + picSrc(id) + '" alt="" style="max-height:260px;border-radius:12px;border:1px solid #E5DFD0">'; $s('#waVid').classList.remove('hidden'); };
+      if ($s('#waCh')) $s('#waCh').onclick = function () { window.HQChars.load().then(function () { window.HQChars.pick(chars, function (ids) { chars = (ids || []).slice(0, 1); $s('#waChN').innerHTML = chars.length ? window.HQChars.chips(chars) : ''; }); }).catch(function (e) { X.toast(e.message); }); };
+      $s('#waPic').onclick = function () { var b = this; b.disabled = true; msg('✨ Making the start picture… (about 20 seconds)'); WKDESC = $s('#waD').value.trim() || WKDESC;
+        X.api('rx-pic', { want: wkPrompts(WKDESC).pic, chars: chars, aspect: '9:16' }).then(function (r) { show(r.img); msg('Check the picture: whole body, side view, plain background. Happy? Press 2.'); }).catch(function (e) { msg('⚠️ ' + X.esc(e.message)); }).then(function () { b.disabled = false; }); };
+      $s('#waUp').onchange = function () { var f = this.files && this.files[0]; if (!f) return; shrinkPic(f, 1400).then(function (d) { return X.api('img', { dataUrl: d }); }).then(function (r) { show(r.id); }).catch(function (e) { msg('⚠️ ' + X.esc(e.message)); }); };
+      $s('#waVid').onclick = async function () {
+        if (!img) return; if (!confirm('Make a 5-second walking clip with Kling? About £1.75 on your fal.ai account.')) return;
+        var b = this; b.disabled = true; WKDESC = $s('#waD').value.trim() || WKDESC; var p = wkPrompts(WKDESC);
+        try {
+          msg('🎬 Asking Kling to make the walk… this usually takes 2–5 minutes. You can leave this open.');
+          var j = (await X.api('vm-clip', { tier: 'budget', imgId: img, prompt: p.vid, negative: p.neg, seconds: 5, aspect: '9:16' })).job, url = '';
+          for (var k = 0; k < 90 && !url; k++) { await new Promise(function (ok) { setTimeout(ok, 6000); }); var st = (await X.api('vm-status', { jobs: [j] })).results[0]; if (st.status === 'COMPLETED') url = st.url; else if (st.status === 'ERROR') throw new Error(st.error || 'Kling couldn’t make it'); else msg('🎬 Kling is working… ' + (k * 6) + 's'); }
+          if (!url) throw new Error('Kling is taking too long — check 🎬 Video ads later, or try again.');
+          await cutAndSave({ url: url, src: 'ai', name: WKDESC.slice(0, 40) }, msg);
+          s.remove();
+        } catch (e) { msg('⚠️ ' + X.esc(e.message)); b.disabled = false; }
+      };
+    }
+    async function cutAndSave(o, msg) {
+      msg('✂️ Removing the background… (about 1 minute)');
+      var j = (await X.api('wk-cut', o.sid ? { sid: o.sid } : { url: o.url })).job, w = null;
+      for (var k = 0; k < 60 && !w; k++) { await new Promise(function (ok) { setTimeout(ok, 5000); }); var r = await X.api('wk-check', { job: j, name: o.name, src: o.src, sid: o.sid || '' }); if (r.walker) w = r.walker; else msg('✂️ Removing the background… ' + (k * 5) + 's'); }
+      if (!w) throw new Error('Removing the background is taking too long — please try again.');
+      await wkList(); car.look.walk = Object.assign({}, WALK, car.look.walk || {}, { walker: w.id }); mark(); renderLook(); wkUse(w.id); X.toast('🚶 Walker ready: ' + w.name);
+    }
+    // 📤 an uploaded clip: shrink it if needed, send it in pieces, then remove the background
+    async function uploadClip(f) {
+      var m = $('#teLookMsg'), msg = function (t) { if (m) m.innerHTML = t; };
+      try {
+        var blob = f.size <= 4.2e6 ? f : await shrinkClip(f, msg);
+        if (blob.size > 4.4e6) throw new Error('That clip is still too big — trim it to about 5 seconds, or export it at 720p.');
+        msg('📤 Uploading the clip…');
+        var b64 = await new Promise(function (ok) { var fr = new FileReader(); fr.onload = function () { ok(String(fr.result).split(',')[1]); }; fr.readAsDataURL(blob); });
+        var n = Math.ceil(b64.length / 2000000), st = await X.api('wk-src-start', { mime: /webm/.test(blob.type) ? 'video/webm' : /quicktime/.test(blob.type) ? 'video/quicktime' : 'video/mp4', parts: n });
+        for (var i = 0; i < n; i++) await X.api('wk-src-part', { sid: st.sid, idx: i, b64: b64.slice(i * 2000000, (i + 1) * 2000000) });
+        await cutAndSave({ sid: st.sid, src: 'upload', name: (f.name || 'My walker').replace(/\.[a-z0-9]+$/i, '').slice(0, 40) }, msg);
+      } catch (e) { msg('⚠️ ' + X.esc(e.message)); }
+    }
+    // big phone clips → 720p, up to 6 seconds, made again in the browser
+    async function shrinkClip(f, msg) {
+      msg('🎞️ Making the clip smaller…');
+      if (!window.Mp4Muxer) await new Promise(function (ok, bad) { var s = document.createElement('script'); s.src = '/vendor/mp4-muxer-5.2.2.js'; s.onload = ok; s.onerror = bad; document.head.appendChild(s); });
+      if (typeof VideoEncoder !== 'function') throw new Error('That clip is over 4 MB and this browser can’t shrink it — export it at 720p, about 5 seconds.');
+      var v = document.createElement('video'); v.muted = true; v.playsInline = true; v.src = URL.createObjectURL(f);
+      await new Promise(function (ok, bad) { v.onloadeddata = ok; v.onerror = function () { bad(new Error('Couldn’t open that video')); }; });
+      var hh = Math.min(1280, v.videoHeight), ww = Math.round(v.videoWidth * hh / v.videoHeight / 2) * 2, FP = 24, dur = Math.min(6, v.duration), n = Math.round(dur * FP);
+      var c = document.createElement('canvas'); c.width = ww; c.height = hh; var cx = c.getContext('2d');
+      var mux = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: ww, height: hh, frameRate: FP }, fastStart: 'in-memory' });
+      var enc = new VideoEncoder({ output: function (ch, meta) { mux.addVideoChunk(ch, meta); }, error: function () {} });
+      enc.configure({ codec: 'avc1.4d0028', width: ww, height: hh, bitrate: 3e6, framerate: FP, avc: { format: 'avc' } });
+      for (var k = 0; k < n; k++) {
+        await new Promise(function (ok) { var d = false, g = function () { if (!d) { d = true; ok(); } }; v.onseeked = g; v.currentTime = k / FP; setTimeout(g, 1200); });
+        cx.drawImage(v, 0, 0, ww, hh); var vf = new VideoFrame(c, { timestamp: Math.round(k * 1e6 / FP), duration: Math.round(1e6 / FP) }); enc.encode(vf, { keyFrame: k % 48 === 0 }); vf.close();
+        if (k % 12 === 0) msg('🎞️ Making the clip smaller… ' + Math.round(k / n * 100) + '%');
+      }
+      await enc.flush(); enc.close(); mux.finalize(); URL.revokeObjectURL(v.src);
+      return new Blob([mux.target.buffer], { type: 'video/mp4' });
+    }
+    function toWalk() { car.look = { kind: 'walk', id: 'walk', name: 'Walk-through', walk: Object.assign({}, WALK, (car.look && car.look.walk) || {}) }; car.swipeMode = car.swipeMode || 'off'; }
     var LASTK = null;   // the line moved last (for ↺ Reset this line)
     function ftlPanel() {
       var F = ftlOf(car), col = function (k, l) { return '<label class="sccol"><input type="color" data-fcol="' + k + '" value="' + F[k] + '"><span>' + l + '</span></label>'; };
@@ -1402,6 +1658,7 @@
             mark(); paint(); paintThumbs();
           });
         });
+        if (el.querySelector('[data-nowalk]')) el.querySelector('[data-nowalk]').onchange = function () { car.slides[i].nowalk = this.checked; mark(); paint(); paintThumbs(); };
         if (el.querySelector('[data-emoup]')) el.querySelector('[data-emoup]').onchange = function () { var f = this.files && this.files[0]; if (!f) return; pngShrink(f, 500).then(function (d) { return X.api('img', { dataUrl: d }); }).then(function (r) { car.slides[i].emoImg = r.id; mark(); paintSlides(); setSel(i); paintThumbs(); }).catch(function (e) { X.toast(e.message || 'Couldn’t add that picture'); }); };
         if (el.querySelector('[data-emodel]')) el.querySelector('[data-emodel]').onclick = function () { delete car.slides[i].emoImg; mark(); paintSlides(); setSel(i); paintThumbs(); };
         el.querySelector('[data-mv="-1"]').onclick = function () { if (i > 0) { var a = car.slides.splice(i, 1)[0]; car.slides.splice(i - 1, 0, a); sel = i - 1; mark(); paintSlides(); setSel(sel); paintThumbs(); } };
@@ -1453,6 +1710,18 @@
       b.disabled = false; b.textContent = '🗜️ All slides as one .zip';
     };
     var ready = null;   // pictures made, waiting for a tap to open the phone's Save sheet
+    $('#teVid').onclick = async function () {
+      var b = this, m = $('#teAllMsg'), F = wkOf(car), lab = '🎬 All slides as videos (MP4) — for the walk';
+      if (!F.walker || !wkFrames(F.walker)) return X.toast('Choose a walker first (🎨 Look → 🚶 Walker) and wait until it says “ready”.');
+      b.disabled = true; m.textContent = '';
+      try {
+        await fontsReady(); await loadPics(car); var files = [], base = slug(car.title);
+        for (var i = 0; i < car.slides.length; i++) { b.textContent = '🎬 Making slide ' + (i + 1) + ' of ' + car.slides.length + '…'; var bl = await wkSlideVideo(car, i); files.push(new File([bl], base + '-slide-' + pad(i + 1) + '.mp4', { type: 'video/mp4' })); }
+        if (phoneShare(files)) { try { await navigator.share({ files: files }); m.textContent = '✅ Tap “Save” to keep them, then post them together as one carousel.'; } catch (e) { if (e && e.name === 'NotAllowedError') { b.disabled = false; b.textContent = '📲 Tap to save ' + files.length + ' videos'; b.onclick = function () { navigator.share({ files: files }).catch(function () { downloadEach(files); }); }; return; } if (e && e.name !== 'AbortError') await downloadEach(files); } }
+        else { await downloadEach(files); m.textContent = '✅ ' + files.length + ' videos saved — post them together as one Instagram carousel.'; }
+      } catch (x) { X.toast(x.message || 'Couldn’t make the videos'); }
+      b.disabled = false; b.textContent = lab;
+    };
     $('#teAll').onclick = async function () {
       var b = this, m = $('#teAllMsg'), lab = '⬇️ All slides as separate pictures';
       if (ready) { var fs = ready; ready = null; b.textContent = lab; try { await navigator.share({ files: fs }); m.textContent = '✅ Tap “Save Images” to put them in Photos.'; } catch (e) { if (e && e.name !== 'AbortError') { await downloadEach(fs); m.textContent = '✅ Downloaded.'; } } return; }
