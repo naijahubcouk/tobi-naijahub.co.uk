@@ -164,15 +164,20 @@ exports.handler = handler(async (ctx) => {
       return { admin: who.email, me: who.email, isAdmin: who.isAdmin, names: await hq.names(tf), team: who.isAdmin ? tf : undefined, sections: who.isAdmin ? null : (who.sections || null), items: has(CARDS) || has(['bin']) ? await hq.list(st) : [], bin: has(['bin']) ? await hq.bin(st) : [], trashDays: hq.TRASH_DAYS, today: core.dayKey(), types: hq.TYPES, topics: hq.TOPICS, statuses: hq.STATUSES, app: has(['app']) ? appFor(who, app) : [], appCategories: apppub.CATEGORIES, subs, igc, igcTarget: igcomment.DAILY_TARGET, cars, tcars, vads, abizNew, tucked: nav && Array.isArray(nav.tucked) ? nav.tucked : [] };
     }
     // 🧰 More tools folder: which sidebar tools this person has tucked away (their own, follows them across devices)
-    case 'qv-prefs': return { prefs: (await core.getJson('hq/qv/prefs/' + core.sha256(String(who.email || '').toLowerCase()).slice(0, 24)).catch(() => null)) || null };   // ⭐ my quiz defaults
-    case 'qv-prefs-save': {
-      const P = body.prefs && typeof body.prefs === 'object' ? body.prefs : null, key = 'hq/qv/prefs/' + core.sha256(String(who.email || '').toLowerCase()).slice(0, 24);
-      if (!P) { await core.del(key).catch(() => {}); return { prefs: null }; }
+    // ⭐ my quiz defaults — kept separately for 🇬🇧 Life in the UK and 🚗 Driving Theory, plus the test used last
+    case 'qv-prefs': case 'qv-prefs-save': case 'qv-prefs-last': {
+      const key = 'hq/qv/prefs/' + core.sha256(String(who.email || '').toLowerCase()).slice(0, 24);
+      const norm = d => { if (!d) return { byBank: {}, last: '' }; if (d.byBank) return d; return { byBank: { [d.bank === 'drive' ? 'drive' : 'lifeuk']: d }, last: d.bank === 'drive' ? 'drive' : 'lifeuk' }; };   // older single set
+      const a = String(body.action), bk = body.bank === 'drive' ? 'drive' : 'lifeuk';
+      if (a === 'qv-prefs') return { prefs: norm(await core.getJson(key).catch(() => null)) };
+      if (a === 'qv-prefs-last') { const d = await core.cas(key, cur => Object.assign(norm(cur), { last: bk })); return { prefs: d }; }
+      const P = body.prefs && typeof body.prefs === 'object' ? body.prefs : null;
       const t = (v, n) => String(v == null ? '' : v).slice(0, n), num = (v, lo, hi, d) => { const x = Number(v); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : d; };
-      const clean = { bank: P.bank === 'drive' ? 'drive' : 'lifeuk', n: [5, 8, 10].includes(+P.n) ? +P.n : 10, grp: num(P.grp, 0, 40, 0), voiceOn: P.voiceOn !== false, voice: t(P.voice, 60), model: t(P.model, 30), readOpts: P.readOpts !== false,
+      const clean = P && { bank: bk, n: [5, 8, 10].includes(+P.n) ? +P.n : 10, grp: num(P.grp, 0, 40, 0), voiceOn: P.voiceOn !== false, voice: t(P.voice, 60), model: t(P.model, 30), readOpts: P.readOpts !== false,
         outro: t(P.outro, 200), appOn: P.appOn !== false, appT: t(P.appT, 120), sayApp: P.sayApp !== false, music: t(P.music, 30), musicVol: num(P.musicVol, 0, 100, 30), voiceVol: num(P.voiceVol, 0, 150, 100), duck: P.duck !== false,
         igOn: P.igOn !== false, ig: t(P.ig, 40), h2T: t(P.h2T, 120), cSubT: t(P.cSubT, 120), at: core.nowIso() };
-      await core.setJson(key, clean); return { prefs: clean };
+      const d = await core.cas(key, cur => { const x = norm(cur); x.byBank = Object.assign({}, x.byBank); if (clean) x.byBank[bk] = clean; else delete x.byBank[bk]; x.last = bk; return x; });
+      return { prefs: d };
     }
     case 'nav-save': {
       const tucked = (Array.isArray(body.tucked) ? body.tucked : []).map(x => String(x)).filter(x => /^[a-z]{2,8}$/.test(x) && x !== 'today').slice(0, 60);
