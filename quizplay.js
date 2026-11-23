@@ -19,6 +19,10 @@
   function setSound(v) { try { localStorage.setItem(SND, v ? '1' : '0'); } catch (e) {} }
   function wait(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
 
+  // which video quizzes this person has finished (on this phone)
+  var DONE = 'qp-done-v1';
+  function doneSet() { try { return JSON.parse(localStorage.getItem(DONE) || '{}') || {}; } catch (e) { return {}; } }
+  function markDone(id) { try { var d = doneSet(); d[id] = 1; var k = Object.keys(d); if (k.length > 300) delete d[k[0]]; localStorage.setItem(DONE, JSON.stringify(d)); } catch (e) {} }
   function list(bank) {
     if (!LIST[bank]) LIST[bank] = fetch(API + '?vq=list&bank=' + bank).then(function (r) { return r.ok ? r.json() : { items: [] }; }).then(function (j) { return j.items || []; }).catch(function () { delete LIST[bank]; return []; });
     return LIST[bank];
@@ -163,10 +167,11 @@
       body().innerHTML = '<div class="qp-mid">' + (P.cTitle ? '<div class="qp-cov">' + esc(P.cTitle) + '</div>' + (P.cSub ? '<div><span class="qp-cs">' + esc(P.cSub) + '</span></div>' : '') : '<div class="qp-big">Ready?</div><div class="qp-sub">' + P.qs.length + ' questions · tap your answer</div>') + '<button type="button" class="qp-btn" id="qpGo" style="margin-top:4cqh">▶️ Start</button>' +
         '</div>';
       $('#qpGo', el).onclick = function () { this.disabled = true; this.textContent = 'Loading…'; startAudio().then(function () { gt('video_quiz_start', { label: P.name }); say('intro').then(function (d) { return d ? wait(250) : 0; }).then(function () { if (alive) ask(0); }); }); };
+      if (hooks.autostart) { hooks.autostart = false; $('#qpGo', el).click(); }   // came from ▶️ Next quiz — start straight away
     }
     // sound can only start after a tap (phones) — load the voice lines and music now
     function startAudio() {
-      try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return Promise.resolve(); }
+      try { ac = hooks._ac || new (window.AudioContext || window.webkitAudioContext)(); hooks._ac = null; if (ac.resume) ac.resume().catch(function () {}); } catch (e) { return Promise.resolve(); }
       voiceBus = ac.createGain(); voiceBus.gain.value = soundOn() ? vol() : 0; voiceBus.connect(ac.destination);
       musicBus = ac.createGain(); musicBus.gain.value = 0; musicBus.connect(ac.destination);
       var keys = Object.keys(P.vo || {});
@@ -209,10 +214,20 @@
       if (answered && !reported && hooks.done) { reported = true; try { hooks.done(answered, score, P.name); } catch (e) {} }
       var pc = P.qs.length ? Math.round(score / P.qs.length * 100) : 0, msg = pc === 100 ? 'Perfect score! 🏆' : pc >= 75 ? 'Brilliant — well done! 🎉' : pc >= 50 ? 'Good effort — keep going! 💪🏾' : 'Keep practising — you’ll get there! 💚';
       body().innerHTML = '<div class="qp-mid"><div class="qp-big">' + score + ' / ' + P.qs.length + '</div><div class="qp-sub">' + msg + '</div>' +
-        '<div style="margin-top:4cqh"><button type="button" class="qp-btn g" id="qpPr">📚 Practise more questions</button><button type="button" class="qp-btn w" id="qpMore">📺 More video quizzes</button><button type="button" class="qp-btn w" id="qpAg">🔁 Play again</button></div></div>';
+        '<div style="margin-top:4cqh"><div id="qpNx"></div><button type="button" class="qp-btn g" id="qpPr">📚 Practise more questions</button><button type="button" class="qp-btn w" id="qpMore">📺 More video quizzes</button><button type="button" class="qp-btn w" id="qpAg">🔁 Play again</button></div></div>';
       // no spoken outro in the app — the video's outro asks for comments and points to the app we're already in
       $('#qpPr', el).onclick = function () { close(); var l = document.querySelector('.qp-list'); if (l) { l.remove(); document.body.style.overflow = ''; } if (hooks.practice) hooks.practice(); };
       $('#qpMore', el).onclick = function () { close(); if (!document.querySelector('.qp-list') && hooks.bank) browse(hooks.bank, hooks); };
+      // ▶️ next quiz in the same test — ones not done yet first, then round again from the start
+      markDone(P.id || id);
+      list(P.bank || hooks.bank || '').then(function (items) {
+        var k = -1; items.forEach(function (x, j) { if (x.id === (P.id || id)) k = j; });
+        var order = items.slice(k + 1).concat(items.slice(0, Math.max(0, k))).filter(function (x) { return x.id !== (P.id || id); }), dn = doneSet();
+        var nx = order.filter(function (x) { return !dn[x.id]; })[0] || order[0], box = $('#qpNx', el); if (!nx || !box || !alive) return;
+        pack(nx.id).catch(function () {});   // load it now so it starts quickly
+        box.innerHTML = '<button type="button" class="qp-btn" id="qpNext" style="margin-bottom:1.6cqh">▶️ Next: ' + esc(nx.name) + '</button>';
+        $('#qpNext', el).onclick = function () { var a = null; try { a = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} gt('video_quiz_next', { label: nx.name }); close(); play(nx.id, Object.assign({}, hooks, { autostart: true, _ac: a })); };
+      });
       $('#qpAg', el).onclick = function () { stopVoice(); score = 0; answered = 0; reported = false; ask(0); };
     }
     pack(id).then(function (p) {
