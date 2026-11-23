@@ -520,7 +520,14 @@
   // the order the lines sit on the cover (top to bottom) → which pick each one leads to
   function ftlOrder(car) { var m = ftlPicks(car).length, o = (ftlOf(car).order || []).filter(function (x) { return x < m; }); for (var k = 0; k < m; k++) if (o.indexOf(k) < 0) o.push(k); return o.slice(0, m); }
   function ftlCoverY(m, p) { return m <= 1 ? H * 0.5 : H * (0.30 + p * (0.42 / (m - 1))); }
-  function ftlEmojiAt() { return { x: W * 0.5, y: H * 0.23 }; }
+  function ftlEmojiAt(sl) { return { x: (sl && sl.ex != null ? sl.ex : 0.5) * W, y: (sl && sl.ey != null ? sl.ey : 0.23) * H }; }
+  function ftlCoverPos(car, k, p, m) { var sl = car.slides[ftlPicks(car)[k]] || {}; return { x: (sl.cvx != null ? sl.cvx : 0.80) * W, y: sl.cvy != null ? sl.cvy * H : ftlCoverY(m, p) }; }
+  // Aa headings: auto (big words in capitals) · all capitals · as typed · Each Word Capital — for the carousel, or one slide
+  function ftlCaps(car, sl, defUp) {
+    var mode = (sl && sl.caps) || ftlOf(car).caps || 'auto', t = (sl && sl.heading) || '';
+    if (mode === 'title') t = t.replace(/(^|[\s(“"\-*])([a-zà-ÿ])/g, function (m0, a, b) { return a + b.toUpperCase(); });
+    return { t: t, up: mode === 'up' || (mode === 'auto' && defUp) };
+  }
   // every line's points, in carousel-wide coordinates (slide j covers x from j·W to (j+1)·W)
   function ftlPaths(car) {
     var F = ftlOf(car), picks = ftlPicks(car), m = picks.length, ord = ftlOrder(car), cov = 0, out = [];
@@ -530,14 +537,14 @@
     for (var k = 0; k < m; k++) { var top = ftlRand(F.seed, k, 99) < 0.34 && topN < 2; if (top) topN++; else bottomN++; band[k] = top ? 'top' : 'bot'; }
     var laneY = function (k, j) { var r = ftlRand(F.seed, k, j * 7 + 3); return band[k] === 'top' ? H * (0.06 + r * 0.08) : H * (0.72 + r * 0.22); };
     for (var kk = 0; kk < m; kk++) {
-      var dest = picks[kk], p = ord.indexOf(kk), y0 = ftlCoverY(m, p), pts = [[cov * W + W * 0.80, y0], [cov * W + W * 0.93, y0]], y = y0;
+      var dest = picks[kk], p = ord.indexOf(kk), cp = ftlCoverPos(car, kk, p, m), y0 = cp.y, pts = [[cov * W + cp.x, y0], [cov * W + Math.min(W * 0.97, cp.x + W * 0.13), y0]], y = y0;
       for (var j = cov + 1; j <= dest; j++) {
         var x0 = j * W, sk = ftlKind(car.slides[j]), yIn = j === cov + 1 ? y0 : laneY(kk, j);
         if (j > cov + 1) pts.push([x0, yIn]); else pts.push([x0, y0]);
         if (j === dest) {   // arrive: up the left side and into the emoji
-          var e = ftlEmojiAt(), side = band[kk] === 'top' ? 0 : 1;
-          if (side) pts.push([x0 + W * 0.10, H * (0.55 + 0.1 * ftlRand(F.seed, kk, 5))]);
-          pts.push([x0 + W * 0.22, e.y + (side ? H * 0.04 : -H * 0.04)]); pts.push([x0 + W * 0.36, e.y]); pts.push([x0 + e.x, e.y]);
+          var e = ftlEmojiAt(car.slides[dest]), side = band[kk] === 'top' ? 0 : 1;
+          if (side) pts.push([x0 + Math.min(W * 0.10, e.x * 0.2), H * (0.55 + 0.1 * ftlRand(F.seed, kk, 5))]);
+          pts.push([x0 + e.x * 0.44, e.y + (side ? H * 0.04 : -H * 0.04)]); pts.push([x0 + e.x * 0.72, e.y]); pts.push([x0 + e.x, e.y]);
           break;
         }
         var yOut = laneY(kk, j + 1), wig = F.wig;
@@ -558,6 +565,8 @@
         }
         y = yOut;
       }
+      var A = (F.adj || {})[kk];   // ✋ bends the user dragged on the preview
+      if (A) Object.keys(A).forEach(function (ix) { ix = +ix; var v = A[ix]; if (ix >= 1 && ix < pts.length - 1 && pts[ix] && v) pts[ix] = [Math.abs(pts[ix][0] / W - Math.round(pts[ix][0] / W)) < 1e-6 ? pts[ix][0] : v[0], v[1]]; });
       out.push({ k: kk, slide: dest, color: (car.slides[dest] && car.slides[dest].lc) || FTL_COLS[kk % FTL_COLS.length], pts: pts });
     }
     return out;
@@ -587,8 +596,8 @@
     var picks = ftlPicks(car), M = 120;
     if (kind === 'cover') {
       var ord = ftlOrder(car), m = picks.length, es = clamp(H * 0.36 / Math.max(1, m), 90, 160);
-      ord.forEach(function (k, p) { ftlEmoji(ctx, car.slides[picks[k]], W * 0.80, ftlCoverY(m, p), es); });
-      var cw = W * 0.56, hf = rtFit(ctx, sl.heading, HF, cw, H * 0.6, 118 * e.hs, 40, 1.02, false), bf = sl.body ? rtFit(ctx, sl.body, BF, cw, H * 0.2, 36 * e.bs, 20, 1.35, false) : null;
+      ord.forEach(function (k, p) { var cp = ftlCoverPos(car, k, p, m); ftlEmoji(ctx, car.slides[picks[k]], cp.x, cp.y, es); });
+      var c1 = ftlCaps(car, sl, false), cw = W * 0.56, hf = rtFit(ctx, c1.t, HF, cw, H * 0.6, 118 * e.hs, 40, 1.02, c1.up), bf = sl.body ? rtFit(ctx, sl.body, BF, cw, H * 0.2, 36 * e.bs, 20, 1.35, false) : null;
       var tot = hf.h + (bf ? 30 + bf.h : 0), y = (H - tot) / 2;
       rtDraw(ctx, hf, HF, M, y, cw, sl.align === 'center' ? 'center' : 'left', F.ink, F.hl); y += hf.h;
       if (bf) rtDraw(ctx, bf, BF, M, y + 30, cw, sl.align === 'center' ? 'center' : 'left', F.sub, F.hl);
@@ -597,14 +606,14 @@
       rtDraw(ctx, hf2, BF, W * 0.1, H * 0.78, W * 0.8, 'center', F.ink, F.hl);
       if (sl.body) { ctx.fillStyle = F.ink; ctx.font = '60px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(sl.body.slice(0, 8), W / 2, H * 0.78 + hf2.h + 60); }
     } else if (kind === 'ftlp') {
-      var em = ftlEmojiAt(); ftlEmoji(ctx, sl, em.x, em.y, 150);
-      var wW = W * 0.84, hf3 = rtFit(ctx, sl.heading, HF, wW, H * 0.2, 150 * e.hs, 40, 1.0, true), bw = W * 0.74, bf3 = sl.body ? rtFit(ctx, sl.body, BF, bw, H * 0.26, 48 * e.bs, 22, 1.38, false) : null;
+      var em = ftlEmojiAt(sl); ftlEmoji(ctx, sl, em.x, em.y, 150);
+      var c3 = ftlCaps(car, sl, true), wW = W * 0.84, hf3 = rtFit(ctx, c3.t, HF, wW, H * 0.2, 150 * e.hs, 40, 1.0, c3.up), bw = W * 0.74, bf3 = sl.body ? rtFit(ctx, sl.body, BF, bw, H * 0.26, 48 * e.bs, 22, 1.38, false) : null;
       var y3 = H * 0.355; rtDraw(ctx, hf3, HF, (W - wW) / 2, y3, wW, 'center', F.ink, F.hl); y3 += hf3.h + 34;
       if (bf3) rtDraw(ctx, bf3, BF, (W - bw) / 2, y3, bw, 'center', F.sub, F.hl);
       var last = picks[picks.length - 1] === i, hasEnd = car.slides.some(function (s) { return s.kind === 'end'; });
       if (F.oneMore && last && hasEnd && F.oneMoreText) { var om = rtFit(ctx, F.oneMoreText, HF, W * 0.8, 120, 62, 26, 1.1, false); rtDraw(ctx, om, HF, W * 0.1, H - 70 - om.h, W * 0.8, 'center', F.ink, F.hl); }
     } else {   // end slide
-      var hf4 = rtFit(ctx, sl.heading, HF, W * 0.8, H * 0.4, 110 * e.hs, 36, 1.04, false), bf4 = sl.body ? rtFit(ctx, sl.body, BF, W * 0.76, H * 0.25, 40 * e.bs, 20, 1.38, false) : null;
+      var c4 = ftlCaps(car, sl, false), hf4 = rtFit(ctx, c4.t, HF, W * 0.8, H * 0.4, 110 * e.hs, 36, 1.04, c4.up), bf4 = sl.body ? rtFit(ctx, sl.body, BF, W * 0.76, H * 0.25, 40 * e.bs, 20, 1.38, false) : null;
       var tot4 = hf4.h + (bf4 ? 36 + bf4.h : 0), y4 = (H - tot4) / 2 - 30;
       rtDraw(ctx, hf4, HF, W * 0.1, y4, W * 0.8, 'center', F.ink, F.hl); if (bf4) rtDraw(ctx, bf4, BF, W * 0.12, y4 + hf4.h + 36, W * 0.76, 'center', F.sub, F.hl);
     }
@@ -962,6 +971,7 @@
             '<div><label>Words side to side</label><select data-f="hpos"><option value="">Same as carousel</option>' + [['auto', 'Away from the person'], ['left', 'Left'], ['center', 'Centre'], ['right', 'Right']].map(function (o) { return '<option value="' + o[0] + '"' + (sl.hpos === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div></div>' : '') +
           (sl.kind === 'tip' ? '<div class="f2"><div><label>Number</label><select data-f="num"><option value="">Same as carousel</option><option value="on"' + (sl.num === 'on' ? ' selected' : '') + '>Show</option><option value="off"' + (sl.num === 'off' ? ' selected' : '') + '>Hide</option></select></div>' +
             (isPurple(car) ? '<div><label>Number circle sits</label><select data-f="npos"><option value="">Same as carousel</option>' + NPOS.map(function (o) { return '<option value="' + o[0] + '"' + (sl.npos === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' : '<div></div>') + '</div>' : '') +
+          (isFtl(car) && sl.kind !== 'ftlt' ? '<div class="f2"><div><label>Heading letters</label><select data-f="caps"><option value="">Same as carousel</option><option value="up"' + (sl.caps === 'up' ? ' selected' : '') + '>ABC All capitals</option><option value="as"' + (sl.caps === 'as' ? ' selected' : '') + '>Abc As I type it</option><option value="title"' + (sl.caps === 'title' ? ' selected' : '') + '>Abc Def Each Word</option></select></div><div></div></div>' : '') +
           '<div class="f2"><div><label>Heading size <span class="muted" data-pv="hs">' + pct(sl.hs) + '</span></label><input type="range" data-f="hs" min="50" max="160" step="5" value="' + Math.round((sl.hs || 1) * 100) + '"></div>' +
           '<div><label>Body text size <span class="muted" data-pv="bs">' + pct(sl.bs) + '</span></label><input type="range" data-f="bs" min="50" max="160" step="5" value="' + Math.round((sl.bs || 1) * 100) + '"></div></div>' +
           '<button class="btn link" data-reset style="margin-top:4px">↺ Reset this slide’s options</button></details>' + picHtml(sl, i) + decoHtml(sl, i) + '</div>';
@@ -1116,7 +1126,18 @@
       if (!hov) return; var b = hov; ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.strokeStyle = 'rgba(17,17,17,.55)'; ctx.setLineDash([14, 10]); ctx.lineWidth = 3; ctx.strokeRect(b.x, b.y, b.w, b.h); ctx.setLineDash([]);
       ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = '#111111'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(Math.min(W - 26, b.x + b.w), Math.max(26, b.y), 22, 0, 7); ctx.fill(); ctx.stroke(); ctx.restore();
     }
-    var paint0 = paint; paint = function () { paint0(); overlay(); };
+    function ftlDots() {   // the draggable bends on the slide being shown
+      if (!isFtl(car) || ftlOf(car).dots === false) return [];
+      var out = []; ftlPaths(car).forEach(function (pp) { for (var ix = 1; ix < pp.pts.length - 1; ix++) { var gx = pp.pts[ix][0] - sel * W; if (gx >= -2 && gx <= W + 2) out.push({ k: pp.k, ix: ix, x: clamp(gx, 0, W), y: pp.pts[ix][1], color: pp.color, edge: Math.abs(pp.pts[ix][0] / W - Math.round(pp.pts[ix][0] / W)) < 1e-6 }); } });
+      return out;
+    }
+    function ftlEmojiHit(p) {   // an emoji to drag: this pick's emoji, or one of the cover's
+      if (!isFtl(car)) return null; var sl = car.slides[sel], X0 = p.x * W, Y0 = p.y * H;
+      if (ftlKind(sl) === 'ftlp') { var e = ftlEmojiAt(sl); if (Math.hypot(X0 - e.x, Y0 - e.y) < 85) return { slide: sel, cover: false }; }
+      if (sl.kind === 'cover') { var ord = ftlOrder(car), picks = ftlPicks(car), m = picks.length, hitk = null; ord.forEach(function (k, pp) { var c = ftlCoverPos(car, k, pp, m); if (Math.hypot(X0 - c.x, Y0 - c.y) < 70) hitk = k; }); if (hitk != null) return { slide: picks[hitk], cover: true }; }
+      return null;
+    }
+    var paint0 = paint; paint = function () { paint0(); overlay(); var ds = ftlDots(); cv.dataset.dots = ds.length; if (!ds.length) return; ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ds.forEach(function (d) { ctx.beginPath(); ctx.arc(d.x, d.y, d.edge ? 12 : 15, 0, 7); ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = d.color; ctx.stroke(); }); ctx.restore(); };
     (function () {
       var drag = null, at = function (e) { var r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height }; };
       var hit = function (p) { var ds = car.slides[sel].deco || []; for (var k = ds.length - 1; k >= 0; k--) { var d = ds[k], rad = 0.11 * (d.s || 1) + 0.03; if (Math.abs(p.x - d.x) < rad && Math.abs(p.y - d.y) * (H / W) < rad) return k; } return -1; };
@@ -1129,7 +1150,11 @@
       var sync = function (k) { var el = ov.querySelector('.cslide[data-i="' + k + '"]'), pc = car.slides[k].pic; if (!el || !pc) return; ['size', 'fx', 'fy'].forEach(function (f) { var inp = el.querySelector('[data-p="' + f + '"]'), pv = el.querySelector('[data-ppv="' + f + '"]'); if (inp && pc[f] != null) { inp.value = Math.round(pc[f] * 100); if (pv) pv.textContent = inp.value + (f === 'size' ? '%' : ''); } }); };
       cv.addEventListener('pointerdown', function (e) {
         var p = at(e), k = hit(p), hp, ph;
+        var fd = null, fe = null;
+        if (k < 0) { ftlDots().forEach(function (d) { if (Math.hypot(d.x - p.x * W, d.y - p.y * H) < 34) fd = d; }); if (!fd) fe = ftlEmojiHit(p); }
         if (k >= 0) { var d = car.slides[sel].deco[k]; drag = { t: 'deco', k: k, dx: p.x - d.x, dy: p.y - d.y }; }
+        else if (fd) { drag = { t: 'fpt', line: fd.k, ix: fd.ix, edge: fd.edge, gx: fd.x + sel * W }; LASTK = fd.k; }
+        else if (fe) { drag = { t: 'femo', slide: fe.slide, cover: fe.cover }; }
         else if ((hp = hitPerson(p))) { var b = hp.b, pc = b.p, g = cutGeom(pc, picImg(pc.img)); if (pc.px == null || pc.py == null) { pc.px = (g.x + g.w / 2) / W; pc.py = (g.y + g.h) / H; pc.spill = false; }
           drag = { t: hp.resize ? 'size' : 'person', k: b.k, dx: b.dx, ox: p.x * W - (pc.px * W + b.dx), oy: p.y * H - pc.py * H, s0: pc.size, y0: p.y * H, feet: pc.py * H }; }
         else if ((ph = hitPhoto(p))) { var im = picImg(ph.img), bb = ph.mode === 'bg' ? { w: W, h: H } : picBox(ph), sc = Math.max(bb.w / im.naturalWidth, bb.h / im.naturalHeight) * clamp(Number(ph.z) || 1, 1, 2.5);
@@ -1138,14 +1163,18 @@
       });
       cv.addEventListener('pointermove', function (e) {
         var p = at(e);
+        if (!drag && hit(p) < 0 && (ftlDots().some(function (d) { return Math.hypot(d.x - p.x * W, d.y - p.y * H) < 34; }) || ftlEmojiHit(p))) { cv.style.cursor = 'grab'; return; }
         if (!drag) { var hp = hit(p) >= 0 ? null : hitPerson(p), was = hov; hov = hp ? hp.b : null; cv.style.cursor = hit(p) >= 0 ? 'move' : hp ? (hp.resize ? 'nwse-resize' : 'grab') : hitPhoto(p) ? 'grab' : ''; if (was !== hov && (was || hov)) paint(); return; }
         if (drag.t === 'deco') { var d = car.slides[sel].deco[drag.k]; d.x = clamp(p.x - drag.dx, 0, 1); d.y = clamp(p.y - drag.dy, 0, 1); }
+        else if (drag.t === 'fpt') { var F2 = car.look.ftl = Object.assign({}, FTL, car.look.ftl || {}); F2.adj = Object.assign({}, F2.adj || {}); var L2 = F2.adj[drag.line] = Object.assign({}, F2.adj[drag.line] || {});
+          L2[drag.ix] = [drag.edge ? drag.gx : sel * W + clamp(p.x, -0.1, 1.1) * W, clamp(p.y, 0.01, 0.99) * H]; cv.style.cursor = 'grabbing'; }
+        else if (drag.t === 'femo') { var es = car.slides[drag.slide]; if (drag.cover) { es.cvx = clamp(p.x, 0.08, 0.95); es.cvy = clamp(p.y, 0.05, 0.95); } else { es.ex = clamp(p.x, 0.08, 0.92); es.ey = clamp(p.y, 0.06, 0.94); } cv.style.cursor = 'grabbing'; }
         else if (drag.t === 'person') { var pc = car.slides[drag.k].pic; pc.px = clamp((p.x * W - drag.ox - drag.dx) / W, -0.45, 1.45); pc.py = clamp((p.y * H - drag.oy) / H, 0.3, 1.5); hov = personBox(sel, 0) && drag.k === sel ? personBox(sel, 0) : personBox(drag.k, drag.dx); cv.style.cursor = 'grabbing'; }
         else if (drag.t === 'size') { var pc2 = car.slides[drag.k].pic; pc2.size = clamp(drag.s0 * (drag.feet - p.y * H) / Math.max(40, drag.feet - drag.y0), 0.3, 1.3); hov = personBox(drag.k, drag.dx); }
         else if (drag.t === 'photo') { drag.ph.fx = clamp(drag.fx - (p.x * W - drag.x0) / drag.ex, 0, 1); drag.ph.fy = clamp(drag.fy - (p.y * H - drag.y0) / drag.ey, 0, 1); cv.style.cursor = 'grabbing'; }
         paint();
       });
-      var end = function () { if (!drag) return; var k = drag.k == null ? sel : drag.k; drag = null; mark(); sync(k); paintThumbs(); paint(); };
+      var end = function () { if (!drag) return; var wasF = drag.t === 'fpt'; var k = drag.k == null || drag.t === 'fpt' ? sel : drag.k; drag = null; mark(); if (car.slides[k] && car.slides[k].pic) sync(k); paintThumbs(); paint(); if (wasF && isFtl(car)) renderLook(); };
       cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
       cv.addEventListener('pointerleave', function () { if (!drag && hov) { hov = null; paint(); } });
       cv.style.touchAction = 'none';
@@ -1244,6 +1273,7 @@
     // 💜 Bold Purple Pro look settings
     var NPOS = [['auto', 'With the words'], ['tl', '↖ Top left'], ['tc', '⬆ Top middle'], ['tr', '↗ Top right'], ['bl', '↙ Bottom left'], ['bc', '⬇ Bottom middle'], ['br', '↘ Bottom right']];
     // 🧵 Follow the line — look settings
+    var LASTK = null;   // the line moved last (for ↺ Reset this line)
     function ftlPanel() {
       var F = ftlOf(car), col = function (k, l) { return '<label class="sccol"><input type="color" data-fcol="' + k + '" value="' + F[k] + '"><span>' + l + '</span></label>'; };
       var sel = function (k, opts) { return '<select data-fsel="' + k + '" style="width:auto">' + Object.keys(opts).map(function (x) { return '<option value="' + x + '"' + (F[k] === x ? ' selected' : '') + '>' + opts[x][0] + '</option>'; }).join('') + '</select>'; };
@@ -1253,8 +1283,10 @@
         '<details class="lsec" open style="margin-top:8px"><summary>🧵 Lines</summary>' +
           '<div class="f2" style="margin-top:6px"><div><div class="lbl">Thickness <span class="muted">' + Math.round(F.thick) + '</span></div><input type="range" data-frng="thick" min="4" max="30" step="1" value="' + F.thick + '"></div>' +
           '<div><div class="lbl">Wiggle <span class="muted">' + Math.round(F.wig * 100) + '%</span></div><input type="range" data-frng="wig" min="0" max="250" step="10" value="' + Math.round(F.wig * 100) + '"></div></div>' +
-          '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn ghost sm" id="ftShuf">🔀 Shuffle which line leads where</button><button class="btn ghost sm" id="ftTang">↻ New tangle</button><button class="btn ghost sm" id="ftAdd"' + (n >= 6 ? ' disabled' : '') + '>➕ Add a pick</button></div>' +
+          '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><label class="chk" style="margin:0"><input type="checkbox" data-fchk="dots"' + (F.dots !== false ? ' checked' : '') + '> ✋ Show line dots on the preview (drag them to reshape)</label></div>' +
+          '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn ghost sm" id="ftRL"' + (LASTK == null || !(F.adj && F.adj[LASTK]) ? ' disabled' : '') + '>↺ Reset this line</button><button class="btn ghost sm" id="ftRA">↺ Reset all lines</button><button class="btn ghost sm" id="ftShuf">🔀 Shuffle which line leads where</button><button class="btn ghost sm" id="ftTang">↻ New tangle</button><button class="btn ghost sm" id="ftAdd"' + (n >= 6 ? ' disabled' : '') + '>➕ Add a pick</button></div>' +
           '<div class="muted" style="font-size:12.5px;margin-top:6px">' + n + ' pick' + (n === 1 ? '' : 's') + ' (2–6 work best). Each pick’s emoji, line colour, big word and message are on its slide on the left.</div></details>' +
+        '<div class="lbl" style="margin-top:8px">Heading letters</div><div class="scseg">' + [['auto', 'Auto (big words in CAPITALS)'], ['up', 'ABC All capitals'], ['as', 'Abc As I type it'], ['title', 'Abc Def Each Word']].map(function (o) { return '<button data-fcaps="' + o[0] + '" aria-pressed="' + ((F.caps || 'auto') === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>' +
         '<details class="lsec" open><summary>🎨 Colours & fonts</summary><div class="sccols" style="margin-top:6px">' + col('bg', 'Background') + col('ink', 'Headings') + col('hl', 'Highlighted words') + col('sub', 'Messages') + '</div>' +
           '<div class="f2" style="margin-top:6px"><div><div class="lbl">Heading font</div>' + sel('head', FTL_HEAD) + '</div><div><div class="lbl">Message font</div>' + sel('body', FTL_BODY) + '</div></div>' +
           '<div class="f2" style="margin-top:6px"><div><div class="lbl">Heading size <span id="teHsV"></span></div><input type="range" id="teHs" min="60" max="140" step="5"></div><div><div class="lbl">Message size <span id="teBsV"></span></div><input type="range" id="teBs" min="60" max="140" step="5"></div></div></details>' +
@@ -1269,7 +1301,10 @@
       qa('[data-ftxt]').forEach(function (x) { x.oninput = function () { F[x.dataset.ftxt] = x.value.slice(0, 60); re(); }; });
       qa('[data-frng]').forEach(function (x) { x.oninput = function () { F[x.dataset.frng] = x.dataset.frng === 'wig' ? Number(x.value) / 100 : Number(x.value); var s = x.previousElementSibling && x.previousElementSibling.querySelector('.muted'); if (s) s.textContent = x.dataset.frng === 'wig' ? x.value + '%' : x.value; re(); }; });
       q('#ftShuf').onclick = function () { var o = ftlOrder(car), was = o.join(); for (var t = 0; t < 20 && o.join() === was; t++) for (var k = o.length - 1; k > 0; k--) { var r = Math.floor(Math.random() * (k + 1)), tmp = o[k]; o[k] = o[r]; o[r] = tmp; } F.order = o; re(); paintThumbs(); };
-      q('#ftTang').onclick = function () { F.seed = Math.floor(Math.random() * 1e6); re(); paintThumbs(); };
+      q('#ftTang').onclick = function () { F.seed = Math.floor(Math.random() * 1e6); F.adj = {}; re(); paintThumbs(); };
+      qa('[data-fcaps]').forEach(function (b) { b.onclick = function () { F.caps = b.dataset.fcaps; re(true); paintThumbs(); }; });
+      q('#ftRL').onclick = function () { if (F.adj && LASTK != null) { delete F.adj[LASTK]; re(true); paintThumbs(); } };
+      q('#ftRA').onclick = function () { if (!confirm('Put every line (and every emoji) back where it started?')) return; F.adj = {}; car.slides.forEach(function (x) { delete x.ex; delete x.ey; delete x.cvx; delete x.cvy; }); re(true); paintThumbs(); };
       q('#ftAdd').onclick = function () {
         var n = ftlPicks(car).length, at = car.slides.length; car.slides.forEach(function (s, j) { if (s.kind === 'end') at = Math.min(at, j); });
         car.slides.splice(at, 0, { kind: 'ftlp', heading: 'New pick', body: 'Your message for this pick.', emo: ['⭐', '🌍', '🔥', '🫶🏾', '☀️', '🎉'][n % 6], lc: FTL_COLS[n % FTL_COLS.length], align: 'center' });

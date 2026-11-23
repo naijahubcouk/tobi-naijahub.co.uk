@@ -44,6 +44,9 @@ function cleanSlide(x) {
     ...(typeof x.emo === 'string' && x.emo.trim() ? { emo: [...x.emo.trim()].slice(0, 8).join('') } : {}),
     ...(/^#[0-9a-f]{6}$/i.test(String(x.lc || '')) ? { lc: x.lc } : {}),
     ...(/^i[a-z0-9]{6,30}$/.test(String(x.emoImg || '')) ? { emoImg: x.emoImg } : {}),
+    // ✋ where the emoji was dragged to (on its slide / on the cover), and this slide's heading letters
+    ...['ex', 'ey', 'cvx', 'cvy'].reduce((o, k) => { const v = Number(x[k]); if (x[k] != null && x[k] !== '' && Number.isFinite(v)) o[k] = Math.max(0, Math.min(1, v)); return o; }, {}),
+    ...(['up', 'as', 'title'].includes(x.caps) ? { caps: x.caps } : {}),
     ...(cleanDeco(x.deco).length ? { deco: cleanDeco(x.deco) } : {}),
   };
 }
@@ -66,6 +69,14 @@ function cleanDeco(list) {
   return (Array.isArray(list) ? list : []).slice(0, 12).filter(d => d && DECOS.includes(d.t)).map(d => ({ t: d.t, x: n(d.x, 0, 1, 0.5), y: n(d.y, 0, 1, 0.5), s: n(d.s, 0.2, 4, 1), r: n(d.r, -180, 180, 0), c: /^#[0-9a-f]{6}$/i.test(String(d.c || '')) ? d.c : '#057A44', ...(d.txt ? { txt: String(d.txt).slice(0, 24) } : {}), ...(d.flip ? { flip: true } : {}) }));
 }
 const NPOS = ['auto', 'tl', 'tc', 'tr', 'bl', 'bc', 'br', 'left', 'center', 'right'];   // 💜 where the number circle sits
+// ✋ line bends dragged on the preview: { line: { pointIndex: [x, y] } } in carousel-wide pixels
+function cleanAdj(a) {
+  const out = {}; if (!a || typeof a !== 'object') return out;
+  Object.keys(a).slice(0, 6).forEach(k => { if (!/^[0-5]$/.test(k) || !a[k] || typeof a[k] !== 'object') return; const L = {};
+    Object.keys(a[k]).slice(0, 60).forEach(i => { const v = a[k][i]; if (/^\d{1,2}$/.test(i) && Array.isArray(v) && v.length === 2 && v.every(n => Number.isFinite(Number(n)))) L[i] = [Math.max(-2000, Math.min(12000, Math.round(Number(v[0])))), Math.max(0, Math.min(1350, Math.round(Number(v[1]))))]; });
+    if (Object.keys(L).length) out[k] = L; });
+  return out;
+}
 function cleanLook(l) {
   if (l && typeof l === 'object' && l.kind === 'purple') {   // 💜 Bold Purple Pro
     const P = l.purple && typeof l.purple === 'object' ? l.purple : {}, hex = (v, d) => /^#[0-9a-f]{6}$/i.test(String(v || '')) ? v : d;
@@ -80,7 +91,7 @@ function cleanLook(l) {
     return { kind: 'ftl', id: 'ftl', name: 'Follow the line', ftl: { bg: hex(F.bg, '#F2C6C9'), ink: hex(F.ink, '#4A1525'), hl: hex(F.hl, '#C8553D'), sub: hex(F.sub, '#3A2A2E'),
       head: ['playfair', 'fraunces', 'anton', 'archivo', 'poppins', 'caveat'].includes(F.head) ? F.head : 'playfair', body: ['dmsans', 'inter', 'poppins', 'playfair'].includes(F.body) ? F.body : 'dmsans',
       thick: num(F.thick, 4, 30, 12), wig: num(F.wig, 0, 2.5, 1), seed: Math.floor(num(F.seed, 0, 1e7, 7)), order: Array.isArray(F.order) ? F.order.slice(0, 6).map(v => Math.floor(num(v, 0, 5, 0))) : null,
-      oneMore: F.oneMore !== false, oneMoreText: cleanText(F.oneMoreText, 60) } };
+      oneMore: F.oneMore !== false, oneMoreText: cleanText(F.oneMoreText, 60), caps: ['auto', 'up', 'as', 'title'].includes(F.caps) ? F.caps : 'auto', dots: F.dots !== false, adj: cleanAdj(F.adj) } };
   }
   if (!l || typeof l !== 'object' || l.kind !== 'spec') return null;
   return { kind: 'spec', name: cleanText(l.name, 40) || 'My look', styleId: String(l.styleId || '').slice(0, 40), spec: require('./stylecar').cleanSpec(l.spec) };
