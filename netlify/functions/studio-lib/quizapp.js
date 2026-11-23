@@ -42,7 +42,7 @@ async function publish(id, lines) {
     qs: d.qs.map(q => ({ id: q.id, q: q.q, opts: q.opts, ans: q.ans, hl: q.hl, e: q.e, img: (d.bgs || {})[q.id] || '' })), vo,
   };
   await setJson(PACK(id), pack);
-  await core.cas(LIST, cur => { const l = ((cur && cur.items) || []).filter(x => x.id !== id); l.unshift({ id, name: s.name, title: pack.cTitle, bank: d.bank, n: pack.qs.length, at: pack.at, voice: Object.keys(vo).length > 0 }); return { items: l.slice(0, 100) }; });
+  await core.cas(LIST, cur => { const l = ((cur && cur.items) || []).filter(x => x.id !== id); l.unshift({ id, name: s.name, title: '', bank: d.bank, n: pack.qs.length, at: pack.at, voice: Object.keys(vo).length > 0 }); return { items: l.slice(0, 100) }; });
   await rebuildAssets();
   return { ok: true, voiceLines: Object.keys(vo).length };
 }
@@ -53,13 +53,20 @@ async function unpublish(id) {
   await rebuildAssets();
   return { ok: true };
 }
+// ✏️ a renamed quiz shows its new name in the app straight away (only if it's in the app)
+async function rename(id, name) {
+  let hit = false;
+  await core.cas(LIST, cur => { const l = ((cur && cur.items) || []).map(x => { if (x.id !== id) return x; hit = true; return Object.assign({}, x, { name, title: '' }); }); return { items: l }; });
+  if (hit) { const p = await getJson(PACK(id)).catch(() => null); if (p) { p.name = name; await setJson(PACK(id), p); } }
+  return { ok: true, inApp: hit };
+}
 async function publishedIds() { const l = await getJson(LIST).catch(() => null); return ((l && l.items) || []).map(x => x.id); }
 
 // ── public (the app) ──
 const J = (o, age) => ({ statusCode: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': `public, max-age=${age}, s-maxage=${age}`, 'X-Content-Type-Options': 'nosniff' }, body: JSON.stringify(o) });
 // the name shown in the app — never the other test's name (older quizzes kept a heading from the other test)
 function appName(x) {
-  const n = String(x.title || x.name || '').trim(), dflt = x.bank === 'drive' ? 'UK Driving Theory Quiz' : 'Life in the UK Test Quiz';
+  const n = String(x.name || x.title || '').trim(), dflt = x.bank === 'drive' ? 'UK Driving Theory Quiz' : 'Life in the UK Test Quiz';
   if (!n || (x.bank === 'drive' && /life\s*in\s*(the\s*)?uk/i.test(n)) || (x.bank !== 'drive' && /driv/i.test(n))) return dflt + (/\b0*\d{1,3}\s*$/.test(n) ? ' · ' + n.match(/(\d{1,3})\s*$/)[1] : '');
   return n;
 }
@@ -94,4 +101,4 @@ async function serveAudio(h) {
   const rec = await getJson(`hq/qv/tts/${h}`).catch(() => null); return bin(rec && rec.dataUrl, 604800);
 }
 
-module.exports = { publish, unpublish, publishedIds, publicList, publicPack, serveImg, serveAudio, ttsHash };
+module.exports = { rename, publish, unpublish, publishedIds, publicList, publicPack, serveImg, serveAudio, ttsHash };

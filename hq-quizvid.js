@@ -89,6 +89,7 @@
     var d = snapshot(), j = JSON.stringify(d);
     return X.api('qv-save', { id: asNew ? '' : QV.savedId, name: name, data: d }).then(function (r) {
       QV.savedId = r.id; QV.savedName = r.name; QV._last = j; if (F()) F().lastDraft('qv', r.id); if ($('#qvRoot')) head();
+      var nm = $('#qvName'); if (nm && document.activeElement !== nm) nm.value = r.name;
       if (quiet) return;
       if (PUB[r.id]) { X.toast('💾 Saved — updating the app version…'); publish().catch(function (e) { X.toast(e.message); }); } else X.toast('💾 Saved — find it in 📂 My quizzes');
     });
@@ -101,7 +102,7 @@
     if (!QV.savedId && j === QV._base) return;
     if (QV._pend !== j) { QV._pend = j; return; }
     asvBusy = true; F().saveNote('saving');
-    doSave(QV.savedName || (QV.cTitle || QV.h1) + ' · ' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }), false, true).then(function () { F().saveNote('saved'); }).catch(function () { F().saveNote('error'); }).then(function () { asvBusy = false; });
+    doSave(QV.savedName || '', false, true).then(function () { F().saveNote('saved'); }).catch(function () { F().saveNote('error'); }).then(function () { asvBusy = false; });
   }, 2500);
   // ───── 📺 show a saved quiz in the app (Life in the UK / Driving Theory → 📺 Video quizzes) ─────
   var PUB = {}, PUBLOADED = false;
@@ -127,7 +128,7 @@
   }
   function saveSheet() {
     KEEP();
-    var s = X.sheet('<h3 style="margin:0 0 8px">💾 Save this quiz</h3><label>Name</label><input id="qvSN" value="' + esc(QV.savedName || (QV.h1 + ' · ' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }))) + '">' +
+    var s = X.sheet('<h3 style="margin:0 0 8px">💾 Save this quiz</h3><label>Name</label><input id="qvSN" value="' + esc(QV.savedName || '') + '" placeholder="Leave empty to number it automatically (' + esc(bank().cover) + ' · 002…)">' +
       '<div class="muted" style="font-size:12.5px;margin-top:6px">Saves the questions, words, voice choice and pictures. Open it again any time from 📂 My quizzes and make the video again — the voice and pictures are already saved, so it’s free.</div>' +
       '<div class="row" style="gap:8px;margin-top:12px"><button class="btn primary" id="qvSOk">💾 Save</button>' + (QV.savedId ? '<button class="btn ghost" id="qvSNew">Save as a new copy</button>' : '') + '<button class="btn ghost" id="qvSX">Cancel</button></div>');
     var go = function (asNew) { var n = $('#qvSN', s).value.trim(); doSave(n, asNew).then(function () { s.remove(); }).catch(function (e) { X.toast(e.message); }); };
@@ -146,9 +147,11 @@
       box.innerHTML = items.map(function (it) {
         return '<div class="row" style="gap:8px;padding:8px 0;border-top:1px solid #EEE9DD;flex-wrap:nowrap"><div style="flex:1;min-width:0"><b>' + esc(it.name) + '</b>' + (it.id === QV.savedId ? ' <span class="muted">(open now)</span>' : '') + (PUB[it.id] ? ' <span style="font-size:12px;background:#E7F6EE;color:#057A44;border-radius:999px;padding:1px 8px;font-weight:700">📺 In the app</span>' : '') +
           '<div class="muted" style="font-size:12.5px">' + (BANKS[it.bank] ? BANKS[it.bank].name : '') + ' · ' + it.n + ' questions · saved ' + new Date(it.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</div></div>' +
-          '<button class="btn primary sm" data-open="' + it.id + '">Open</button><button class="btn ghost sm" data-del="' + it.id + '" title="Delete">🗑️</button></div>';
+          '<button class="btn primary sm" data-open="' + it.id + '">Open</button><button class="btn ghost sm" data-ren="' + it.id + '" title="Rename">✏️</button><button class="btn ghost sm" data-del="' + it.id + '" title="Delete">🗑️</button></div>';
       }).join('');
       $$('[data-open]', s).forEach(function (b) { b.onclick = function () { openSaved(b.dataset.open).then(function () { s.remove(); }); }; });
+      $$('[data-ren]', s).forEach(function (b) { b.onclick = function () { var it = items.filter(function (x) { return x.id === b.dataset.ren; })[0], v = prompt('New name (this is what shows in the app):', it.name); if (!v || !v.trim() || v.trim() === it.name) return;
+        X.api('qv-rename', { id: it.id, name: v }).then(function (r) { if (it.id === QV.savedId) { QV.savedName = r.name; head(); var nm = $('#qvName'); if (nm) nm.value = r.name; } X.toast('✏️ Renamed'); load(); }).catch(function (e) { X.toast(e.message); }); }; });
       $$('[data-del]', s).forEach(function (b) { b.onclick = function () { var it = items.filter(function (x) { return x.id === b.dataset.del; })[0]; if (!confirm('Delete “' + it.name + '”? This can’t be undone.')) return; X.api('qv-del', { id: it.id }).then(function () { delete PUB[it.id]; if (QV.savedId === it.id) { QV.savedId = ''; QV.savedName = ''; head(); } items = items.filter(function (x) { return x.id !== it.id; }); paint(items); X.toast('🗑️ Deleted'); }).catch(function (e) { X.toast(e.message); }); }; });
     };
   }
@@ -170,6 +173,7 @@
     var est = QV.qs.reduce(function (a, q) { return a + q.q.length + (QV.readOpts ? q.opts.join(', ').length + 12 : 0) + q.opts[q.ans].length + 16; }, 60);
     v.innerHTML = '<div id="qvRoot" style="max-width:1020px"><style>#qvRoot .card{margin-bottom:12px}#qvRoot label{display:block}#qvRoot input[type=checkbox]{width:auto;flex:none;margin:0}</style>' +
       '<div class="card"><div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">' +
+      '<div style="flex:1 1 100%"><label>Name <span class="muted" style="font-weight:400">— shows in 📂 My quizzes and in the app</span></label><input id="qvName" value="' + esc(QV.savedName || '') + '" placeholder="Numbered automatically when saved, e.g. ' + esc(bank().cover) + ' · 002" maxlength="80"></div>' +
       '<div><label>Quiz</label><select id="qvBank">' + Object.keys(BANKS).map(function (k) { return '<option value="' + k + '"' + (k === QV.bank ? ' selected' : '') + '>' + BANKS[k].name + '</option>'; }).join('') + '</select></div>' +
       '<div><label>Questions</label><select id="qvN">' + [5, 8, 10].map(function (n) { return '<option' + (n === QV.n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></div>' +
       '<div><label>From</label><select id="qvGrp">' + b.groups.map(function (g) { return '<option value="' + g[0] + '"' + (g[0] === QV.grp ? ' selected' : '') + '>' + esc(g[1]) + '</option>'; }).join('') + '</select></div>' +
@@ -228,6 +232,12 @@
     if (QV.out) showOut();
   }
   function bind() {
+    $('#qvName').onchange = function () {
+      var v = this.value.replace(/\s+/g, ' ').trim(), el = this;
+      if (!v) { el.value = QV.savedName || ''; return; }
+      if (!QV.savedId) { QV.savedName = v; return; }
+      X.api('qv-rename', { id: QV.savedId, name: v }).then(function (r) { QV.savedName = r.name; head(); X.toast('✏️ Renamed' + (PUB[QV.savedId] ? ' — the app shows the new name too' : '')); }).catch(function (e) { el.value = QV.savedName || ''; X.toast(e.message); });
+    };
     $('#qvBank').onchange = function () { QV.bank = this.value; QV.grp = 0; QV.bgs = {}; loadBank(QV.bank).then(function (all) { newSet(all); draw(); refreshBgs(); }); };
     $('#qvN').onchange = function () { QV.n = +this.value; loadBank(QV.bank).then(function (all) { newSet(all); draw(); refreshBgs(); }); };
     $('#qvGrp').onchange = function () { QV.grp = +this.value; loadBank(QV.bank).then(function (all) { newSet(all); draw(); refreshBgs(); }); };

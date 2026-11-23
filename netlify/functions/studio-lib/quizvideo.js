@@ -122,11 +122,28 @@ function cleanSave(d) {
 async function save(raw, email) {
   const data = cleanSave(raw.data); if (!data.qs.length) throw new HttpError(400, 'invalid', 'Add some questions first.');
   const id = /^q[a-z0-9]{6,20}$/.test(String(raw.id || '')) ? raw.id : 'q' + crypto.randomBytes(6).toString('hex');
-  const name = String(raw.name || '').replace(/\s+/g, ' ').trim().slice(0, 80) || (data.h1 || 'Quiz video');
+  let name = String(raw.name || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+  if (!name) name = await nextName(data.bank);   // 🔢 Life in the UK Test Quiz · 002, 003…
   const at = core.nowIso();
   await setJson(`hq/qv/saved/${id}`, { id, name, at, by: email || '', data });
   await core.cas(LIST, cur => { const l = ((cur && cur.items) || []).filter(x => x.id !== id); l.unshift({ id, name, at, bank: data.bank, n: data.qs.length, by: email || '' }); return { items: l.slice(0, 200) }; });
+  await require('./quizapp').rename(id, name).catch(() => {});   // the app shows the same name
   return { id, name, at };
+}
+const BASE = { lifeuk: 'Life in the UK Test Quiz', drive: 'UK Driving Theory Quiz' };
+async function nextName(bank) {
+  const items = await list(); let max = 0;
+  items.filter(x => (x.bank || 'lifeuk') === bank).forEach(x => { const m = /(\d{1,4})\s*$/.exec(String(x.name || '')); if (m && /·|#|-|quiz/i.test(String(x.name))) max = Math.max(max, parseInt(m[1], 10)); });
+  return `${BASE[bank] || BASE.lifeuk} · ${String(max + 1).padStart(3, '0')}`;
+}
+async function rename(id, raw) {
+  if (!/^q[a-z0-9]{6,20}$/.test(String(id || ''))) throw new HttpError(400, 'invalid', 'Which quiz?');
+  const name = String(raw || '').replace(/\s+/g, ' ').trim().slice(0, 80); if (!name) throw new HttpError(400, 'invalid', 'Give it a name.');
+  const s = await getJson(`hq/qv/saved/${id}`); if (!s) throw new HttpError(404, 'not_found', 'That saved quiz has gone.');
+  s.name = name; await setJson(`hq/qv/saved/${id}`, s);
+  await core.cas(LIST, cur => ({ items: ((cur && cur.items) || []).map(x => x.id === id ? Object.assign({}, x, { name }) : x) }));
+  await require('./quizapp').rename(id, name).catch(() => {});
+  return { id, name };
 }
 async function list() { const l = await getJson(LIST).catch(() => null); return (l && l.items) || []; }
 async function load(id) {
@@ -141,4 +158,4 @@ async function remove(id) {
   return { ok: true };
 }
 
-module.exports = { bgPrompts, bgPrompt, key, el, MODELS, status, speak, background, setBackground, savedBackgrounds, save, list, load, remove };
+module.exports = { rename, nextName, bgPrompts, bgPrompt, key, el, MODELS, status, speak, background, setBackground, savedBackgrounds, save, list, load, remove };
