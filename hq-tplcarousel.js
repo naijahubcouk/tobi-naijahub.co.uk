@@ -14,10 +14,10 @@
   var GREEN = '#057A44', FRAME = '#0A8A4C', INK = '#111111', BODY = '#33383F', GOLD = '#E0A21B', GREY = '#8A9099';
   var FH = "'Inter Tight', 'Inter', 'Helvetica Neue', Arial, sans-serif";
   var FB = "'Inter', 'Helvetica Neue', Arial, sans-serif";
-  var KINDS = { cover: '🎯 Cover', tip: '📌 Tip / point', quote: '💬 Quote', check: '✅ Checklist', stat: '🔢 Big number', myth: '❌✅ Myth vs fact', question: '❓ Question', steps: '1️⃣ Steps', end: '💚 Save & share' };
+  var KINDS = { cover: '🎯 Cover', tip: '📌 Tip / point', quote: '💬 Quote', check: '✅ Checklist', stat: '🔢 Big number', myth: '❌✅ Myth vs fact', question: '❓ Question', steps: '1️⃣ Steps', end: '💚 Save & share', ftlt: '🧵 Keep going (tangle)', ftlp: '🧵 Pick (follow the line)' };
   // what the two boxes mean for each kind of slide
   var LBL = { cover: ['Heading', 'Small text under it (optional)'], tip: ['Heading', 'Body text'], end: ['Heading', 'Small text under it (optional)'], quote: ['The quote', 'Who said it (optional)'], check: ['Title', 'The items — one per line'],
-    stat: ['The big number — e.g. £1,500 or 3 in 5', 'What the number means'], myth: ['❌ The myth', '✅ The fact'], question: ['The question', 'Answer options — one per line (optional; leave empty for “Tell us in the comments”)'], steps: ['Title', 'The steps — one per line'] };
+    stat: ['The big number — e.g. £1,500 or 3 in 5', 'What the number means'], myth: ['❌ The myth', '✅ The fact'], question: ['The question', 'Answer options — one per line (optional; leave empty for “Tell us in the comments”)'], steps: ['Title', 'The steps — one per line'], ftlt: ['Text', 'Little emoji under it (optional)'], ftlp: ['Big word — e.g. FOCUS', 'Message'] };
   var EXAMPLE = { quote: ['Hard work in the UK pays — **but rest is not a crime.**', 'Auntie Tobi'], check: ['Before you **move house**', 'Tell the council\nRedirect your post\nUpdate your GP\nTell DVLA your new address'],
     stat: ['£1,500', 'is how much the average family loses a year by not checking their **council tax band**'], myth: ['You must have a **credit card** to build credit in the UK', 'Paying phone, rent and bills on time also builds your credit score'],
     question: ['Which would you choose for **Jollof**?', 'Basmati rice\nLong grain rice\nParboiled rice'], steps: ['How to register with a **GP**', 'Find a GP near you on the NHS website\nFill in the GMS1 form\nTake ID and proof of address\nBook your first check-up'] };
@@ -188,7 +188,8 @@
   function loadPics(car) {
     var lk = car.look && car.look.kind === 'spec' && car.look.spec && car.look.spec.bg && car.look.spec.bg.type === 'image' ? car.look.spec.bg.img : '';
     var bgp = lk ? new Promise(function (ok) { if (lookImg(lk)) return ok(); var q = LIMG[lk]; q.im.addEventListener('load', ok, { once: true }); q.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); }) : Promise.resolve();
-    return Promise.all([bgp].concat(car.slides.map(function (sl) { return new Promise(function (ok) { if (!sl.pic || !sl.pic.img) return ok(); var im = picImg(sl.pic.img); if (im) return ok(); var p = PIC[sl.pic.img]; p.im.addEventListener('load', ok, { once: true }); p.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); }); }))); }
+    var stick = car.slides.filter(function (sl) { return sl.emoImg; }).map(function (sl) { return new Promise(function (ok) { if (picImg(sl.emoImg)) return ok(); var p = PIC[sl.emoImg]; p.im.addEventListener('load', ok, { once: true }); p.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); }); });
+    return Promise.all([bgp].concat(stick).concat(car.slides.map(function (sl) { return new Promise(function (ok) { if (!sl.pic || !sl.pic.img) return ok(); var im = picImg(sl.pic.img); if (im) return ok(); var p = PIC[sl.pic.img]; p.im.addEventListener('load', ok, { once: true }); p.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); }); }))); }
   function picDraw(ctx, pic, x, y, w, h, radius) {
     var im = picImg(pic.img); if (!im) return;
     var z = clamp(Number(pic.z) || 1, 1, 2.5), s = Math.max(w / im.naturalWidth, h / im.naturalHeight) * z, dw = im.naturalWidth * s, dh = im.naturalHeight * s;
@@ -213,6 +214,7 @@
   var LOOKS = [
     { id: 'white', name: 'Auntie Tobi White', sw: ['#FFFFFF', '#057A44'] },
     { id: 'purple', name: '💜 Bold Purple Pro', purple: true },
+    { id: 'ftl', name: '🧵 Follow the line', ftl: true },
     { id: 'green', name: 'Auntie Tobi Green', spec: baseSpec({ bg: { type: 'gradient', c1: '#057A44', c2: '#03532E' }, ink: '#FFFFFF', sub: '#E6F4EC', accent: '#FFB81C', hl: '#FFB81C', hlInk: '#0F1E36', font: { head: 'poppins' }, hlStyle: 'bar', shapes: 'circles' }) },
     { id: 'yellow', name: 'Bold Yellow', spec: baseSpec({ bg: { c1: '#FFC928' }, ink: '#111111', sub: '#2B2B2B', accent: '#111111', hl: '#FFFFFF', hlInk: '#111111', font: { head: 'archivo', caps: true }, hlStyle: 'bar', frame: { on: true, color: '#111111', width: 8, inset: 30, radius: 18 }, numbers: 'pill', shapes: 'dots' }) },
     { id: 'cream', name: 'Soft Cream', spec: baseSpec({ bg: { c1: '#F7F1E6' }, ink: '#2B2118', sub: '#5C4F42', accent: '#C2652A', hl: '#C2652A', font: { head: 'playfair', body: 'dmsans' }, hlStyle: 'color', align: 'center', shapes: 'blob', numbers: 'big' }) },
@@ -502,6 +504,127 @@
     ctx.restore();
     return { over: false, shrunk: false };
   }
+  // ── 🧵 Follow the line: one coloured line per pick runs from the cover's emoji, through a tangle, to that pick's slide ──
+  function isFtl(car) { return !!(car.look && car.look.kind === 'ftl'); }
+  var FTL = { bg: '#F2C6C9', ink: '#4A1525', hl: '#C8553D', sub: '#3A2A2E', head: 'playfair', body: 'dmsans', thick: 12, wig: 1, seed: 7, order: null, oneMore: true, oneMoreText: '(just one more swipe…)' };
+  var FTL_COLS = ['#5F7D5B', '#5B4A8A', '#E2B93B', '#C0392B', '#2E86AB', '#D35D8C'];
+  var FTL_HEAD = { playfair: ['Playfair Display (like the sample)', function (z) { return '900 ' + Math.round(z) + 'px "Playfair Display", Georgia, serif'; }], fraunces: ['Fraunces', function (z) { return '700 ' + Math.round(z) + 'px Fraunces, Georgia, serif'; }],
+    anton: ['Anton (tall)', function (z) { return '400 ' + Math.round(z) + 'px Anton, Arial, sans-serif'; }], archivo: ['Archivo Black', function (z) { return '400 ' + Math.round(z) + 'px "Archivo Black", Arial, sans-serif'; }],
+    poppins: ['Poppins', function (z) { return '800 ' + Math.round(z) + 'px Poppins, Arial, sans-serif'; }], caveat: ['Caveat (handwriting)', function (z) { return '700 ' + Math.round(z) + 'px Caveat, cursive'; }] };
+  var FTL_BODY = { dmsans: ['DM Sans', function (z, w) { return (w || 500) + ' ' + Math.round(z) + 'px "DM Sans", Inter, Arial, sans-serif'; }], inter: ['Inter', function (z, w) { return (w || 500) + ' ' + Math.round(z) + 'px Inter, Arial, sans-serif'; }],
+    poppins: ['Poppins', function (z, w) { return (w || 500) + ' ' + Math.round(z) + 'px Poppins, Arial, sans-serif'; }], playfair: ['Playfair Display', function (z) { return 'italic 900 ' + Math.round(z) + 'px "Playfair Display", Georgia, serif'; }] };
+  function ftlOf(car) { return Object.assign({}, FTL, (car.look && car.look.ftl) || {}); }
+  function ftlKind(sl) { return !sl ? '' : sl.kind === 'cover' || sl.kind === 'end' || sl.kind === 'ftlt' ? sl.kind : 'ftlp'; }
+  function ftlPicks(car) { var out = []; car.slides.forEach(function (s, j) { if (ftlKind(s) === 'ftlp') out.push(j); }); return out; }
+  function ftlRand(seed, a, b) { var h = (Math.imul(seed | 0, 2654435761) ^ Math.imul(a + 17, 40503) ^ Math.imul(b + 31, 69069)) | 0; h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+  // the order the lines sit on the cover (top to bottom) → which pick each one leads to
+  function ftlOrder(car) { var m = ftlPicks(car).length, o = (ftlOf(car).order || []).filter(function (x) { return x < m; }); for (var k = 0; k < m; k++) if (o.indexOf(k) < 0) o.push(k); return o.slice(0, m); }
+  function ftlCoverY(m, p) { return m <= 1 ? H * 0.5 : H * (0.30 + p * (0.42 / (m - 1))); }
+  function ftlEmojiAt() { return { x: W * 0.5, y: H * 0.23 }; }
+  // every line's points, in carousel-wide coordinates (slide j covers x from j·W to (j+1)·W)
+  function ftlPaths(car) {
+    var F = ftlOf(car), picks = ftlPicks(car), m = picks.length, ord = ftlOrder(car), cov = 0, out = [];
+    car.slides.forEach(function (s, j) { if (s.kind === 'cover' && !cov) cov = j; });
+    var band = {};   // after the tangle each line keeps to the top or bottom strip, away from the words
+    var bottomN = 0, topN = 0;
+    for (var k = 0; k < m; k++) { var top = ftlRand(F.seed, k, 99) < 0.34 && topN < 2; if (top) topN++; else bottomN++; band[k] = top ? 'top' : 'bot'; }
+    var laneY = function (k, j) { var r = ftlRand(F.seed, k, j * 7 + 3); return band[k] === 'top' ? H * (0.06 + r * 0.08) : H * (0.72 + r * 0.22); };
+    for (var kk = 0; kk < m; kk++) {
+      var dest = picks[kk], p = ord.indexOf(kk), y0 = ftlCoverY(m, p), pts = [[cov * W + W * 0.80, y0], [cov * W + W * 0.93, y0]], y = y0;
+      for (var j = cov + 1; j <= dest; j++) {
+        var x0 = j * W, sk = ftlKind(car.slides[j]), yIn = j === cov + 1 ? y0 : laneY(kk, j);
+        if (j > cov + 1) pts.push([x0, yIn]); else pts.push([x0, y0]);
+        if (j === dest) {   // arrive: up the left side and into the emoji
+          var e = ftlEmojiAt(), side = band[kk] === 'top' ? 0 : 1;
+          if (side) pts.push([x0 + W * 0.10, H * (0.55 + 0.1 * ftlRand(F.seed, kk, 5))]);
+          pts.push([x0 + W * 0.22, e.y + (side ? H * 0.04 : -H * 0.04)]); pts.push([x0 + W * 0.36, e.y]); pts.push([x0 + e.x, e.y]);
+          break;
+        }
+        var yOut = laneY(kk, j + 1), wig = F.wig;
+        if (sk === 'ftlt') {   // the tangle: wander, cross, maybe loop
+          var a = [0.28, 0.52, 0.76];
+          for (var q = 0; q < a.length; q++) {
+            var yy = H * (0.14 + 0.72 * ftlRand(F.seed, kk * 3 + q, j)), xx = x0 + W * a[q];
+            pts.push([xx, yy]);
+            if (q === 1 && ftlRand(F.seed, kk, j + 50) < 0.5) {   // a little loop
+              var R = 70 + 40 * ftlRand(F.seed, kk, j + 51);
+              pts.push([xx + R, yy - R * 0.9]); pts.push([xx + R * 0.1, yy - R * 1.8]); pts.push([xx - R * 0.8, yy - R * 0.9]); pts.push([xx + R * 0.4, yy + R * 0.15]);
+            }
+          }
+        } else {   // passing through a slide: stay in its strip, gentle wave
+          var mid = (yIn + yOut) / 2 + (ftlRand(F.seed, kk, j + 9) - 0.5) * H * 0.06 * wig;
+          mid = band[kk] === 'top' ? clamp(mid, H * 0.04, H * 0.15) : clamp(mid, H * 0.70, H * 0.96);
+          pts.push([x0 + W * 0.5, mid]);
+        }
+        y = yOut;
+      }
+      out.push({ k: kk, slide: dest, color: (car.slides[dest] && car.slides[dest].lc) || FTL_COLS[kk % FTL_COLS.length], pts: pts });
+    }
+    return out;
+  }
+  function ftlStroke(ctx, pts, w, color) {   // a smooth curve through the points (Catmull-Rom)
+    if (pts.length < 2) return;
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+      ctx.bezierCurveTo(p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6, p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6, p2[0], p2[1]);
+    }
+    ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+  }
+  function ftlEmoji(ctx, sl, x, y, size) {
+    var im = sl && sl.emoImg ? picImg(sl.emoImg) : null;
+    if (im) { var k = size / Math.max(im.naturalWidth, im.naturalHeight); ctx.drawImage(im, x - im.naturalWidth * k / 2, y - im.naturalHeight * k / 2, im.naturalWidth * k, im.naturalHeight * k); return; }
+    ctx.save(); ctx.font = Math.round(size * 0.86) + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText((sl && sl.emo) || '✨', x, y + size * 0.04); ctx.restore();
+  }
+  function drawFtl(ctx, car, i) {
+    var F = ftlOf(car), sl = car.slides[i] || { kind: 'ftlp', heading: '', body: '' }, kind = ftlKind(sl), e = eff(car, sl), HF = (FTL_HEAD[F.head] || FTL_HEAD.playfair)[1], BF = (FTL_BODY[F.body] || FTL_BODY.dmsans)[1];
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = F.bg; ctx.fillRect(0, 0, W, H);
+    var bp = boxPic(sl); if (bp && bp.mode === 'bg') picDraw(ctx, bp, 0, 0, W, H, 0);
+    // the lines (drawn for the whole carousel, shifted to this slide)
+    var paths = ftlPaths(car), thick = clamp(Number(F.thick) || 12, 4, 30);
+    ctx.save(); ctx.translate(-i * W, 0); paths.forEach(function (pp) { ftlStroke(ctx, pp.pts, thick, pp.color); }); ctx.restore();
+    var picks = ftlPicks(car), M = 120;
+    if (kind === 'cover') {
+      var ord = ftlOrder(car), m = picks.length, es = clamp(H * 0.36 / Math.max(1, m), 90, 160);
+      ord.forEach(function (k, p) { ftlEmoji(ctx, car.slides[picks[k]], W * 0.80, ftlCoverY(m, p), es); });
+      var cw = W * 0.56, hf = rtFit(ctx, sl.heading, HF, cw, H * 0.6, 118 * e.hs, 40, 1.02, false), bf = sl.body ? rtFit(ctx, sl.body, BF, cw, H * 0.2, 36 * e.bs, 20, 1.35, false) : null;
+      var tot = hf.h + (bf ? 30 + bf.h : 0), y = (H - tot) / 2;
+      rtDraw(ctx, hf, HF, M, y, cw, sl.align === 'center' ? 'center' : 'left', F.ink, F.hl); y += hf.h;
+      if (bf) rtDraw(ctx, bf, BF, M, y + 30, cw, sl.align === 'center' ? 'center' : 'left', F.sub, F.hl);
+    } else if (kind === 'ftlt') {
+      var hf2 = rtFit(ctx, sl.heading || 'Keep going…', BF, W * 0.8, 160, 54 * e.hs, 24, 1.2, false);
+      rtDraw(ctx, hf2, BF, W * 0.1, H * 0.78, W * 0.8, 'center', F.ink, F.hl);
+      if (sl.body) { ctx.fillStyle = F.ink; ctx.font = '60px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(sl.body.slice(0, 8), W / 2, H * 0.78 + hf2.h + 60); }
+    } else if (kind === 'ftlp') {
+      var em = ftlEmojiAt(); ftlEmoji(ctx, sl, em.x, em.y, 150);
+      var wW = W * 0.84, hf3 = rtFit(ctx, sl.heading, HF, wW, H * 0.2, 150 * e.hs, 40, 1.0, true), bw = W * 0.74, bf3 = sl.body ? rtFit(ctx, sl.body, BF, bw, H * 0.26, 48 * e.bs, 22, 1.38, false) : null;
+      var y3 = H * 0.355; rtDraw(ctx, hf3, HF, (W - wW) / 2, y3, wW, 'center', F.ink, F.hl); y3 += hf3.h + 34;
+      if (bf3) rtDraw(ctx, bf3, BF, (W - bw) / 2, y3, bw, 'center', F.sub, F.hl);
+      var last = picks[picks.length - 1] === i, hasEnd = car.slides.some(function (s) { return s.kind === 'end'; });
+      if (F.oneMore && last && hasEnd && F.oneMoreText) { var om = rtFit(ctx, F.oneMoreText, HF, W * 0.8, 120, 62, 26, 1.1, false); rtDraw(ctx, om, HF, W * 0.1, H - 70 - om.h, W * 0.8, 'center', F.ink, F.hl); }
+    } else {   // end slide
+      var hf4 = rtFit(ctx, sl.heading, HF, W * 0.8, H * 0.4, 110 * e.hs, 36, 1.04, false), bf4 = sl.body ? rtFit(ctx, sl.body, BF, W * 0.76, H * 0.25, 40 * e.bs, 20, 1.38, false) : null;
+      var tot4 = hf4.h + (bf4 ? 36 + bf4.h : 0), y4 = (H - tot4) / 2 - 30;
+      rtDraw(ctx, hf4, HF, W * 0.1, y4, W * 0.8, 'center', F.ink, F.hl); if (bf4) rtDraw(ctx, bf4, BF, W * 0.12, y4 + hf4.h + 36, W * 0.76, 'center', F.sub, F.hl);
+    }
+    if (car.handle !== false) { ctx.font = BF(26, 600); ctx.fillStyle = F.ink; ctx.globalAlpha = 0.75; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'; ctx.fillText('@auntietobi_uk', W - 60, H - 44); ctx.globalAlpha = 1; }
+    ctx.restore();
+    return { over: false, shrunk: false };
+  }
+  function ftlStarter() {
+    return { title: 'Pick an emoji — your word for this week', numbers: false, handle: true, swipe: true, swipeMode: 'off', caption: 'Pick an emoji and follow the line to find your word for this week 💚 Which one did you get? Tell me in the comments 👇🏾', hashtags: '#NigeriansInUK #AuntieTobi #MondayMotivation',
+      look: { kind: 'ftl', id: 'ftl', name: 'Follow the line', ftl: Object.assign({}, FTL, { order: [2, 0, 3, 1] }) },
+      slides: [
+        { kind: 'cover', heading: 'Pick an emoji & follow the line — here’s your **word for this week…**', body: '', align: 'left' },
+        { kind: 'ftlt', heading: 'Keep going…', body: '❤️', align: 'center' },
+        { kind: 'ftlp', heading: 'Focus', body: 'You don’t have to do everything this week. Just focus on **what matters most.**', emo: '🎯', lc: FTL_COLS[0], align: 'center' },
+        { kind: 'ftlp', heading: 'Courage', body: 'Do the thing you’ve been postponing. You may be **more ready than you think.**', emo: '🦁', lc: FTL_COLS[1], align: 'center' },
+        { kind: 'ftlp', heading: 'Peace', body: 'Not everything needs your reaction. **Protect your peace** this week.', emo: '🕊️', lc: FTL_COLS[2], align: 'center' },
+        { kind: 'ftlp', heading: 'Consistency', body: 'Small steps still count. **Keep showing up.** 💚', emo: '🌱', lc: FTL_COLS[3], align: 'center' },
+        { kind: 'end', heading: 'Which one did **you** pick?', body: 'Tell me in the comments 👇🏾 and save this for Monday 💚', align: 'center' }
+      ] };
+  }
   // 👉 the Swipe sign — one setting for every look: cover only / every slide but the last / off
   function swipeOf(car) {
     var m = car.swipeMode || (isSpec(car) ? (car.look.spec.swipe ? 'all' : 'off') : (car.swipe !== false ? 'cover' : 'off'));
@@ -542,7 +665,7 @@
     // the looks' own swipe text is switched off — drawSwipe draws the one the user chose
     var car = Object.assign({}, car0, { swipe: false });
     if (isSpec(car0)) car.look = Object.assign({}, car0.look, { spec: Object.assign({}, car0.look.spec, { swipe: false }) });
-    var sl0 = car.slides[i], r = sl0 && NEWK[sl0.kind] ? drawLayout(ctx, car, i) : isPurple(car) ? drawPurple(ctx, car, i) : isSpec(car) ? drawSpec(ctx, car, i) : drawWhite(ctx, car, i), sl = sl0;
+    var sl0 = car.slides[i], r = isFtl(car) ? drawFtl(ctx, car, i) : sl0 && NEWK[sl0.kind] ? drawLayout(ctx, car, i) : isPurple(car) ? drawPurple(ctx, car, i) : isSpec(car) ? drawSpec(ctx, car, i) : drawWhite(ctx, car, i), sl = sl0;
     drawSwipe(ctx, car0, i);
     if (sl && sl.deco && sl.deco.length) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); sl.deco.forEach(function (d) { drawDeco(ctx, d); }); ctx.restore(); }
     return r;
@@ -723,7 +846,7 @@
         '<textarea id="tnP" rows="9" placeholder="5 small ways to make life in the UK feel **less stressful!**\nPlan your **week on Sunday** | Check your shifts, bills and appointments for the week ahead.\nSet up **direct debits** | Never miss a bill again.\n..."></textarea></div>' +
       '<label class="chk" style="margin-top:10px"><input type="checkbox" id="tnE" checked> Add a “Save &amp; share” last slide</label>' +
       '<div class="err hidden" id="tnErr"></div>' +
-      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn ghost" id="tnX">Cancel</button><button class="btn ghost" id="tnBlank">Start blank</button><button class="btn primary" id="tnGo">✨ Write the slides</button></div>');
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn ghost" id="tnX">Cancel</button><button class="btn ghost" id="tnFtl">🧵 Follow the line</button><button class="btn ghost" id="tnBlank">Start blank</button><button class="btn primary" id="tnGo">✨ Write the slides</button></div>');
     var mode = 'ai', $ = function (q) { return s.querySelector(q); };
     Array.prototype.forEach.call(s.querySelectorAll('#tnTab [data-v]'), function (b) {
       b.onclick = function () {
@@ -734,6 +857,7 @@
       };
     });
     $('#tnX').onclick = function () { s.remove(); };
+    $('#tnFtl').onclick = function () { s.remove(); editor(ftlStarter(), true); };
     $('#tnBlank').onclick = function () {
       s.remove();
       var slides = [{ kind: 'cover', heading: 'Your hook goes **here!**', body: '', align: 'center' }, { kind: 'tip', heading: 'First **tip**', body: 'A short explanation of the tip.', align: 'left' }];
@@ -826,7 +950,11 @@
         '<select data-f="align" style="width:auto"><option value="center"' + (sl.align !== 'left' ? ' selected' : '') + '>Centre</option><option value="left"' + (sl.align === 'left' ? ' selected' : '') + '>Left</option></select>' +
         '<span class="cbtns"><button class="btn link" data-mv="-1" title="Move up">▲</button><button class="btn link" data-mv="1" title="Move down">▼</button><button class="btn link" data-dup title="Duplicate">⧉</button><button class="btn link" data-del title="Delete" style="color:#B42318">✕</button></span></div>' +
         '<label>' + (LBL[sl.kind] || LBL.tip)[0] + '</label><textarea data-f="heading" rows="2" maxlength="240">' + esc(sl.heading) + '</textarea>' +
-        '<label>' + (LBL[sl.kind] || LBL.tip)[1] + '</label><textarea data-f="body" rows="' + (/check|steps|question/.test(sl.kind) ? 5 : 3) + '" maxlength="600">' + esc(sl.body) + '</textarea>' +
+        '<label>' + (LBL[sl.kind] || LBL.tip)[1] + '</label><textarea data-f="body" rows="' + (/check|steps|question/.test(sl.kind) ? 5 : sl.kind === 'ftlt' ? 1 : 3) + '" maxlength="600">' + esc(sl.body) + '</textarea>' +
+        (isFtl(car) && ftlKind(sl) === 'ftlp' ? '<div class="row" style="gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:6px"><div><label>Emoji</label><input data-f="emo" value="' + esc(sl.emo || '') + '" maxlength="8" style="width:86px;font-size:24px;text-align:center"></div>' +
+          '<div><label>Line colour</label><input type="color" data-f="lc" value="' + esc(sl.lc || FTL_COLS[0]) + '" style="width:54px;height:40px;padding:0"></div>' +
+          '<div style="flex:1;min-width:180px"><label>…or your own picture / sticker</label><div class="row" style="gap:6px;align-items:center">' + (sl.emoImg ? '<img src="' + picSrc(sl.emoImg) + '" alt="" style="width:40px;height:40px;object-fit:contain"><button class="btn link" data-emodel>✕ Use the emoji</button>' : '') +
+          '<label class="btn ghost sm" style="margin:0;cursor:pointer">📷 Upload<input type="file" accept="image/png,image/webp,image/jpeg" data-emoup hidden></label></div></div></div>' : '') +
         '<details class="sopts" data-i="' + i + '"' + (openOpts[i] ? ' open' : '') + ' style="margin-top:10px"><summary style="cursor:pointer;font-weight:700;font-size:14px">⚙️ Slide options <span class="muted" style="font-weight:400">— ' + esc(optSummary(sl)) + '</span></summary>' +
           '<div class="f2" style="margin-top:6px"><div><label>Text style</label><select data-f="style"><option value="">Same as carousel</option>' + Object.keys(STYLES).map(function (k) { return '<option value="' + k + '"' + (sl.style === k ? ' selected' : '') + '>' + STYLES[k].name + '</option>'; }).join('') + '</select></div>' +
           '<div><label>Gold brush</label><select data-f="brush"><option value="">Same as carousel</option><option value="on"' + (sl.brush === 'on' ? ' selected' : '') + '>On</option><option value="off"' + (sl.brush === 'off' ? ' selected' : '') + '>Off</option></select></div></div>' +
@@ -839,7 +967,7 @@
           '<button class="btn link" data-reset style="margin-top:4px">↺ Reset this slide’s options</button></details>' + picHtml(sl, i) + decoHtml(sl, i) + '</div>';
     }
     // ── 🎨 the look of the whole carousel ──
-    function sw(l) { var s = l.spec; if (l.purple) return 'linear-gradient(135deg,#fff 0 55%,#4B14A6 55%)'; return s ? 'linear-gradient(135deg,' + s.bg.c1 + ' 0 55%,' + s.accent + ' 55%)' : 'linear-gradient(135deg,#fff 0 55%,#057A44 55%)'; }
+    function sw(l) { var s = l.spec; if (l.purple) return 'linear-gradient(135deg,#fff 0 55%,#4B14A6 55%)'; if (l.ftl) return 'linear-gradient(135deg,#F2C6C9 0 55%,#5B4A8A 55%)'; return s ? 'linear-gradient(135deg,' + s.bg.c1 + ' 0 55%,' + s.accent + ' 55%)' : 'linear-gradient(135deg,#fff 0 55%,#057A44 55%)'; }
     function whitePanel() {
       return '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:10px"><label class="chk"><input type="checkbox" id="teN"' + (car.numbers !== false ? ' checked' : '') + '> Number the tips (01, 02…)</label>' +
         '<label class="chk"><input type="checkbox" id="teH"' + (car.handle !== false ? ' checked' : '') + '> Show @auntietobi_uk</label>' +
@@ -884,13 +1012,13 @@
           '<div class="lbl">Where</div>' + g('pos', [['br', '↘ Bottom right'], ['bc', '↓ Bottom centre'], ['mr', '→ Middle right edge']])) +
         '<div class="muted" style="font-size:12.5px;margin-top:4px">Never shows on the last slide.</div></details>';
     }
-    function lookName() { return isSpec(car) ? car.look.name : isPurple(car) ? 'Bold Purple Pro' : 'Auntie Tobi White'; }
+    function lookName() { return isSpec(car) ? car.look.name : isPurple(car) ? 'Bold Purple Pro' : isFtl(car) ? 'Follow the line' : 'Auntie Tobi White'; }
     function renderLook() {
-      var curId = isSpec(car) ? (car.look.id || '') : isPurple(car) ? 'purple' : 'white', box = $('#teLook'), opn = {}; Array.prototype.forEach.call(box.querySelectorAll('.lsec'), function (d) { var t = d.querySelector('summary'); if (t) opn[t.textContent.slice(0, 8)] = d.open; });
+      var curId = isSpec(car) ? (car.look.id || '') : isPurple(car) ? 'purple' : isFtl(car) ? 'ftl' : 'white', box = $('#teLook'), opn = {}; Array.prototype.forEach.call(box.querySelectorAll('.lsec'), function (d) { var t = d.querySelector('summary'); if (t) opn[t.textContent.slice(0, 8)] = d.open; });
       box.innerHTML = '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>🎨 Look</b><span class="muted" style="font-size:13px">— now: <b>' + X.esc(lookName()) + '</b></span></div>' +
         '<div class="chipbar" style="margin-top:8px">' + LOOKS.map(function (l) { return '<button class="chip" data-look="' + l.id + '" aria-pressed="' + (curId === l.id) + '"><i class="lsw" style="background:' + sw(l) + '"></i>' + l.name + '</button>'; }).join('') +
         '<button class="chip" id="teMy">⭐ My styles</button><label class="chip" style="cursor:pointer;margin:0">🎨 Match a style…<input type="file" id="teRef" accept="image/jpeg,image/png,image/webp" multiple hidden></label>' + (isSpec(car) ? '<button class="chip" id="teSaveLook">💾 Save this look</button>' : '') + '</div>' +
-        '<div class="muted" id="teLookMsg" style="font-size:12.5px;margin-top:4px"></div>' + (isSpec(car) ? specPanel() : isPurple(car) ? purplePanel() : whitePanel()) + swipePanel() +
+        '<div class="muted" id="teLookMsg" style="font-size:12.5px;margin-top:4px"></div>' + (isSpec(car) ? specPanel() : isPurple(car) ? purplePanel() : isFtl(car) ? ftlPanel() : whitePanel()) + swipePanel() +
         '<div class="muted" style="font-size:12.5px;margin-top:8px">Put highlighted words in <b>**double stars**</b>. Press Enter in a heading to choose where a line breaks.</div>';
       Array.prototype.forEach.call(box.querySelectorAll('.lsec'), function (d) { var t = d.querySelector('summary'), k = t ? t.textContent.slice(0, 8) : ''; if (opn[k] !== undefined) d.open = opn[k]; });
       bindLook();
@@ -898,7 +1026,7 @@
     function lookChanged(full) { mark(); if (full) renderLook(); fontsReady().then(function () { paint(); paintThumbs(); }); paint(); paintThumbs(); }
     function bindLook() {
       var box = $('#teLook'), q = function (s) { return box.querySelector(s); }, qa = function (s) { return Array.prototype.slice.call(box.querySelectorAll(s)); };
-      qa('[data-look]').forEach(function (b) { b.onclick = function () { var l = LOOKS.filter(function (x) { return x.id === b.dataset.look; })[0]; car.look = l.purple ? { kind: 'purple', id: 'purple', name: 'Bold Purple Pro', purple: Object.assign({}, PURPLE) } : l.spec ? { kind: 'spec', id: l.id, name: l.name, styleId: '', spec: JSON.parse(JSON.stringify(l.spec)) } : null; lookChanged(true); paintSlides(); setSel(Math.min(sel, car.slides.length - 1)); }; });
+      qa('[data-look]').forEach(function (b) { b.onclick = function () { var l = LOOKS.filter(function (x) { return x.id === b.dataset.look; })[0]; if (l.ftl) { toFtl(); lookChanged(true); paintSlides(); setSel(0); paintThumbs(); return; } car.look = l.purple ? { kind: 'purple', id: 'purple', name: 'Bold Purple Pro', purple: Object.assign({}, PURPLE) } : l.spec ? { kind: 'spec', id: l.id, name: l.name, styleId: '', spec: JSON.parse(JSON.stringify(l.spec)) } : null; lookChanged(true); paintSlides(); setSel(Math.min(sel, car.slides.length - 1)); }; });
       q('#teMy').onclick = mySheet;
       qa('[data-swp]').forEach(function (b) { b.onclick = function () { var o = swipeOf(car), k = b.dataset.swp; car.swipeMode = o.mode; car.swipeStyle = o.style; car.swipePos = o.pos; car['swipe' + k.charAt(0).toUpperCase() + k.slice(1)] = b.dataset.v; if (k === 'mode') car.swipe = b.dataset.v !== 'off'; lookChanged(true); }; });
       q('#teRef').onchange = async function () {
@@ -914,10 +1042,11 @@
         X.api('sc-style-save', { id: car.look.styleId || '', name: nm, spec: car.look.spec }).then(function (r) { car.look.styleId = r.style.id; car.look.name = r.style.name; car.look.id = ''; STY = r.styles; mark(); renderLook(); X.toast('💾 Saved to ⭐ My styles'); }).catch(function (e) { X.toast(e.message); });
       };
       if (!isSpec(car)) {
-        q('#teN').onchange = function () { car.numbers = this.checked; lookChanged(); };
+        if (q('#teN')) q('#teN').onchange = function () { car.numbers = this.checked; lookChanged(); };
         q('#teH').onchange = function () { car.handle = this.checked; lookChanged(); };
         if (q('#teB')) q('#teB').onchange = function () { car.brush = this.checked; lookChanged(); };
         if (isPurple(car)) bindPurple(q, qa);
+        if (isFtl(car)) bindFtl(q, qa);
         qa('#teSt [data-v]').forEach(function (b) { b.onclick = function () { car.style = b.dataset.v; qa('#teSt [data-v]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); lookChanged(); }; });
         var sizeUi = function () { q('#teHs').value = Math.round((car.hs || 1) * 100); q('#teBs').value = Math.round((car.bs || 1) * 100); q('#teHsV').textContent = pct(car.hs); q('#teBsV').textContent = pct(car.bs); };
         q('#teHs').oninput = function () { car.hs = Number(this.value) / 100; sizeUi(); lookChanged(); };
@@ -960,7 +1089,7 @@
             '<div class="f2" style="margin-top:4px"><div><div class="lbl" style="margin:0">Size</div><input type="range" data-ds="' + k + '" min="20" max="400" value="' + Math.round((d.s || 1) * 100) + '"></div><div><div class="lbl" style="margin:0">Turn</div><input type="range" data-dr="' + k + '" min="-180" max="180" value="' + Math.round(d.r || 0) + '"></div></div></div>';
         }).join('') + (ds.length ? '<div class="muted" style="font-size:12.5px;margin-top:6px">✋ Drag them on the big preview to move them.</div>' : '') + '</details>';
     }
-    function decoColour() { return isSpec(car) ? car.look.spec.accent : isPurple(car) ? pur(car).acc : '#057A44'; }
+    function decoColour() { return isSpec(car) ? car.look.spec.accent : isPurple(car) ? pur(car).acc : isFtl(car) ? ftlOf(car).hl : '#057A44'; }
     function bindDeco(el, i) {
       var d = el.querySelector('.sdeco'); if (!d) return; d.addEventListener('toggle', function () { openDeco[i] = d.open; });
       var sl = car.slides[i], re = function () { mark(); paintSlides(); setSel(i); paintThumbs(); }, live = function () { mark(); paint(); paintThumbs(); };
@@ -1114,6 +1243,47 @@
     function usePic(i, id, msg) { if (cutPic(car.slides[i])) return idToData(id).then(function (du) { return cutFrom(i, du, id, msg); }).catch(function (e) { msg(''); X.toast(e.message || 'Couldn’t remove the background.'); }); setPic(i, id); }
     // 💜 Bold Purple Pro look settings
     var NPOS = [['auto', 'With the words'], ['tl', '↖ Top left'], ['tc', '⬆ Top middle'], ['tr', '↗ Top right'], ['bl', '↙ Bottom left'], ['bc', '⬇ Bottom middle'], ['br', '↘ Bottom right']];
+    // 🧵 Follow the line — look settings
+    function ftlPanel() {
+      var F = ftlOf(car), col = function (k, l) { return '<label class="sccol"><input type="color" data-fcol="' + k + '" value="' + F[k] + '"><span>' + l + '</span></label>'; };
+      var sel = function (k, opts) { return '<select data-fsel="' + k + '" style="width:auto">' + Object.keys(opts).map(function (x) { return '<option value="' + x + '"' + (F[k] === x ? ' selected' : '') + '>' + opts[x][0] + '</option>'; }).join('') + '</select>'; };
+      var n = ftlPicks(car).length;
+      return '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:10px"><label class="chk"><input type="checkbox" id="teH"' + (car.handle !== false ? ' checked' : '') + '> Show @auntietobi_uk</label>' +
+        '<label class="chk"><input type="checkbox" data-fchk="oneMore"' + (F.oneMore ? ' checked' : '') + '> Line on the slide before the last</label></div>' +
+        '<details class="lsec" open style="margin-top:8px"><summary>🧵 Lines</summary>' +
+          '<div class="f2" style="margin-top:6px"><div><div class="lbl">Thickness <span class="muted">' + Math.round(F.thick) + '</span></div><input type="range" data-frng="thick" min="4" max="30" step="1" value="' + F.thick + '"></div>' +
+          '<div><div class="lbl">Wiggle <span class="muted">' + Math.round(F.wig * 100) + '%</span></div><input type="range" data-frng="wig" min="0" max="250" step="10" value="' + Math.round(F.wig * 100) + '"></div></div>' +
+          '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn ghost sm" id="ftShuf">🔀 Shuffle which line leads where</button><button class="btn ghost sm" id="ftTang">↻ New tangle</button><button class="btn ghost sm" id="ftAdd"' + (n >= 6 ? ' disabled' : '') + '>➕ Add a pick</button></div>' +
+          '<div class="muted" style="font-size:12.5px;margin-top:6px">' + n + ' pick' + (n === 1 ? '' : 's') + ' (2–6 work best). Each pick’s emoji, line colour, big word and message are on its slide on the left.</div></details>' +
+        '<details class="lsec" open><summary>🎨 Colours & fonts</summary><div class="sccols" style="margin-top:6px">' + col('bg', 'Background') + col('ink', 'Headings') + col('hl', 'Highlighted words') + col('sub', 'Messages') + '</div>' +
+          '<div class="f2" style="margin-top:6px"><div><div class="lbl">Heading font</div>' + sel('head', FTL_HEAD) + '</div><div><div class="lbl">Message font</div>' + sel('body', FTL_BODY) + '</div></div>' +
+          '<div class="f2" style="margin-top:6px"><div><div class="lbl">Heading size <span id="teHsV"></span></div><input type="range" id="teHs" min="60" max="140" step="5"></div><div><div class="lbl">Message size <span id="teBsV"></span></div><input type="range" id="teBs" min="60" max="140" step="5"></div></div></details>' +
+        '<div class="f2" style="margin-top:6px"><div><div class="lbl">Line on the slide before the last</div><input data-ftxt="oneMoreText" value="' + X.esc(F.oneMoreText) + '"></div><div></div></div>' +
+        '<div class="muted" style="font-size:12.5px;margin-top:6px">💡 Background photo: open 🖼️ Picture on any slide → “Full background”.</div>';
+    }
+    function bindFtl(q, qa) {
+      var F = car.look.ftl = Object.assign({}, FTL, car.look.ftl || {}), re = function (full) { car.look.ftl = F; lookChanged(full); };
+      qa('[data-fcol]').forEach(function (x) { x.oninput = function () { F[x.dataset.fcol] = x.value.toUpperCase(); re(); }; });
+      qa('[data-fsel]').forEach(function (x) { x.onchange = function () { F[x.dataset.fsel] = x.value; re(); }; });
+      qa('[data-fchk]').forEach(function (x) { x.onchange = function () { F[x.dataset.fchk] = x.checked; re(); }; });
+      qa('[data-ftxt]').forEach(function (x) { x.oninput = function () { F[x.dataset.ftxt] = x.value.slice(0, 60); re(); }; });
+      qa('[data-frng]').forEach(function (x) { x.oninput = function () { F[x.dataset.frng] = x.dataset.frng === 'wig' ? Number(x.value) / 100 : Number(x.value); var s = x.previousElementSibling && x.previousElementSibling.querySelector('.muted'); if (s) s.textContent = x.dataset.frng === 'wig' ? x.value + '%' : x.value; re(); }; });
+      q('#ftShuf').onclick = function () { var o = ftlOrder(car), was = o.join(); for (var t = 0; t < 20 && o.join() === was; t++) for (var k = o.length - 1; k > 0; k--) { var r = Math.floor(Math.random() * (k + 1)), tmp = o[k]; o[k] = o[r]; o[r] = tmp; } F.order = o; re(); paintThumbs(); };
+      q('#ftTang').onclick = function () { F.seed = Math.floor(Math.random() * 1e6); re(); paintThumbs(); };
+      q('#ftAdd').onclick = function () {
+        var n = ftlPicks(car).length, at = car.slides.length; car.slides.forEach(function (s, j) { if (s.kind === 'end') at = Math.min(at, j); });
+        car.slides.splice(at, 0, { kind: 'ftlp', heading: 'New pick', body: 'Your message for this pick.', emo: ['⭐', '🌍', '🔥', '🫶🏾', '☀️', '🎉'][n % 6], lc: FTL_COLS[n % FTL_COLS.length], align: 'center' });
+        car.look.ftl = F; mark(); paintSlides(); setSel(at); paintThumbs(); renderLook();
+      };
+    }
+    // turn any carousel into a Follow-the-line one: needs a cover, a "Keep going" slide, and an emoji + colour on each pick
+    function toFtl() {
+      car.look = { kind: 'ftl', id: 'ftl', name: 'Follow the line', ftl: Object.assign({}, FTL, (car.look && car.look.ftl) || {}) };
+      if (!car.slides.some(function (s) { return s.kind === 'cover'; })) car.slides.unshift({ kind: 'cover', heading: 'Pick an emoji & **follow the line…**', body: '', align: 'left' });
+      if (!car.slides.some(function (s) { return s.kind === 'ftlt'; })) { var c = 0; car.slides.forEach(function (s, j) { if (s.kind === 'cover' && !c) c = j; }); car.slides.splice(c + 1, 0, { kind: 'ftlt', heading: 'Keep going…', body: '❤️', align: 'center' }); }
+      var k = 0; car.slides.forEach(function (s) { if (ftlKind(s) === 'ftlp') { if (!s.emo && !s.emoImg) s.emo = ['🎯', '🦁', '🕊️', '🌱', '⭐', '🔥'][k % 6]; if (!s.lc) s.lc = FTL_COLS[k % FTL_COLS.length]; k++; } });
+      car.swipeMode = car.swipeMode || 'off';
+    }
     function purplePanel() {
       var P = pur(car), sg = function (k, opts) { var cur = k === 'num' ? ({ left: 'bl', center: 'bc', right: 'br' }[P.num] || P.num) : P[k]; return '<div class="scseg">' + opts.map(function (o) { return '<button data-ppseg="' + k + '" data-v="' + o[0] + '" aria-pressed="' + (cur === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>'; };
       var col = function (k, l) { return '<label class="sccol"><input type="color" data-ppcol="' + k + '" value="' + P[k] + '"><span>' + l + '</span></label>'; };
@@ -1154,6 +1324,7 @@
       };
     }
     function setPic(i, img) { var sl = car.slides[i], old = sl.pic || {}; sl.pic = Object.assign({ mode: 'bg', fade: 0.7, size: 0.3, z: 1, fx: 0.5, fy: 0.5 }, old.img && old.mode !== 'cut' ? old : {}, { img: img }); delete sl.pic.copied; openPic[i] = true; mark(); paintSlides(); setSel(i); paintThumbs(); }
+    function pngShrink(file, max) { return new Promise(function (ok, bad) { var u = URL.createObjectURL(file), im = new Image(); im.onload = function () { var k = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); ok(c.toDataURL('image/png')); }; im.onerror = function () { bad(new Error('Couldn’t open that picture')); }; im.src = u; }); }
     function shrinkPic(file, max) { return new Promise(function (ok, bad) { var u = URL.createObjectURL(file), im = new Image(); im.onload = function () { var k = Math.min(1, (max || 1600) / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); ok(c.toDataURL('image/jpeg', 0.88)); }; im.onerror = function () { bad(new Error('That photo didn’t open.')); }; im.src = u; }); }
     function bindPic(el, i) {
       var d = el.querySelector('.spic'); if (!d) return; d.addEventListener('toggle', function () { openPic[i] = d.open; });
@@ -1196,6 +1367,8 @@
             mark(); paint(); paintThumbs();
           });
         });
+        if (el.querySelector('[data-emoup]')) el.querySelector('[data-emoup]').onchange = function () { var f = this.files && this.files[0]; if (!f) return; pngShrink(f, 500).then(function (d) { return X.api('img', { dataUrl: d }); }).then(function (r) { car.slides[i].emoImg = r.id; mark(); paintSlides(); setSel(i); paintThumbs(); }).catch(function (e) { X.toast(e.message || 'Couldn’t add that picture'); }); };
+        if (el.querySelector('[data-emodel]')) el.querySelector('[data-emodel]').onclick = function () { delete car.slides[i].emoImg; mark(); paintSlides(); setSel(i); paintThumbs(); };
         el.querySelector('[data-mv="-1"]').onclick = function () { if (i > 0) { var a = car.slides.splice(i, 1)[0]; car.slides.splice(i - 1, 0, a); sel = i - 1; mark(); paintSlides(); setSel(sel); paintThumbs(); } };
         el.querySelector('[data-mv="1"]').onclick = function () { if (i < car.slides.length - 1) { var a = car.slides.splice(i, 1)[0]; car.slides.splice(i + 1, 0, a); sel = i + 1; mark(); paintSlides(); setSel(sel); paintThumbs(); } };
         var det = el.querySelector('.sopts'); det.addEventListener('toggle', function () { openOpts[i] = det.open; });

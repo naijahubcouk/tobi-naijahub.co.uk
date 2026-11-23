@@ -18,7 +18,7 @@ const gen = require('./generate');
 
 const KEY = 'hq/tplcars';
 const MAX = 300;
-const KINDS = ['cover', 'tip', 'end', 'quote', 'check', 'stat', 'myth', 'question', 'steps'];
+const KINDS = ['cover', 'tip', 'end', 'quote', 'check', 'stat', 'myth', 'question', 'steps', 'ftlt', 'ftlp'];
 const STYLES = ['classic', 'condensed', 'friendly', 'elegant', 'hand'];
 const scale = (v, lo, hi) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.round(Math.min(hi, Math.max(lo, n)) * 100) / 100 : 1; };
 const multi = (s, n) => String(s == null ? '' : s).replace(/\r/g, '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim().slice(0, n);
@@ -40,6 +40,10 @@ function cleanSlide(x) {
     ...(['auto', 'left', 'center', 'right'].includes(x.hpos) ? { hpos: x.hpos } : {}),
     ...(NPOS.includes(x.npos) ? { npos: x.npos } : {}),
     ...(cleanPic(x.pic) ? { pic: cleanPic(x.pic) } : {}),
+    // 🧵 Follow the line: the pick's emoji (or sticker picture) and its line colour
+    ...(typeof x.emo === 'string' && x.emo.trim() ? { emo: [...x.emo.trim()].slice(0, 8).join('') } : {}),
+    ...(/^#[0-9a-f]{6}$/i.test(String(x.lc || '')) ? { lc: x.lc } : {}),
+    ...(/^i[a-z0-9]{6,30}$/.test(String(x.emoImg || '')) ? { emoImg: x.emoImg } : {}),
     ...(cleanDeco(x.deco).length ? { deco: cleanDeco(x.deco) } : {}),
   };
 }
@@ -70,6 +74,13 @@ function cleanLook(l) {
       btn: cleanText(P.btn, 40), handle: cleanText(P.handle, 40), icons: P.icons !== false, pattern: P.pattern !== false,
       brand: typeof P.brand === 'string' ? cleanText(P.brand, 40) : 'Auntie Tobi', brandOn: P.brandOn !== false,
       vpos: ['top', 'middle', 'bottom'].includes(P.vpos) ? P.vpos : 'top', hpos: ['auto', 'left', 'center', 'right'].includes(P.hpos) ? P.hpos : 'auto' } };
+  }
+  if (l && typeof l === 'object' && l.kind === 'ftl') {   // 🧵 Follow the line
+    const F = l.ftl && typeof l.ftl === 'object' ? l.ftl : {}, hex = (v, d) => /^#[0-9a-f]{6}$/i.test(String(v || '')) ? v : d, num = (v, lo, hi, d) => { const x = Number(v); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : d; };
+    return { kind: 'ftl', id: 'ftl', name: 'Follow the line', ftl: { bg: hex(F.bg, '#F2C6C9'), ink: hex(F.ink, '#4A1525'), hl: hex(F.hl, '#C8553D'), sub: hex(F.sub, '#3A2A2E'),
+      head: ['playfair', 'fraunces', 'anton', 'archivo', 'poppins', 'caveat'].includes(F.head) ? F.head : 'playfair', body: ['dmsans', 'inter', 'poppins', 'playfair'].includes(F.body) ? F.body : 'dmsans',
+      thick: num(F.thick, 4, 30, 12), wig: num(F.wig, 0, 2.5, 1), seed: Math.floor(num(F.seed, 0, 1e7, 7)), order: Array.isArray(F.order) ? F.order.slice(0, 6).map(v => Math.floor(num(v, 0, 5, 0))) : null,
+      oneMore: F.oneMore !== false, oneMoreText: cleanText(F.oneMoreText, 60) } };
   }
   if (!l || typeof l !== 'object' || l.kind !== 'spec') return null;
   return { kind: 'spec', name: cleanText(l.name, 40) || 'My look', styleId: String(l.styleId || '').slice(0, 40), spec: require('./stylecar').cleanSpec(l.spec) };
