@@ -219,15 +219,15 @@
   }
   function drawBiz(ctx, it, im, p) {
     drawPhoto(ctx, im, it.pos, it.name);
-    var a = '@' + String(it.handle || '').replace(/^@/, ''), b = line(p, it);
-    var s = 50; ctx.font = '700 ' + s + 'px ' + FT;
-    var tw = Math.max(ctx.measureText(a).width, b ? ctx.measureText(b).width : 0);
-    if (tw > W - 140) { s = Math.floor(s * (W - 140) / tw); ctx.font = '700 ' + s + 'px ' + FT; tw = Math.max(ctx.measureText(a).width, b ? ctx.measureText(b).width : 0); }
-    var bw = Math.max(W * 0.62, tw + 76), bh = (b ? 2 : 1) * s * 1.3 + 46, bx = 26, by = H - bh - 30;
+    var a = '@' + String(it.handle || '').replace(/^@/, ''), B = line(p, it).split(' · ').filter(Boolean);
+    var s = 50, meas = function () { return Math.max.apply(null, [a].concat(B).map(function (t) { return ctx.measureText(t).width; })); }; ctx.font = '700 ' + s + 'px ' + FT;
+    var tw = meas();
+    if (tw > W - 140) { s = Math.floor(s * (W - 140) / tw); ctx.font = '700 ' + s + 'px ' + FT; tw = meas(); }
+    var bw = Math.max(W * 0.62, tw + 76), bh = (1 + B.length) * s * 1.3 + 46, bx = 26, by = H - bh - 30;
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.2)'; ctx.shadowBlur = 18; ctx.fillStyle = '#fff'; ctx.fillRect(bx, by, bw, bh); ctx.restore();
     ctx.lineWidth = 7; ctx.strokeStyle = GREEN; ctx.strokeRect(bx + 3.5, by + 3.5, bw - 7, bh - 7);
     ctx.fillStyle = INK; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
-    ctx.fillText(a, bx + 36, by + 23 + s * 0.65); if (b) ctx.fillText(b, bx + 30, by + 23 + s * 1.95);
+    ctx.fillText(a, bx + 36, by + 23 + s * 0.65); B.forEach(function (t, k) { ctx.fillText(t, bx + 30, by + 23 + s * (1.95 + 1.3 * k)); });
   }
   // 🛍️ product slide: photo + white box with the product name, price (if on) and @handle
   function drawProd(ctx, it, im, p) {
@@ -384,7 +384,7 @@
         : '<div><label>Title</label><input id="deL1" value="' + esc(p.l1) + '" placeholder="Nigerian Caterers"><input id="deL2" value="' + esc(p.l2) + '" placeholder="in the UK" style="margin-top:6px"></div>') +
       '<div class="row" style="gap:8px;align-items:center"><label style="margin:0">Part</label><input id="dePt" value="' + pt(p) + '" maxlength="6" style="width:80px;text-transform:uppercase" aria-label="Part — type 3 or III" title="Type 3 or III"><select id="dePw" style="width:auto" aria-label="How it shows in the title">' + [['part', '… – Part ' + pt(p)], ['bare', '… ' + pt(p) + ' (no “Part”)'], ['none', 'No number at all']].map(function (o) { var on = p.noPart ? o[0] === 'none' : p.bare ? o[0] === 'bare' : o[0] === 'part'; return '<option value="' + o[0] + '"' + (on ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select><span class="muted" style="font-size:12.5px">type 3 or III</span></div>' +
       (isMkt(p) ? '<label style="margin:0;display:flex;align-items:center;gap:6px;font-weight:600"><input type="checkbox" id="dePrice"' + (p.showPrice !== false ? ' checked' : '') + ' style="width:18px;height:18px"> Show prices on the slides</label><label style="margin:0;display:flex;align-items:center;gap:6px;font-weight:600"><input type="checkbox" id="deTown"' + (p.showTown ? ' checked' : '') + ' style="width:18px;height:18px"> Show the seller’s town</label>' : '') +
-      (!isMkt(p) ? '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><label for="deLine" style="margin:0">Under each @handle</label><select id="deLine" style="width:auto">' + [['town', '📍 Town only'], ['cat', 'Category only'], ['both', 'Category · 📍 Town'], ['none', 'Nothing (just the @handle)']].map(function (o) { return '<option value="' + o[0] + '"' + ((p.line || (isCity(p) ? 'cat' : isGen(p) ? 'both' : 'town')) === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' : '') +
+      (!isMkt(p) ? '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><label for="deLine" style="margin:0">Under each @handle</label><select id="deLine" style="width:auto">' + [['town', '📍 Town only'], ['cat', 'Category only'], ['both', 'Category + 📍 Town (2 lines)'], ['none', 'Nothing (just the @handle)']].map(function (o) { return '<option value="' + o[0] + '"' + ((p.line || (isCity(p) ? 'cat' : isGen(p) ? 'both' : 'town')) === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' : '') +
       '<button class="btn ghost sm" data-open="-1">📷 Cover photo &amp; position</button></div></div></div>' +
       '<div class="card" style="padding:14px 16px;margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>' + (isMkt(p) ? '🛍️ Products (' : '🏪 Businesses (') + p.items.length + ')</b><div class="row" style="gap:6px"><button class="btn ghost sm" id="deAuto">' + (isGen(p) ? '⭐ Fill with Club members' : '✨ Fill to 10') + '</button><button class="btn ghost sm" id="deAdd">＋ Add</button></div></div>' +
       '<p class="muted" style="font-size:12.5px;margin:4px 0 10px">' + (isMkt(p) ? 'Up to 12 products. Tap a slide to change the photo, product name, price or @handle. The product’s Marketplace photo is used unless you upload another.</p>' : isGen(p) ? 'Any businesses you like, up to 12. Tap a slide to change the photo, @handle, category or town.' : isCity(p) ? 'One business per category. Tap a slide to change the photo, @handle or category.' : 'Tap a slide to change the photo, @handle or town.') + (isMkt(p) ? '' : ' For the best slides, upload a photo from their Instagram.</p>') +
