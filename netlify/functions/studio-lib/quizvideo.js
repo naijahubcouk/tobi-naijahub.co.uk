@@ -72,19 +72,25 @@ async function background(raw) {
   if (!(qid > 0 && qid < 5000)) throw new HttpError(400, 'invalid', 'Which question?');
   const slot = `hq/qv/bg/${bank}-${qid}`;
   if (!raw.fresh) { const hit = await getJson(slot).catch(() => null); if (hit && hit.img) return { img: hit.img, cached: true }; }
-  const q = String(raw.q || '').slice(0, 300), a = String(raw.a || '').slice(0, 120), hint = String(raw.hint || '').slice(0, 300);
-  const prompt = [
+  const prompt = bgPrompt(bank, raw.q, raw.a, raw.hint);
+  const url = await require('./eventmedia').generateImage(prompt, '9:16');
+  const img = await require('./hq').saveImage(url);
+  await setJson(slot, { img, at: core.nowIso() });
+  return { img, cached: false };
+}
+// 📋 the exact words sent to the image AI — also shown in HQ so pictures can be made outside HQ for free
+function bgPrompt(bank, q0, a0, h0) {
+  bank = BANKS[bank] ? bank : 'lifeuk';
+  const q = String(q0 || '').slice(0, 300), a = String(a0 || '').slice(0, 120), hint = String(h0 || '').slice(0, 300);
+  return [
     'A beautiful, photorealistic vertical (9:16) background photo for a social media quiz video about the ' + BANKS[bank] + '.',
     'The scene should clearly suggest the topic of this question, without giving away the answer in words: "' + q + '"' + (a ? ' (the topic is: ' + a + ')' : '') + '.',
     hint ? 'Scene idea: ' + hint + '.' : '',
     'Set in the UK where it fits. Cinematic, warm, rich colours, soft depth of field, slightly moody sky. The top quarter and the middle should be calm and uncluttered so white text can sit on top.',
     'ABSOLUTELY NO text, letters, numbers, signs with writing, logos, watermarks or captions anywhere in the image. No close-up faces.',
   ].filter(Boolean).join(' ');
-  const url = await require('./eventmedia').generateImage(prompt, '9:16');
-  const img = await require('./hq').saveImage(url);
-  await setJson(slot, { img, at: core.nowIso() });
-  return { img, cached: false };
 }
+function bgPrompts(raw) { return { prompts: (Array.isArray(raw.qs) ? raw.qs : []).slice(0, 40).map(x => bgPrompt(raw.bank, x && x.q, x && x.a)) }; }
 async function setBackground(raw) {
   const bank = BANKS[raw.bank] ? raw.bank : 'lifeuk', qid = parseInt(raw.qid, 10);
   if (!(qid > 0 && qid < 5000)) throw new HttpError(400, 'invalid', 'Which question?');
@@ -135,4 +141,4 @@ async function remove(id) {
   return { ok: true };
 }
 
-module.exports = { key, el, MODELS, status, speak, background, setBackground, savedBackgrounds, save, list, load, remove };
+module.exports = { bgPrompts, bgPrompt, key, el, MODELS, status, speak, background, setBackground, savedBackgrounds, save, list, load, remove };

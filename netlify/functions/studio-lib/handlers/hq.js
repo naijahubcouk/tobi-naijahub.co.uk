@@ -380,6 +380,7 @@ exports.handler = handler(async (ctx) => {
       return require('../quizvideo').background(body);
     }
     case 'qv-bg-set': return require('../quizvideo').setBackground(body);
+    case 'qv-bg-prompts': return require('../quizvideo').bgPrompts(body);   // 📋 free — just the words, no picture made
     case 'qv-save': return require('../quizvideo').save(body, who.email);
     case 'qv-list': return { items: await require('../quizvideo').list() };
     case 'qv-load': return require('../quizvideo').load(body.id);

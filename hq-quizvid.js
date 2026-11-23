@@ -163,8 +163,9 @@
           '<div style="flex:1;min-width:0"><div style="font-weight:700">' + (i + 1) + '. ' + esc(q.q) + '</div><div class="muted" style="font-size:13px;margin-top:3px">' + q.opts.map(function (o, k) { return k === q.ans ? '<b style="color:#057A44">✓ ' + esc(o) + '</b>' : esc(o); }).join(' · ') + '</div>' +
           '<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><label style="margin:0;font-size:12.5px">Green word <input data-hl="' + i + '" value="' + esc(q.hl) + '" style="width:130px;padding:4px 6px;font-size:13px"></label>' +
           '<button class="btn ghost sm" data-swap="' + i + '">🔀 Swap</button><button class="btn ghost sm" data-gen="' + i + '">' + (bg ? '🔄 New picture' : '✨ Make picture') + '</button>' +
+          '<button class="btn ghost sm" data-cp="' + i + '">📋 Copy prompt</button>' +
           '<label class="btn ghost sm" style="margin:0;cursor:pointer">📷 My photo<input type="file" accept="image/jpeg,image/png,image/webp" data-up="' + i + '" hidden></label></div></div></div>';
-      }).join('') + '</div><div class="row" style="gap:8px;margin-top:10px"><button class="btn primary" id="qvAll">✨ Make all missing pictures</button><span class="muted" id="qvBgMsg" style="font-size:12.5px">Pictures are saved per question and reused in later videos for free.</span></div></div>' +
+      }).join('') + '</div><div class="row" style="gap:8px;margin-top:10px"><button class="btn ghost" id="qvCpAll">📋 Copy all prompts</button><button class="btn primary" id="qvAll">✨ Make all missing pictures (costs on OpenRouter)</button><span class="muted" id="qvBgMsg" style="font-size:12.5px">💡 Free way: 📋 copy the prompt → make the picture in ChatGPT or Gemini → 📷 My photo. Pictures are saved per question and reused in later videos for free.</span></div></div>' +
 
       '<div class="card"><b>🖼️ Cover</b> <span class="muted" style="font-size:13px">— the opening of the video and its Instagram cover. The title sits in the middle so it stays readable in your profile grid.</span>' +
       '<div class="row" style="gap:14px;margin-top:10px;align-items:flex-start;flex-wrap:wrap"><canvas id="qvCov" width="270" height="480" style="width:135px;height:240px;border-radius:10px;background:#0F1E36;flex:none"></canvas><div style="flex:1;min-width:240px">' +
@@ -214,6 +215,8 @@
     $$('[data-hl]').forEach(function (el) { el.onchange = function () { QV.qs[+el.dataset.hl].hl = el.value.trim(); }; });
     $$('[data-swap]').forEach(function (b) { b.onclick = function () { var i = +b.dataset.swap; loadBank(QV.bank).then(function (all) { var f = pick(all); if (f[0]) { QV.qs[i] = makeQ(f[0]); draw(); refreshBgs(); } }); }; });
     $$('[data-gen]').forEach(function (b) { b.onclick = function () { genBg(+b.dataset.gen, !!QV.bgs[QV.qs[+b.dataset.gen].id]); }; });
+    $$('[data-cp]').forEach(function (b) { b.onclick = function () { copyPrompts([+b.dataset.cp], b); }; });
+    $('#qvCpAll').onclick = function () { copyPrompts(QV.qs.map(function (q, i) { return i; }), this); };
     $$('[data-up]').forEach(function (inp) { inp.onchange = function () { var f = inp.files && inp.files[0]; if (f) upBg(+inp.dataset.up, f); }; });
     $('#qvAll').onclick = makeAllBgs;
     var keep = KEEP = function () { QV.cTitle = $('#qvCT').value; QV.cSub = $('#qvCS').value; QV.h1 = $('#qvH1').value; QV.h2 = $('#qvH2').value; QV.outro = $('#qvOut').value; QV.appT = $('#qvAppT').value; var g = $('#qvIgT').value.trim().replace(/^@*/, ''); QV.ig = g ? '@' + g : ''; };
@@ -252,9 +255,17 @@
   async function makeAllBgs() {
     var todo = QV.qs.map(function (q, i) { return i; }).filter(function (i) { return !QV.bgs[QV.qs[i].id]; });
     if (!todo.length) return X.toast('All the pictures are ready ✅');
-    if (!confirm('Make ' + todo.length + ' picture' + (todo.length === 1 ? '' : 's') + ' with your image model? Each one is saved and reused for free next time.')) return;
+    if (!confirm('Make ' + todo.length + ' picture' + (todo.length === 1 ? '' : 's') + ' with AI? This costs money on your OpenRouter account (each one is saved and reused free next time).\n\nFree option: 📋 Copy all prompts and make them in ChatGPT or Gemini instead.')) return;
     for (var k = 0; k < todo.length; k++) { var m = $('#qvBgMsg'); if (m) m.textContent = '✨ Making picture ' + (k + 1) + ' of ' + todo.length + '…'; await genBg(todo[k], false); }
     X.toast('Pictures ready ✅');
+  }
+  // 📋 the exact prompt HQ would send to the image AI — make the picture elsewhere, then 📷 My photo
+  function copyPrompts(idx, btn) {
+    var t0 = btn.textContent; btn.disabled = true;
+    return X.api('qv-bg-prompts', { bank: QV.bank, qs: idx.map(function (i) { var q = QV.qs[i]; return { q: q.q, a: q.opts[q.ans] }; }) }).then(function (r) {
+      var txt = idx.length === 1 ? r.prompts[0] : r.prompts.map(function (p, k) { return 'Q' + (idx[k] + 1) + ' — ' + QV.qs[idx[k]].q + '\n' + p; }).join('\n\n');
+      return navigator.clipboard.writeText(txt).then(function () { X.toast('📋 Copied — paste it into ChatGPT or Gemini, then upload the picture with 📷 My photo'); }, function () { window.prompt('Copy the prompt:', txt); });
+    }).catch(function (e) { X.toast(e.message || 'Couldn’t get the prompt.'); }).then(function () { btn.disabled = false; btn.textContent = t0; });
   }
   function upBg(i, file) {
     var q = QV.qs[i];
