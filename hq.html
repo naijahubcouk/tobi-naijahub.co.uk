@@ -255,6 +255,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
       <button data-nav="posted">📲 Posted</button>
       <button data-nav="app">📣 Publish to App <span class="n" id="nApp"></span></button>
       <button data-nav="luq">📝 Quiz question review</button>
+      <button data-nav="yor">🗣️ Yoruba Lessons</button>
       <button data-nav="subs">🎉 Events <span class="n gold" id="nSubs"></span></button>
       <button data-nav="club" id="navClub">💚 Club check-ups <span class="n gold" id="nClub"></span></button>
       <button data-nav="dir" id="navDir">🏢 Business directory</button>
@@ -307,6 +308,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
 <script src="/hq-chars.js?v=20261122a"></script>
 <script src="/hq-voicevid.js?v=20261122h"></script>
 <script src="/hq-luq.js?v=20261122b"></script>
+<script src="/hq-yor.js?v=20261123b"></script>
 <script src="/hq-club.js?v=20261121a"></script>
 <script src="/hq-discovery.js?v=20261117c"></script>
 <script src="/hq-market.js?v=20261107"></script>
@@ -386,9 +388,9 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     go(location.hash.slice(1) || 'today');
   }
   var BASIC = ['today', 'board', 'calendar', 'posted', 'app', 'subs', 'igc', 'cars', 'vads', 'bin'];
-  var EXTRA = ['club', 'chat', 'ideas', 'dir', 'abiz', 'mkt', 'spot', 'find', 'out', 'mail', 'imgm', 'disc', 'tx', 'mplan', 'fol', 'glow', 'sun', 'igu', 'dm', 'iga'];
+  var EXTRA = ['club', 'chat', 'ideas', 'dir', 'abiz', 'mkt', 'spot', 'find', 'out', 'mail', 'imgm', 'disc', 'tx', 'mplan', 'fol', 'glow', 'sun', 'igu', 'dm', 'iga', 'yor'];
   var SECTIONS = BASIC.concat(EXTRA);
-  var SECTION_NAMES = { club: '💚 Club check-ups', today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '🎉 Events (submissions)', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin',
+  var SECTION_NAMES = { yor: '🗣️ Yoruba Lessons (reviewers)', club: '💚 Club check-ups', today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '🎉 Events (submissions)', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin',
     chat: '💬 Ask Auntie', ideas: '✨ Weekly ideas', dir: '🏢 Business directory', abiz: '➕ Add your business', mkt: '🛍️ Marketplace', spot: '⭐ Spotlight', find: '🔎 Business Finder', out: '📧 Outreach', mail: '📝 Emails', imgm: '🎨 Image model', disc: '📣 Discovery posts', tx: '🎙️ Transcribe a video', mplan: '💚 My Plan users', fol: '📈 Followers tracker', glow: '✨ Instagram Revamp', sun: '📰 Sunday Update', igu: '👥 Comment & like usernames', dm: '📨 DM Outreach', iga: '⚡ Auto-replies' };
   function allowed(v) { if (v === 'tcars' || v === 'scars' || v === 'qvid' || v === 'rmx' || v === 'vvid' || v === 'fin' || v === 'chars') v = 'cars'; if (v === 'luq') v = 'app'; var ok = function (x) { return !S.sections || S.sections.indexOf(x) >= 0; }; return v === 'subs' ? ok('subs') || ok('app') : ok(v); }   // 🎉 Events page = submissions + live events
   function go(v) {
@@ -406,13 +408,14 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
     $('#nTcars').textContent = (S.tcars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     $('#nCars').textContent = (S.cars || []).filter(function (c) { return c.status !== 'posted'; }).length || '';
     if (window.HQTidy) window.HQTidy.sync(S.view);
-    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vEvents, club: function () { window.HQClub.view(); }, scars: function () { S.view = 'tcars'; location.hash = '#tcars'; window.HQTpl.view(); }, qvid: function () { window.HQQuizVid.view(); }, rmx: function () { window.HQRemix.view(); }, vvid: function () { window.HQVoice.view(); }, fin: function () { window.HQFinished.view(); }, chars: function () { window.HQChars.view(); }, luq: function () { window.HQLuq.view(); }, dir: vDir, find: vFind, spot: function () { window.HQSpot.view(); }, ideas: function () { window.HQIdeas.view(); }, chat: function () { window.HQChat.view(); }, out: vOut, mail: vMail, igu: vIgu, imgm: vImgm, disc: function () { window.HQDisc.view(); }, mkt: function () { window.HQMkt.view(); }, tx: function () { window.HQTx.view(); }, mplan: function () { window.HQPlan.view(); }, fol: function () { window.HQFollow.view(); }, glow: function () { window.HQGlow.view(); }, sun: function () { window.HQSun.view(); }, abiz: vAbiz, dm: vDm, iga: vIga, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
+    ({ today: vToday, board: vBoard, calendar: vCalendar, posted: vPosted, app: vApp, subs: vEvents, club: function () { window.HQClub.view(); }, yor: function () { window.HQYor.view(); }, scars: function () { S.view = 'tcars'; location.hash = '#tcars'; window.HQTpl.view(); }, qvid: function () { window.HQQuizVid.view(); }, rmx: function () { window.HQRemix.view(); }, vvid: function () { window.HQVoice.view(); }, fin: function () { window.HQFinished.view(); }, chars: function () { window.HQChars.view(); }, luq: function () { window.HQLuq.view(); }, dir: vDir, find: vFind, spot: function () { window.HQSpot.view(); }, ideas: function () { window.HQIdeas.view(); }, chat: function () { window.HQChat.view(); }, out: vOut, mail: vMail, igu: vIgu, imgm: vImgm, disc: function () { window.HQDisc.view(); }, mkt: function () { window.HQMkt.view(); }, tx: function () { window.HQTx.view(); }, mplan: function () { window.HQPlan.view(); }, fol: function () { window.HQFollow.view(); }, glow: function () { window.HQGlow.view(); }, sun: function () { window.HQSun.view(); }, abiz: vAbiz, dm: vDm, iga: vIga, igc: vIgc, cars: function () { window.HQCar.view(); }, tcars: function () { window.HQTpl.view(); }, vads: function () { window.HQVad.view(); }, bin: vBin })[S.view]();
   }
   function rerender() { go(S.view); }
   if (window.HQCar) window.HQCar.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
   if (window.HQTpl) window.HQTpl.init({ api: api, sheet: sheet, toast: toast, esc: esc, S: S });
   if (window.HQClub) window.HQClub.init({ api: api, sheet: sheet, toast: toast, esc: esc });
   if (window.HQLuq) window.HQLuq.init({ api: api, sheet: sheet, toast: toast, esc: esc });
+  if (window.HQYor) window.HQYor.init({ api: api, sheet: sheet, toast: toast, esc: esc });
   if (window.HQTidy) window.HQTidy.init({ api: api, toast: toast });
   if (window.HQChars) window.HQChars.init({ api: api, sheet: sheet, toast: toast, esc: esc });
   if (window.HQFinished) window.HQFinished.init({ api: api, sheet: sheet, toast: toast, esc: esc, go: go });
