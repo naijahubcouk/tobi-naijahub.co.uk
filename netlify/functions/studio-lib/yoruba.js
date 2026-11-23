@@ -40,7 +40,13 @@ async function index() {
 }
 function sum(l) {
   const it = l.items || [];
-  return { id: l.id, title: l.title, n: it.length, ok: it.filter(x => x.st === 'ok').length, no: it.filter(x => x.st === 'no').length, aud: it.filter(x => x.audio).length, audOk: it.filter(x => x.audio && x.audOk).length, live: !!l.live, changed: !!l.changed };
+  return { id: l.id, title: l.title, n: it.length, ok: it.filter(x => x.st === 'ok').length, no: it.filter(x => x.st === 'no').length, aud: it.filter(x => x.audio).length, audOk: it.filter(x => x.audio && x.audOk).length,
+    exN: it.filter(x => x.ex_yo).length, exOk: it.filter(x => x.ex_yo && x.exAudio && x.exAudOk).length, live: !!l.live, changed: !!l.changed };
+}
+// 🔊 two audio slots per word: the word itself, and its example sentence ("ex")
+function slot(raw) {
+  return raw && raw.which === 'ex' ? { which: 'ex', text: 'ex_yo', a: 'exAudio', how: 'exAudHow', voice: 'exAudVoice', ok: 'exAudOk', rec: 'exRecBy', by: 'exAudBy', what: 'example sentence' }
+    : { which: 'word', text: 'yo', a: 'audio', how: 'audHow', voice: 'audVoice', ok: 'audOk', rec: 'recBy', by: 'audBy', what: 'Yoruba' };
 }
 async function touch(l) {   // save a lesson and refresh its line in the index
   l.at = core.nowIso(); if (l.live) l.changed = true;
@@ -112,7 +118,9 @@ async function itemSave(raw, email) {
   const l = await lesson(raw.lesson);
   if (raw.add) { l.items = l.items || []; if (l.items.length >= 30) throw new HttpError(400, 'full', 'A lesson can have up to 30 words.'); l.items.push({ id: newId('i'), yo: '', en: '', ex_yo: '', ex_en: '', pic: '', note: '', img: '', audio: '', audOk: false, st: 'draft', src: 'hand', at: core.nowIso(), by: email || '' }); await touch(l); return { lesson: l }; }
   const it = item(l, raw.item), f = raw.f || {}, was = it.yo + '|' + it.en + '|' + it.ex_yo + '|' + it.ex_en;
+  const exWas = it.ex_yo;
   ['yo', 'en', 'ex_yo', 'ex_en', 'pic', 'note'].forEach(k => { if (f[k] !== undefined) it[k] = txt(f[k], k === 'ex_yo' || k === 'ex_en' || k === 'pic' || k === 'note' ? 200 : 120); });
+  if (it.ex_yo !== exWas) it.exAudOk = false;   // a changed example sentence needs its audio listening to again
   if (f.img !== undefined) it.img = /^i[a-z0-9]{6,30}$/.test(String(f.img)) ? f.img : '';
   if (was !== it.yo + '|' + it.en + '|' + it.ex_yo + '|' + it.ex_en) { it.edBy = email || ''; it.edAt = core.nowIso(); if (it.st === 'ok') it.st = 'draft'; }   // a changed word needs approving again
   await touch(l); return { lesson: l };
@@ -127,12 +135,12 @@ async function review(raw, email) {
   return { lesson: l };
 }
 async function audioOk(raw, email) {
-  const l = await lesson(raw.lesson), it = item(l, raw.item); if (!it.audio) throw new HttpError(400, 'invalid', 'There’s no audio yet.');
-  it.audOk = !!raw.ok; it.audBy = email || ''; await touch(l);
-  if (raw.ok) await logReview(email, { k: 'audio', st: 'ok', lesson: l.id, item: it.id, yo: it.yo });
+  const l = await lesson(raw.lesson), it = item(l, raw.item), S = slot(raw); if (!it[S.a]) throw new HttpError(400, 'invalid', 'There’s no audio yet.');
+  it[S.ok] = !!raw.ok; it[S.by] = email || ''; await touch(l);
+  if (raw.ok) await logReview(email, { k: 'audio', st: 'ok', which: S.which, lesson: l.id, item: it.id, yo: it.yo });
   return { lesson: l };
 }
-async function itemDel(raw) { const l = await lesson(raw.lesson); const it = item(l, raw.item); l.items = l.items.filter(x => x !== it); if (it.audio) await core.del(AUD(it.audio)).catch(() => {}); await touch(l); return { lesson: l }; }
+async function itemDel(raw) { const l = await lesson(raw.lesson); const it = item(l, raw.item); l.items = l.items.filter(x => x !== it); if (it.audio) await core.del(AUD(it.audio)).catch(() => {}); if (it.exAudio) await core.del(AUD(it.exAudio)).catch(() => {}); await touch(l); return { lesson: l }; }
 async function logReview(email, e) {
   const m = core.monthKey();
   await core.cas(LOG(m), cur => { const l = (cur && cur.items) || []; l.push(Object.assign({ by: email || '', at: core.nowIso() }, e)); return { items: l.slice(-5000) }; }).catch(() => {});
@@ -140,7 +148,7 @@ async function logReview(email, e) {
 async function summary(raw) {
   const m = /^\d{4}-\d{2}$/.test(String(raw.month || '')) ? raw.month : core.monthKey();
   const log = (await getJson(LOG(m)).catch(() => null)) || { items: [] }, by = {};
-  log.items.forEach(e => { const p = by[e.by] || (by[e.by] = { email: e.by, words: 0, rejected: 0, audio: 0, recorded: 0 }); if (e.k === 'word') { if (e.st === 'ok') p.words++; else p.rejected++; } else if (e.k === 'audio') p.audio++; else if (e.k === 'rec') p.recorded++; });
+  log.items.forEach(e => { const p = by[e.by] || (by[e.by] = { email: e.by, words: 0, rejected: 0, audio: 0, recorded: 0, exRec: 0, exAudio: 0 }); if (e.k === 'word') { if (e.st === 'ok') p.words++; else p.rejected++; } else if (e.k === 'audio') { if (e.which === 'ex') p.exAudio++; else p.audio++; } else if (e.k === 'rec') { if (e.which === 'ex') p.exRec++; else p.recorded++; } });
   return { month: m, people: Object.values(by).sort((a, b) => (b.words + b.audio + b.recorded) - (a.words + a.audio + a.recorded)) };
 }
 
@@ -148,22 +156,23 @@ async function summary(raw) {
 async function record(raw, email) {
   const l = await lesson(raw.lesson), it = item(l, raw.item), du = String(raw.dataUrl || '');
   if (!/^data:audio\/(webm|ogg|mp4|mpeg|aac|x-m4a|wav)(;[^,]*)?;base64,[A-Za-z0-9+/=]+$/.test(du) || du.length > 900000) throw new HttpError(400, 'bad_audio', 'That recording didn’t work — keep it under 15 seconds and try again.');
+  const S = slot(raw); if (!it[S.text]) throw new HttpError(400, 'invalid', 'Write the ' + S.what + ' first.');
   const aid = newId('a'); await setJson(AUD(aid), { dataUrl: du, by: email || '', at: core.nowIso(), how: 'rec' });
-  if (it.audio) await core.del(AUD(it.audio)).catch(() => {});
-  it.audio = aid; it.audHow = 'rec'; it.audOk = false; it.recBy = email || '';
-  await touch(l); await logReview(email, { k: 'rec', st: 'ok', lesson: l.id, item: it.id, yo: it.yo });
+  if (it[S.a]) await core.del(AUD(it[S.a])).catch(() => {});
+  it[S.a] = aid; it[S.how] = 'rec'; it[S.ok] = false; it[S.rec] = email || ''; delete it[S.voice];
+  await touch(l); await logReview(email, { k: 'rec', st: 'ok', which: S.which, lesson: l.id, item: it.id, yo: it.yo });
   return { lesson: l };
 }
 async function tts(raw, email) {
-  const l = await lesson(raw.lesson), it = item(l, raw.item); if (!it.yo) throw new HttpError(400, 'invalid', 'Write the Yoruba first.');
+  const l = await lesson(raw.lesson), it = item(l, raw.item), S = slot(raw); if (!it[S.text]) throw new HttpError(400, 'invalid', 'Write the ' + S.what + ' first.');
   const set = (await getJson(SETTINGS).catch(() => null)) || {};
   const pick = okVoice(raw.voice) ? raw.voice : okVoice(set.voice) ? set.voice : 'sp:sade';   // 🇳🇬 Spitch — native Yoruba voices
   if (pick !== set.voice) await setJson(SETTINGS, Object.assign({}, set, { voice: pick })).catch(() => {});
-  const du = await spitchSay(it.yo, pick.slice(3));
+  const du = await spitchSay(it[S.text], pick.slice(3));
   const aid = newId('a'); await setJson(AUD(aid), { dataUrl: du, by: email || '', at: core.nowIso(), how: 'tts', voice: pick });
-  if (it.audio) await core.del(AUD(it.audio)).catch(() => {});
-  it.audio = aid; it.audHow = 'tts'; it.audVoice = pick; it.audOk = false; await touch(l);
-  return { lesson: l, chars: it.yo.length };
+  if (it[S.a]) await core.del(AUD(it[S.a])).catch(() => {});
+  it[S.a] = aid; it[S.how] = 'tts'; it[S.voice] = pick; it[S.ok] = false; await touch(l);
+  return { lesson: l, chars: it[S.text].length };
 }
 // older clips may carry the wrong audio type — check the bytes and fix the label when serving
 function relabel(du) {
@@ -232,10 +241,11 @@ async function settingsSave(raw) { const s = { voice: okVoice(raw.voice) ? raw.v
 async function publish(raw) {
   const l = await lesson(raw.id), it = l.items || [];
   if (it.length < 3) throw new HttpError(400, 'not_ready', 'A lesson needs at least 3 words.');
-  const notOk = it.filter(x => x.st !== 'ok').length, noAud = it.filter(x => !x.audio || !x.audOk).length;
-  if (notOk || noAud) throw new HttpError(400, 'not_ready', `Not ready yet: ${notOk ? notOk + ' word' + (notOk > 1 ? 's' : '') + ' still to approve' : ''}${notOk && noAud ? ' and ' : ''}${noAud ? noAud + ' without approved audio' : ''}.`);
+  const notOk = it.filter(x => x.st !== 'ok').length, noAud = it.filter(x => !x.audio || !x.audOk).length, noEx = it.filter(x => x.ex_yo && (!x.exAudio || !x.exAudOk)).length;
+  const why = [notOk ? notOk + ' word' + (notOk > 1 ? 's' : '') + ' still to approve' : '', noAud ? noAud + ' without approved word audio' : '', noEx ? noEx + ' example sentence' + (noEx > 1 ? 's' : '') + ' without approved audio' : ''].filter(Boolean);
+  if (why.length) throw new HttpError(400, 'not_ready', 'Not ready yet: ' + why.join(', ') + '.');
   const ix = await index(), unit = ix.units.find(u => u.id === l.unit) || {};
-  const pack = { id: l.id, unit: l.unit, unitTitle: unit.title || '', title: l.title, at: core.nowIso(), items: it.map(x => ({ id: x.id, yo: x.yo, en: x.en, ex_yo: x.ex_yo, ex_en: x.ex_en, note: x.note, img: x.img, audio: x.audio })) };
+  const pack = { id: l.id, unit: l.unit, unitTitle: unit.title || '', title: l.title, at: core.nowIso(), items: it.map(x => ({ id: x.id, yo: x.yo, en: x.en, ex_yo: x.ex_yo, ex_en: x.ex_en, note: x.note, img: x.img, audio: x.audio, exAudio: x.ex_yo ? x.exAudio || '' : '' })) };
   await setJson(APP_LESSON(l.id), pack);
   await core.cas(APP_LIST, cur => { const items = ((cur && cur.items) || []).filter(x => x.id !== l.id); items.push({ id: l.id, unit: l.unit, title: l.title, n: it.length, at: pack.at }); return { items }; });
   l.live = true; l.changed = false; l.pubAt = pack.at; await setJson(LESSON(l.id), l);

@@ -27,10 +27,10 @@
     $('#topRight').innerHTML = t('lessons', '📚 Lessons') + ' ' + t('review', '🔎 To check (' + toCheck() + ')') + (ADMIN ? ' ' + t('pay', '💷 Reviewer summary') : '');
     $$('[data-tab]').forEach(function (b) { b.onclick = function () { TAB = b.dataset.tab; if (TAB !== 'lessons') CUR = null; head(); draw(); }; });
   }
-  function toCheck() { var n = 0; (IX ? IX.units : []).forEach(function (u) { u.lessons.forEach(function (l) { n += (l.n - l.ok) + (l.n - l.audOk); }); }); return n; }
+  function toCheck() { var n = 0; (IX ? IX.units : []).forEach(function (u) { u.lessons.forEach(function (l) { n += (l.n - l.ok) + (l.n - l.audOk) + ((l.exN || 0) - (l.exOk || 0)); }); }); return n; }
   function draw() { if (TAB === 'review') return drawReview(); if (TAB === 'pay') return drawPay(); if (CUR) return drawLesson(); drawCourse(); }
   function chips(l) {
-    return '<span class="muted" style="font-size:12.5px">✅ ' + l.ok + '/' + l.n + ' words · 🔊 ' + l.audOk + '/' + l.n + ' audio' + (l.no ? ' · ❌ ' + l.no + ' rejected' : '') + '</span>' +
+    return '<span class="muted" style="font-size:12.5px">✅ ' + l.ok + '/' + l.n + ' words · 🔊 ' + l.audOk + '/' + l.n + ' audio' + (l.exN ? ' · 💬 ' + (l.exOk || 0) + '/' + l.exN + ' example audio' : '') + (l.no ? ' · ❌ ' + l.no + ' rejected' : '') + '</span>' +
       (l.live ? ' <span style="font-size:12px;background:#E3F2EA;color:#05502E;border-radius:99px;padding:2px 8px">🟢 In the app' + (l.changed ? ' · changed since' : '') + '</span>' : '');
   }
 
@@ -51,18 +51,18 @@
   }
   function openLesson(id) { $('#view').innerHTML = '<div class="card"><div class="muted">Opening…</div></div>'; X.api('yo-lesson', { id: id }).then(function (r) { CUR = r.lesson; TAB = 'lessons'; head(); drawLesson(); window.scrollTo(0, 0); }).catch(function (e) { X.toast(e.message); view(); }); }
   function setLesson(l) { CUR = l; IX.units.forEach(function (u) { u.lessons = u.lessons.map(function (x) { return x.id === l.id ? sumOf(l) : x; }); }); head(); }
-  function sumOf(l) { var it = l.items || []; return { id: l.id, title: l.title, n: it.length, ok: it.filter(function (x) { return x.st === 'ok'; }).length, no: it.filter(function (x) { return x.st === 'no'; }).length, aud: it.filter(function (x) { return x.audio; }).length, audOk: it.filter(function (x) { return x.audio && x.audOk; }).length, live: !!l.live, changed: !!l.changed }; }
+  function sumOf(l) { var it = l.items || []; return { id: l.id, title: l.title, n: it.length, ok: it.filter(function (x) { return x.st === 'ok'; }).length, no: it.filter(function (x) { return x.st === 'no'; }).length, aud: it.filter(function (x) { return x.audio; }).length, audOk: it.filter(function (x) { return x.audio && x.audOk; }).length, exN: it.filter(function (x) { return x.ex_yo; }).length, exOk: it.filter(function (x) { return x.ex_yo && x.exAudio && x.exAudOk; }).length, live: !!l.live, changed: !!l.changed }; }
 
   // ── one lesson ──
   function drawLesson() {
-    var l = CUR, s = sumOf(l), ready = s.n >= 3 && s.ok === s.n && s.audOk === s.n;
+    var l = CUR, s = sumOf(l), ready = s.n >= 3 && s.ok === s.n && s.audOk === s.n && s.exOk === s.exN;
     var h = '<div style="max-width:980px"><div class="card"><button class="btn link" id="yoBack">← All lessons</button>' +
       '<div class="row" style="gap:8px;align-items:center;margin-top:4px"><h2 style="margin:0;flex:1">' + esc(l.title) + '</h2>' + (ADMIN ? '<button class="btn ghost sm" id="yoRen">✏️ Rename</button>' : '') + '</div>' +
       '<div style="margin-top:4px">' + chips(s) + '</div>';
-    if (ADMIN) h += '<div class="row" style="gap:6px;margin-top:10px;align-items:center;flex-wrap:wrap"><span style="font-weight:700">🔊 Voice for AI audio</span><select id="yoVoice" style="width:auto;flex:1;min-width:220px"><option value="">Loading voices…</option></select><button class="btn ghost sm" id="yoHear">🎧 Preview</button><button class="btn ghost sm" id="yoChk">🩺 Check Spitch is working</button><span class="muted" id="yoChkMsg" style="font-size:12px">🇳🇬 Spitch voices are made for Yoruba</span></div>' +
+    if (ADMIN) h += '<div class="row" style="gap:6px;margin-top:10px;align-items:center;flex-wrap:wrap"><span style="font-weight:700">🔊 Voice for AI audio</span><select id="yoVoice" style="width:auto;flex:1;min-width:220px"><option value="">Loading voices…</option></select><button class="btn ghost sm" id="yoHear">🎧 Preview</button><button class="btn ghost sm" id="yoChk">🩺 Check Spitch is working</button><button class="btn ghost sm" id="yoExAll">💬 Voice all examples</button><span class="muted" id="yoChkMsg" style="font-size:12px">🇳🇬 Spitch voices are made for Yoruba</span></div>' +
       '<div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap"><input id="yoTopic" placeholder="Topic for the AI (optional) — e.g. greeting older people in the morning" style="flex:1;min-width:240px"><select id="yoN" style="width:auto;flex:none">' + [5, 8, 10, 12].map(function (n) { return '<option' + (n === 8 ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select><button class="btn primary" id="yoDraft">✨ Draft words with AI <span style="font-weight:400">(small cost)</span></button></div>' +
       '<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">' + (l.live ? '<button class="btn ' + (l.changed ? 'primary' : 'ghost') + '" id="yoPub"' + (ready ? '' : ' disabled') + '>📲 Update in the app</button><button class="btn ghost" id="yoUnpub">Take out of the app</button>' : '<button class="btn primary" id="yoPub"' + (ready ? '' : ' disabled') + '>📲 Put in the app</button>') +
-        (ready ? '' : '<span class="muted" style="font-size:12.5px;align-self:center">Every word and its audio must be ✅ approved first (at least 3 words).</span>') + (l.live || l.items.length ? '' : '<button class="btn ghost" id="yoDelL" style="color:#B42318">🗑️ Delete lesson</button>') + '</div>';
+        (ready ? '' : '<span class="muted" style="font-size:12.5px;align-self:center">Every word, its audio and any example audio must be ✅ approved first (at least 3 words).</span>') + (l.live || l.items.length ? '' : '<button class="btn ghost" id="yoDelL" style="color:#B42318">🗑️ Delete lesson</button>') + '</div>';
     h += '</div><div class="card" style="position:sticky;top:0;z-index:5;padding:8px 10px"><div class="muted" style="font-size:12px;margin-bottom:4px">Tone marks — click a box, then tap a letter to add it:</div><div class="row" style="gap:4px;flex-wrap:wrap">' + TONES.map(function (t) { return '<button class="btn ghost sm" data-tone="' + t + '" style="min-width:38px;font-size:17px;padding:4px 8px">' + t + '</button>'; }).join('') + '</div></div>';
     h += (l.items || []).map(cardOf).join('') + '<div class="card"><button class="btn ghost" id="yoAdd">➕ Add a word by hand</button></div></div>';
     $('#view').innerHTML = h;
@@ -77,10 +77,13 @@
     return '<div class="card yoi" data-i="' + it.id + '"><div class="row" style="gap:8px;align-items:center;margin-bottom:6px"><b style="flex:1">' + (k + 1) + '.</b>' + st + '</div>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap">' + f('yo', 'Yoruba (with tone marks)', true, 'e.g. Ẹ káàárọ̀') + f('en', 'English', false, 'e.g. Good morning (to an elder)') + '</div>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:6px">' + f('ex_yo', 'Example sentence (Yoruba)') + f('ex_en', 'Example (English)') + '</div>' +
+      (it.ex_yo ? '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:6px;align-items:center;background:#FAF7EE;border-radius:10px;padding:6px 8px"><b style="font-size:12.5px">💬 Example audio</b>' +
+        (it.exAudio ? '<button class="btn ghost sm" data-explay="' + it.exAudio + '">▶️ Play</button><span class="muted" style="font-size:12.5px">' + (it.exAudHow === 'tts' ? '🔊 AI voice' + (it.exAudVoice ? ' (Spitch · ' + esc(String(it.exAudVoice).slice(3)) + ')' : '') : '🎙️ Recorded' + (it.exRecBy ? ' by ' + esc(who(it.exRecBy)) : '')) + '</span><label class="chk" style="margin:0"><input type="checkbox" data-exaudok' + (it.exAudOk ? ' checked' : '') + '> ✅ Example audio sounds right</label>' : '<span class="muted" style="font-size:12.5px">No example audio yet</span>') +
+        '<button class="btn ghost sm" data-exrec>🎙️ ' + (it.exAudio ? 'Record again' : 'Record example') + '</button>' + (ADMIN ? '<button class="btn ghost sm" data-extts>🔊 AI voice</button>' : '') + '</div>' : '') +
       '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:6px">' + f('note', 'Tip for learners (optional)') + f('pic', 'Picture idea') + '</div>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center">' + (it.img ? '<img src="' + imgSrc(it.img) + '" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:8px">' : '') +
         '<button class="btn ghost sm" data-pp>📋 Copy picture prompt</button>' + (ADMIN ? '<label class="btn ghost sm" style="margin:0;cursor:pointer">📷 ' + (it.img ? 'Change' : 'Add') + ' picture<input type="file" accept="image/*" data-pic hidden></label>' : '') + '</div>' +
-      '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center;border-top:1px dashed #E5DFD0;padding-top:8px">' + aud +
+      '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center;border-top:1px dashed #E5DFD0;padding-top:8px"><b style="font-size:12.5px">🔤 Word audio</b>' + aud +
         '<button class="btn ghost sm" data-rec>🎙️ ' + (it.audio ? 'Record again' : 'Record') + '</button>' + (ADMIN ? '<button class="btn ghost sm" data-tts title="Uses the voice chosen at the top of the lesson">🔊 AI voice</button>' : '') + '</div>' +
       '<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn primary sm" data-ok>✅ Approve</button><button class="btn ghost sm" data-no>❌ Reject</button>' + (it.st !== 'draft' ? '<button class="btn link sm" data-undo>Undo</button>' : '') + (ADMIN ? '<span style="flex:1"></span><button class="btn ghost sm" data-del title="Delete">🗑️</button>' : '') + '</div>' +
       (it.edBy ? '<div class="muted" style="font-size:12px;margin-top:6px">✏️ Last edited by ' + esc(who(it.edBy)) + ' · ' + when(it.edAt) + '</div>' : '') + '</div>';
@@ -98,6 +101,14 @@
         if (/^sp:/.test(sel.value)) { var b = this, t = b.textContent; b.textContent = '⏳'; return X.api('yo-sample', { voice: sel.value }).then(function (r) { say(r.dataUrl, b); }).catch(function (e) { X.toast(e.message); }).then(function () { b.textContent = t; }); }
         X.toast('Choose a voice first'); };
     });
+    if ($('#yoExAll')) $('#yoExAll').onclick = async function () {
+      var vv = ($('#yoVoice') || {}).value || '', todo = l.items.filter(function (x) { return x.ex_yo && !x.exAudio; });
+      if (!vv) return X.toast('Choose a voice first'); if (!todo.length) return X.toast('Every example sentence already has audio ✅');
+      if (!confirm('Make audio for ' + todo.length + ' example sentence' + (todo.length > 1 ? 's' : '') + ' with Spitch (' + vv.slice(3) + ')? Costs a few pence at most. A native speaker still ticks each one.')) return;
+      var b = this, last = null; b.disabled = true;
+      for (var k = 0; k < todo.length; k++) { b.textContent = '💬 ' + (k + 1) + ' of ' + todo.length + '…'; try { last = await X.api('yo-tts', { lesson: l.id, item: todo[k].id, which: 'ex', voice: vv }); } catch (e) { X.toast(e.message); break; } }
+      if (last) { setLesson(last.lesson); drawLesson(); X.toast('💬 Example audio made — play each one and tick if it sounds right'); } else { b.disabled = false; b.textContent = '💬 Voice all examples'; }
+    };
     if ($('#yoChk')) $('#yoChk').onclick = function () {
       var b = this, m = $('#yoChkMsg'); b.disabled = true; m.textContent = '🩺 Asking Spitch to say a test sentence…';
       X.api('yo-spitch-check', { voice: ($('#yoVoice') || {}).value || '' }).then(function (r) { m.innerHTML = '✅ <b>Spitch is working</b> — ' + esc(r.voice) + ' answered in ' + (r.ms / 1000).toFixed(1) + 's (' + esc(r.type || '') + '). Press ▶ to hear “Ẹ káàbọ̀ sí Auntie Tobi.” '; var a = say(r.dataUrl, null); m.appendChild(a); })
@@ -125,6 +136,11 @@
       };
       if ($('[data-pic]', c)) $('[data-pic]', c).onchange = function () { var file = this.files && this.files[0]; if (!file) return; shrink(file, 900).then(function (d) { return X.api('img', { dataUrl: d }); }).then(function (r) { return X.api('yo-item', { lesson: l.id, item: iid, f: { img: r.id } }); }).then(upd).catch(err); };
       if ($('[data-tts]', c)) $('[data-tts]', c).onclick = function () { var b = this; if (!it.yo) return X.toast('Write the Yoruba first'); var vv = ($('#yoVoice') || {}).value || ''; if (!vv) return X.toast('Choose a voice at the top of the lesson first'); if (!confirm('Make the audio for “' + it.yo + '” with Spitch (' + vv.slice(3) + ')? Costs a tiny amount — well under a penny. A native speaker still has to tick that it sounds right.')) return; b.disabled = true; b.textContent = '🔊 Making…'; X.api('yo-tts', { lesson: l.id, item: iid, voice: ($('#yoVoice') || {}).value || '' }).then(function (r) { upd(r); X.toast('🔊 Done — play it and tick if it sounds right'); }).catch(function (e) { err(e); b.disabled = false; b.textContent = '🔊 AI voice'; }); };
+      var exWho = function () { return ($('#yoVoice') || {}).value || ''; };
+      if ($('[data-explay]', c)) $('[data-explay]', c).onclick = function () { play(this.dataset.explay, this); };
+      if ($('[data-exaudok]', c)) $('[data-exaudok]', c).onchange = function () { X.api('yo-audio-ok', { lesson: l.id, item: iid, which: 'ex', ok: this.checked }).then(upd).catch(err); };
+      if ($('[data-exrec]', c)) $('[data-exrec]', c).onclick = function () { record(this, function (du) { X.api('yo-record', { lesson: l.id, item: iid, which: 'ex', dataUrl: du }).then(function (r) { upd(r); X.toast('🎙️ Saved — play it back, then tick ✅ Example audio sounds right'); }).catch(err); }); };
+      if ($('[data-extts]', c)) $('[data-extts]', c).onclick = function () { var b = this, vv = exWho(); if (!vv) return X.toast('Choose a voice at the top of the lesson first'); if (!confirm('Make the audio for the example “' + it.ex_yo + '” with Spitch (' + vv.slice(3) + ')? Costs a tiny amount — well under a penny.')) return; b.disabled = true; b.textContent = '🔊 Making…'; X.api('yo-tts', { lesson: l.id, item: iid, which: 'ex', voice: vv }).then(function (r) { upd(r); X.toast('🔊 Done — play it and tick if it sounds right'); }).catch(function (e) { err(e); b.disabled = false; b.textContent = '🔊 AI voice'; }); };
       $('[data-rec]', c).onclick = function () { record(this, function (du) { X.api('yo-record', { lesson: l.id, item: iid, dataUrl: du }).then(function (r) { upd(r); X.toast('🎙️ Saved — play it back, then tick ✅ Audio sounds right'); }).catch(err); }); };
     });
   }
@@ -174,7 +190,7 @@
   // ── 🔎 everything still to check ──
   function drawReview() {
     var rows = [];
-    IX.units.forEach(function (u, ui) { u.lessons.forEach(function (l) { var w = l.n - l.ok, a = l.n - l.audOk; if (l.n && (w || a)) rows.push('<div class="row" style="gap:8px;padding:9px 0;border-top:1px solid #EEE9DD;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:220px"><b>' + esc(l.title) + '</b> <span class="muted">· Unit ' + (ui + 1) + ' ' + esc(u.title) + '</span><br><span style="font-size:12.5px">' + (w ? '🔎 ' + w + ' word' + (w > 1 ? 's' : '') + ' to check' : '') + (w && a ? ' · ' : '') + (a ? '🔊 ' + a + ' audio to record or check' : '') + '</span></div><button class="btn primary sm" data-open="' + l.id + '">Check</button></div>'); }); });
+    IX.units.forEach(function (u, ui) { u.lessons.forEach(function (l) { var w = l.n - l.ok, a = l.n - l.audOk + ((l.exN || 0) - (l.exOk || 0)); if (l.n && (w || a)) rows.push('<div class="row" style="gap:8px;padding:9px 0;border-top:1px solid #EEE9DD;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:220px"><b>' + esc(l.title) + '</b> <span class="muted">· Unit ' + (ui + 1) + ' ' + esc(u.title) + '</span><br><span style="font-size:12.5px">' + (w ? '🔎 ' + w + ' word' + (w > 1 ? 's' : '') + ' to check' : '') + (w && a ? ' · ' : '') + (a ? '🔊 ' + a + ' audio to record or check' : '') + '</span></div><button class="btn primary sm" data-open="' + l.id + '">Check</button></div>'); }); });
     $('#view').innerHTML = '<div class="card" style="max-width:980px"><h3 style="margin:0 0 6px">🔎 To check</h3>' + (rows.join('') || '<div class="muted">Nothing waiting — everything is checked ✅</div>') + '</div>';
     $$('[data-open]').forEach(function (b) { b.onclick = function () { openLesson(b.dataset.open); }; });
   }
@@ -187,7 +203,7 @@
     $('#yoM').onchange = function () { drawPay(this.value); };
     X.api('yo-summary', { month: month }).then(function (r) {
       $('#yoPay').classList.remove('muted');
-      $('#yoPay').innerHTML = r.people.length ? '<table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left"><th>Reviewer</th><th>✅ Words approved</th><th>❌ Rejected</th><th>🎙️ Recorded</th><th>🔊 Audio checked</th></tr>' + r.people.map(function (p) { return '<tr style="border-top:1px solid #EEE9DD"><td style="padding:6px 0">' + esc(p.email) + '</td><td>' + p.words + '</td><td>' + p.rejected + '</td><td>' + p.recorded + '</td><td>' + p.audio + '</td></tr>'; }).join('') + '</table>' : 'No checks in ' + month + ' yet.';
+      $('#yoPay').innerHTML = r.people.length ? '<table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left"><th>Reviewer</th><th>✅ Words approved</th><th>❌ Rejected</th><th>🎙️ Words recorded</th><th>🔊 Word audio checked</th><th>💬 Examples recorded</th><th>💬 Example audio checked</th></tr>' + r.people.map(function (p) { return '<tr style="border-top:1px solid #EEE9DD"><td style="padding:6px 0">' + esc(p.email) + '</td><td>' + p.words + '</td><td>' + p.rejected + '</td><td>' + p.recorded + '</td><td>' + p.audio + '</td><td>' + (p.exRec || 0) + '</td><td>' + (p.exAudio || 0) + '</td></tr>'; }).join('') + '</table>' : 'No checks in ' + month + ' yet.';
     }).catch(function (e) { $('#yoPay').textContent = e.message; });
   }
   window.HQYor = { init: function (x) { X = x; }, view: view };
