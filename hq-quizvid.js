@@ -187,7 +187,7 @@
           '<div style="flex:1;min-width:0"><div style="font-weight:700">' + (i + 1) + '. ' + esc(q.q) + '</div><div class="muted" style="font-size:13px;margin-top:3px">' + q.opts.map(function (o, k) { return k === q.ans ? '<b style="color:#057A44">✓ ' + esc(o) + '</b>' : esc(o); }).join(' · ') + '</div>' +
           '<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><label style="margin:0;font-size:12.5px">Green word <input data-hl="' + i + '" value="' + esc(q.hl) + '" style="width:130px;padding:4px 6px;font-size:13px"></label>' +
           '<button class="btn ghost sm" data-swap="' + i + '">🔀 Swap</button><button class="btn ghost sm" data-gen="' + i + '">' + (bg ? '🔄 New picture' : '✨ Make picture') + '</button>' +
-          '<button class="btn ghost sm" data-cp="' + i + '">📋 Copy prompt</button>' +
+          '<button class="btn ghost sm" data-ed="' + i + '">✏️ Edit</button><button class="btn ghost sm" data-cp="' + i + '">📋 Copy prompt</button>' +
           '<label class="btn ghost sm" style="margin:0;cursor:pointer">📷 My photo<input type="file" accept="image/jpeg,image/png,image/webp" data-up="' + i + '" hidden></label></div></div></div>';
       }).join('') + '</div><div class="row" style="gap:8px;margin-top:10px"><button class="btn ghost" id="qvCpAll">📋 Copy all prompts</button><button class="btn primary" id="qvAll">✨ Make all missing pictures (costs on OpenRouter)</button><span class="muted" id="qvBgMsg" style="font-size:12.5px">💡 Free way: 📋 copy the prompt → make the picture in ChatGPT or Gemini → 📷 My photo. Pictures are saved per question and reused in later videos for free.</span></div></div>' +
 
@@ -245,6 +245,7 @@
     $$('[data-hl]').forEach(function (el) { el.onchange = function () { QV.qs[+el.dataset.hl].hl = el.value.trim(); }; });
     $$('[data-swap]').forEach(function (b) { b.onclick = function () { var i = +b.dataset.swap; loadBank(QV.bank).then(function (all) { var f = pick(all); if (f[0]) { QV.qs[i] = makeQ(f[0]); draw(); refreshBgs(); } }); }; });
     $$('[data-gen]').forEach(function (b) { b.onclick = function () { genBg(+b.dataset.gen, !!QV.bgs[QV.qs[+b.dataset.gen].id]); }; });
+    $$('[data-ed]').forEach(function (b) { b.onclick = function () { editQ(+b.dataset.ed); }; });
     $$('[data-cp]').forEach(function (b) { b.onclick = function () { copyPrompts([+b.dataset.cp], b); }; });
     $('#qvCpAll').onclick = function () { copyPrompts(QV.qs.map(function (q, i) { return i; }), this); };
     $$('[data-up]').forEach(function (inp) { inp.onchange = function () { var f = inp.files && inp.files[0]; if (f) upBg(+inp.dataset.up, f); }; });
@@ -288,6 +289,33 @@
     if (!confirm('Make ' + todo.length + ' picture' + (todo.length === 1 ? '' : 's') + ' with AI? This costs money on your OpenRouter account (each one is saved and reused free next time).\n\nFree option: 📋 Copy all prompts and make them in ChatGPT or Gemini instead.')) return;
     for (var k = 0; k < todo.length; k++) { var m = $('#qvBgMsg'); if (m) m.textContent = '✨ Making picture ' + (k + 1) + ' of ' + todo.length + '…'; await genBg(todo[k], false); }
     X.toast('Pictures ready ✅');
+  }
+  // ✏️ edit a question in this quiz (and, if ticked, in the question bank too)
+  function editQ(i) {
+    var q = QV.qs[i], L = ['A', 'B', 'C', 'D'];
+    var s = X.sheet('<h3 style="margin:0 0 8px">✏️ Edit question ' + (i + 1) + '</h3><label>Question</label><textarea id="eqQ" rows="3">' + esc(q.q) + '</textarea>' +
+      '<label style="margin-top:8px">Answers — tick the correct one</label>' + q.opts.map(function (o, k) { return '<div class="row" style="gap:8px;align-items:center;margin-top:4px"><input type="radio" name="eqA" value="' + k + '"' + (k === q.ans ? ' checked' : '') + ' style="width:auto;flex:none"><b style="width:18px">' + L[k] + '</b><input data-eo="' + k + '" value="' + esc(o) + '" style="flex:1"></div>'; }).join('') +
+      '<label style="margin-top:8px">Explanation <span class="muted">(shown after answering)</span></label><textarea id="eqE" rows="3">' + esc(q.e || '') + '</textarea>' +
+      '<label class="chk" style="margin-top:10px"><input type="checkbox" id="eqBank"> Also fix this question in the ' + esc(bank().name) + ' question bank (future quizzes and practice in the app)</label>' +
+      '<div class="muted" style="font-size:12.5px;margin-top:6px">If Auntie Tobi’s voice was made for the old wording, the changed lines are spoken again next time you make the video (a few ElevenLabs credits).</div>' +
+      '<div class="row" style="gap:8px;margin-top:12px"><button class="btn primary" id="eqOk">Save</button><button class="btn ghost" id="eqX">Cancel</button></div>');
+    $('#eqX', s).onclick = function () { s.remove(); };
+    $('#eqOk', s).onclick = function () {
+      var nq = $('#eqQ', s).value.replace(/\s+/g, ' ').trim(), no = $$('[data-eo]', s).map(function (x) { return x.value.replace(/\s+/g, ' ').trim(); }), na = +(($('input[name=eqA]:checked', s) || {}).value || 0), ne = $('#eqE', s).value.replace(/\s+/g, ' ').trim();
+      if (!nq || no.some(function (x) { return !x; })) return X.toast('Fill in the question and all 4 answers');
+      if (no.filter(function (x, k) { return no.indexOf(x) !== k; }).length) return X.toast('Two answers are the same — make them different');
+      q.q = nq.slice(0, 300); q.opts = no.map(function (x) { return x.slice(0, 120); }); q.ans = na; q.e = ne.slice(0, 400);
+      if (q.hl && q.q.toLowerCase().indexOf(String(q.hl).toLowerCase()) < 0) q.hl = keyWord(q.q);
+      QV.out = null; s.remove(); draw();
+      var jobs = [];
+      if ($('#eqBank', s).checked) jobs.push(X.api('lq-set', { bank: QV.bank, id: q.id, patch: { q: q.q, o: [q.opts[q.ans]].concat(q.opts.filter(function (x, k) { return k !== q.ans; })), e: q.e } }));
+      jobs.push(doSave(QV.savedName || '', false, true).then(function () {
+        if (!PUB[QV.savedId]) return;
+        var Ls = {}; if (QV.voiceOn && QV.voice) lines().forEach(function (x) { Ls[x.k] = x.t; });   // only already-made voice lines — no new credits used
+        return X.api('qv-app-pub', { id: QV.savedId, lines: Ls });
+      }));
+      Promise.all(jobs).then(function () { X.toast('✏️ Saved' + ($('#eqBank', s).checked ? ' — and fixed in the question bank' : '') + (PUB[QV.savedId] ? ' · the app is updated' : '')); }).catch(function (e) { X.toast(e.message); });
+    };
   }
   // 📋 the exact prompt HQ would send to the image AI — make the picture elsewhere, then 📷 My photo
   function copyPrompts(idx, btn) {
