@@ -157,13 +157,18 @@ async function record(raw, email) {
 async function tts(raw, email) {
   const l = await lesson(raw.lesson), it = item(l, raw.item); if (!it.yo) throw new HttpError(400, 'invalid', 'Write the Yoruba first.');
   const qv = require('./quizvideo'), set = (await getJson(SETTINGS).catch(() => null)) || {};
-  const voice = /^[A-Za-z0-9]{10,40}$/.test(set.voice || '') ? set.voice : ''; if (!voice) throw new HttpError(400, 'no_voice', 'Choose the voice first (⚙️ Settings on this page).');
-  const r = await qv.el(`/text-to-speech/${voice}?output_format=mp3_44100_128`, { method: 'POST', accept: 'audio/mpeg', timeout: 25000, body: { text: it.yo, model_id: 'eleven_v3', language_code: 'yo' } });
+  const pick = /^[A-Za-z0-9]{10,40}$/.test(String(raw.voice || '')) ? raw.voice : set.voice;
+  const voice = /^[A-Za-z0-9]{10,40}$/.test(pick || '') ? pick : ''; if (!voice) throw new HttpError(400, 'no_voice', 'Choose a voice first (the 🔊 Voice box at the top of the lesson).');
+  if (voice !== set.voice) await setJson(SETTINGS, Object.assign({}, set, { voice })).catch(() => {});   // remember the last voice used
+  // Eleven v3 is the ElevenLabs model that speaks Yoruba ("yo")
+  const call = body => qv.el(`/text-to-speech/${voice}?output_format=mp3_44100_128`, { method: 'POST', accept: 'audio/mpeg', timeout: 26000, body });
+  let r = await call({ text: it.yo, model_id: 'eleven_v3', language_code: 'yo' });
+  if (!r.ok && (r.status === 400 || r.status === 422)) { const j0 = await r.clone().json().catch(() => null); if (/language/i.test(JSON.stringify(j0 || {}))) r = await call({ text: it.yo, model_id: 'eleven_v3' }); }
   if (!r.ok) {
-    const j = await r.json().catch(() => null), why = JSON.stringify((j && j.detail) || j || {}).slice(0, 300); console.error('[yoruba] tts', r.status, why);
+    const j = await r.json().catch(() => null), d = (j && j.detail) || j || {}, why = (typeof d === 'string' ? d : d.message || JSON.stringify(d)).slice(0, 220); console.error('[yoruba] tts', r.status, why);
     if (/quota|credit/i.test(why)) throw new HttpError(402, 'no_credits', 'Your ElevenLabs credits have run out for this month.');
-    if (r.status === 401 || r.status === 403) throw new HttpError(400, 'voice_key', 'ElevenLabs didn’t accept the key, or it isn’t allowed to do Text to Speech — check the key’s permissions in ElevenLabs.');
-    throw new HttpError(502, 'voice_error', 'The Yoruba voice didn’t come back — please try again, or record it instead.');
+    if (r.status === 401 || r.status === 403) throw new HttpError(400, 'voice_key', 'ElevenLabs said: ' + why + ' — check your key allows “Text to Speech” and that your plan includes Eleven v3.');
+    throw new HttpError(502, 'voice_error', 'ElevenLabs said: ' + (why || 'no reason given') + ' (status ' + r.status + '). Try another voice, or record it instead.');
   }
   const du = 'data:audio/mpeg;base64,' + Buffer.from(await r.arrayBuffer()).toString('base64');
   const aid = newId('a'); await setJson(AUD(aid), { dataUrl: du, by: email || '', at: core.nowIso(), how: 'tts' });
