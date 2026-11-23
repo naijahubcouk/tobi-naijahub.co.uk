@@ -4,7 +4,7 @@
  * "Nigerian Caterers in UK – Part I": a cover + one slide per business (their photo, @handle and town), drawn in HQ.
  *   disc/parts       { items: [part] }
  *   disc/img/<id>    { dataUrl }      photos you upload (resized in HQ, ≤ ~400 KB)
- * part: { id, kind ('' | 'city' | 'general'), noPart, line ('cat' | 'town' | 'both'), cat, city, part, l1, l2, coverImg, items: [{ slug, name, handle, town, img, pos: {x,y,z} }], caption,
+ * part: { id, kind ('' | 'city' | 'general'), noPart, line ('cat' | 'town' | 'both' | 'none'), showTown (market), cat, city, part, l1, l2, coverImg, items: [{ slug, name, handle, town, img, pos: {x,y,z} }], caption,
  *         status: 'draft' | 'posted', createdAt, updatedAt, postedAt, postUrl }
  * 🛍️ Marketplace posts (kind 'market'): one slide per Marketplace product — item.pid (product id), prod (product name), price;
  *   part.showPrice, part.end { on, t1, t2, t3 } + endImg: the editable last slide ("Shop these and more on the Auntie Tobi Marketplace").
@@ -32,7 +32,7 @@ function clean(raw, prev) {
   const mkt = raw.kind === 'market', e = raw.end || {};
   return {
     id: prev.id || newId(), kind: raw.kind === 'city' || raw.kind === 'general' || mkt ? raw.kind : '', cat: cleanText(raw.cat, 60), city: raw.kind === 'city' ? cleanText(raw.city, 60) : '', part: Math.round(num(raw.part, 1, 99, 1)),
-    noPart: !!raw.noPart, bare: !!raw.bare, pnum: !!raw.pnum, line: raw.kind === 'general' && /^(cat|town|both)$/.test(raw.line) ? raw.line : '',
+    noPart: !!raw.noPart, bare: !!raw.bare, pnum: !!raw.pnum, line: !mkt && /^(cat|town|both|none)$/.test(raw.line) ? raw.line : '', showTown: mkt ? !!raw.showTown : undefined,
     l1: cleanText(raw.l1, raw.kind === 'city' || raw.kind === 'general' || mkt ? 90 : 50), l2: cleanText(raw.l2, 50), coverImg: okId(raw.coverImg) ? raw.coverImg : '',
     coverPos: { x: num(raw.coverPos && raw.coverPos.x, -1, 1, 0), y: num(raw.coverPos && raw.coverPos.y, -1, 1, 0), z: num(raw.coverPos && raw.coverPos.z, 1, 3, 1) },
     showPrice: mkt ? raw.showPrice !== false : undefined,
