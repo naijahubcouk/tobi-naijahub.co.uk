@@ -157,7 +157,15 @@ async function record(raw, email) {
 async function tts(raw, email) {
   const l = await lesson(raw.lesson), it = item(l, raw.item); if (!it.yo) throw new HttpError(400, 'invalid', 'Write the Yoruba first.');
   const qv = require('./quizvideo'), set = (await getJson(SETTINGS).catch(() => null)) || {};
-  const pick = /^[A-Za-z0-9]{10,40}$/.test(String(raw.voice || '')) ? raw.voice : set.voice;
+  const pick = okVoice(raw.voice) ? raw.voice : set.voice;
+  if (/^sp:/.test(String(pick || ''))) {   // 🇳🇬 Spitch — Nigerian Yoruba voices
+    if (pick !== set.voice) await setJson(SETTINGS, Object.assign({}, set, { voice: pick })).catch(() => {});
+    const du = await spitchSay(it.yo, pick.slice(3));
+    const aid = newId('a'); await setJson(AUD(aid), { dataUrl: du, by: email || '', at: core.nowIso(), how: 'tts', voice: pick });
+    if (it.audio) await core.del(AUD(it.audio)).catch(() => {});
+    it.audio = aid; it.audHow = 'tts'; it.audVoice = pick; it.audOk = false; await touch(l);
+    return { lesson: l, chars: it.yo.length };
+  }
   const voice = /^[A-Za-z0-9]{10,40}$/.test(pick || '') ? pick : ''; if (!voice) throw new HttpError(400, 'no_voice', 'Choose a voice first (the 🔊 Voice box at the top of the lesson).');
   if (voice !== set.voice) await setJson(SETTINGS, Object.assign({}, set, { voice })).catch(() => {});   // remember the last voice used
   // Eleven v3 is the ElevenLabs model that speaks Yoruba ("yo")
@@ -177,8 +185,37 @@ async function tts(raw, email) {
   return { lesson: l, chars: it.yo.length };
 }
 async function audioGet(raw) { if (!okId(raw.id, 'a')) throw new HttpError(400, 'invalid', 'Which audio?'); const a = await getJson(AUD(raw.id)).catch(() => null); if (!a) throw new HttpError(404, 'not_found', 'That audio has gone.'); return { dataUrl: a.dataUrl }; }
-async function settingsGet() { return (await getJson(SETTINGS).catch(() => null)) || {}; }
-async function settingsSave(raw) { const s = { voice: /^[A-Za-z0-9]{10,40}$/.test(String(raw.voice || '')) ? raw.voice : '' }; await setJson(SETTINGS, s); return s; }
+// 🇳🇬 Spitch (spitch.app) — a Nigerian speech-AI service with native Yoruba voices. Key: SPITCH_API_KEY in Netlify (never sent to the browser).
+const SP_VOICES = [{ id: 'sade', name: 'Sade', gender: 'female' }, { id: 'funmi', name: 'Funmi', gender: 'female' }, { id: 'segun', name: 'Segun', gender: 'male' }, { id: 'femi', name: 'Femi', gender: 'male' }];
+const spKey = () => process.env.SPITCH_API_KEY || '';
+function okVoice(v) { v = String(v || ''); return /^[A-Za-z0-9]{10,40}$/.test(v) || (/^sp:[a-z]{3,12}$/.test(v) && SP_VOICES.some(x => 'sp:' + x.id === v)); }
+async function spitchSay(text, voice) {
+  if (!spKey()) throw new HttpError(400, 'no_spitch', 'Spitch isn’t set up yet — add SPITCH_API_KEY in Netlify and redeploy.');
+  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 25000);
+  let r;
+  try { r = await fetch('https://api.spitch.app/v1/speech', { method: 'POST', signal: ctrl.signal, headers: { Authorization: 'Bearer ' + spKey(), 'Content-Type': 'application/json', Accept: 'audio/mpeg, audio/*' }, body: JSON.stringify({ text, voice, language: 'yo', format: 'mp3' }) }); }
+  catch (e) { throw new HttpError(504, 'voice_timeout', 'Spitch took too long — please try again.'); }
+  finally { clearTimeout(t); }
+  if (!r.ok) {
+    const raw = await r.text().catch(() => ''); let why = raw; try { const j = JSON.parse(raw); why = j.detail || j.message || j.error || raw; if (typeof why !== 'string') why = JSON.stringify(why); } catch (_) {}
+    why = String(why || '').slice(0, 220); console.error('[yoruba] spitch', r.status, why);
+    if (r.status === 401 || r.status === 403) throw new HttpError(400, 'voice_key', 'Spitch didn’t accept the key — check SPITCH_API_KEY in Netlify. (' + why + ')');
+    if (r.status === 402 || /balance|credit|insufficient/i.test(why)) throw new HttpError(402, 'no_credits', 'Your Spitch balance has run out — top it up at spitch.app.');
+    throw new HttpError(502, 'voice_error', 'Spitch said: ' + (why || 'no reason given') + ' (status ' + r.status + ').');
+  }
+  const buf = Buffer.from(await r.arrayBuffer()), ct = String(r.headers.get('content-type') || '').split(';')[0] || 'audio/mpeg';
+  if (buf.length < 200) throw new HttpError(502, 'voice_error', 'Spitch sent back empty audio — please try again.');
+  if (buf.length > 650000) throw new HttpError(413, 'too_long', 'That audio is too long — keep it to a word or short phrase.');
+  return `data:${/^audio\//.test(ct) ? ct : 'audio/mpeg'};base64,${buf.toString('base64')}`;
+}
+// 🎧 a short sample of a Spitch voice (made once, then saved)
+async function sample(raw) {
+  const v = String(raw.voice || ''); if (!/^sp:/.test(v) || !okVoice(v)) throw new HttpError(400, 'invalid', 'Which voice?');
+  const k = 'hq/yo/sample/' + v.slice(3), hit = await getJson(k).catch(() => null); if (hit && hit.dataUrl) return { dataUrl: hit.dataUrl };
+  const du = await spitchSay('Ẹ káàárọ̀. Báwo ni? Ẹ ṣé púpọ̀.', v.slice(3)); await setJson(k, { dataUrl: du, at: core.nowIso() }); return { dataUrl: du };
+}
+async function settingsGet() { const s = (await getJson(SETTINGS).catch(() => null)) || {}; return Object.assign({}, s, { spitch: !!spKey(), spVoices: SP_VOICES }); }
+async function settingsSave(raw) { const s = { voice: okVoice(raw.voice) ? raw.voice : '' }; await setJson(SETTINGS, s); return s; }
 
 // ── 📲 publish to the app (admin) — only when every word and its audio are approved ──
 async function publish(raw) {
@@ -203,4 +240,4 @@ async function unpublish(raw) {
   return { lesson: l };
 }
 
-module.exports = { index, lesson, unitSave, lessonNew, lessonRename, lessonDel, draft, itemSave, review, audioOk, itemDel, summary, record, tts, audioGet, settingsGet, settingsSave, publish, unpublish };
+module.exports = { sample, spitchSay, index, lesson, unitSave, lessonNew, lessonRename, lessonDel, draft, itemSave, review, audioOk, itemDel, summary, record, tts, audioGet, settingsGet, settingsSave, publish, unpublish };
