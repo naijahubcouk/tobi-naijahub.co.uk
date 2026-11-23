@@ -95,12 +95,12 @@
       sel.innerHTML = '' + (v.sp.length ? '<optgroup label="🇳🇬 Spitch — native Yoruba voices">' + v.sp.map(opt).join('') + '</optgroup>' : '<option value="">Spitch isn’t set up — add SPITCH_API_KEY in Netlify</option>') + '';
       sel.onchange = function () { VO.cur = sel.value; X.api('yo-settings-save', { voice: sel.value }).then(function () { X.toast('🔊 Voice saved'); }).catch(function () {}); };
       $('#yoHear').onclick = function () {
-        if (/^sp:/.test(sel.value)) { var b = this, t = b.textContent; b.textContent = '⏳'; return X.api('yo-sample', { voice: sel.value }).then(function (r) { try { new Audio(r.dataUrl).play(); } catch (e) {} }).catch(function (e) { X.toast(e.message); }).then(function () { b.textContent = t; }); }
+        if (/^sp:/.test(sel.value)) { var b = this, t = b.textContent; b.textContent = '⏳'; return X.api('yo-sample', { voice: sel.value }).then(function (r) { say(r.dataUrl, b); }).catch(function (e) { X.toast(e.message); }).then(function () { b.textContent = t; }); }
         X.toast('Choose a voice first'); };
     });
     if ($('#yoChk')) $('#yoChk').onclick = function () {
       var b = this, m = $('#yoChkMsg'); b.disabled = true; m.textContent = '🩺 Asking Spitch to say a test sentence…';
-      X.api('yo-spitch-check', { voice: ($('#yoVoice') || {}).value || '' }).then(function (r) { m.innerHTML = '✅ <b>Spitch is working</b> — ' + esc(r.voice) + ' answered in ' + (r.ms / 1000).toFixed(1) + 's. You should hear “Ẹ káàbọ̀ sí Auntie Tobi.”'; try { new Audio(r.dataUrl).play(); } catch (e) {} })
+      X.api('yo-spitch-check', { voice: ($('#yoVoice') || {}).value || '' }).then(function (r) { m.innerHTML = '✅ <b>Spitch is working</b> — ' + esc(r.voice) + ' answered in ' + (r.ms / 1000).toFixed(1) + 's (' + esc(r.type || '') + '). Press ▶ to hear “Ẹ káàbọ̀ sí Auntie Tobi.” '; var a = say(r.dataUrl, null); m.appendChild(a); })
         .catch(function (e) { m.innerHTML = '❌ <b>Not working:</b> ' + esc(e.message); }).then(function () { b.disabled = false; });
     };
     if ($('#yoDraft')) $('#yoDraft').onclick = function () { var b = this; b.disabled = true; b.textContent = '✨ Drafting…'; X.api('yo-draft', { id: l.id, topic: $('#yoTopic').value, n: +$('#yoN').value }).then(function (r) { upd(r); X.toast('✨ ' + r.added + ' words drafted — now they need checking by a native speaker'); }).catch(function (e) { err(e); b.disabled = false; b.textContent = '✨ Draft words with AI'; }); };
@@ -131,8 +131,24 @@
   // 🇳🇬 the Spitch Yoruba voices
   var VO = null;
   function voices() { if (VO) return Promise.resolve(VO); return X.api('yo-settings').catch(function () { return {}; }).then(function (st) { VO = { sp: st.spitch ? (st.spVoices || []).map(function (x) { return { id: 'sp:' + x.id, name: x.name, accent: 'Yoruba', gender: x.gender }; }) : [], cur: /^sp:/.test(st.voice || '') ? st.voice : 'sp:sade' }; if (!VO.sp.length) X.toast('Spitch isn’t set up yet — add SPITCH_API_KEY in Netlify and redeploy.'); return VO; }); }
+  // ▶️ play a clip; if the browser blocks it (e.g. after waiting for the server), show a small player to tap instead
+  var PL = null;
+  // HQ's security rules only allow audio from blob: links, not data: links — so turn the clip into a blob first
+  var BLOBS = {};
+  function blobUrl(du) {
+    if (!/^data:/.test(du)) return du; if (BLOBS[du.length + du.slice(-40)]) return BLOBS[du.length + du.slice(-40)];
+    var m = /^data:([^;,]+)(?:;[^,]*)?;base64,(.*)$/.exec(du); if (!m) return du;
+    var bin = atob(m[2]), u8 = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    return (BLOBS[du.length + du.slice(-40)] = URL.createObjectURL(new Blob([u8], { type: m[1] })));
+  }
+  function say(du, near) {
+    try { if (PL) { PL.pause(); PL.remove(); PL = null; } } catch (e) {}
+    var a = document.createElement('audio'); a.src = blobUrl(du); a.controls = true; a.style.cssText = 'height:34px;max-width:260px;vertical-align:middle;margin-left:6px'; PL = a;
+    var p = a.play(); if (p && p.catch) p.catch(function (e) { if (near && near.parentNode) near.parentNode.insertBefore(a, near.nextSibling); X.toast(e && e.name === 'NotAllowedError' ? '👆 Tap ▶ on the little player to hear it' : 'Your browser couldn’t play this audio (' + (du.slice(5, du.indexOf(';')) || 'unknown') + ') — try Chrome, or tell Auntie Tobi.'); });
+    return a;
+  }
   function play(id, btn) {
-    var go = function (du) { try { var a = new Audio(du); a.play(); } catch (e) { X.toast('Couldn’t play it'); } };
+    var go = function (du) { say(du, btn); };
     if (AUD[id]) return go(AUD[id]);
     var t = btn.textContent; btn.textContent = '⏳'; X.api('yo-audio', { id: id }).then(function (r) { AUD[id] = r.dataUrl; go(r.dataUrl); }).catch(function (e) { X.toast(e.message); }).then(function () { btn.textContent = t; });
   }

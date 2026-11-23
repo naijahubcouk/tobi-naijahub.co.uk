@@ -165,7 +165,14 @@ async function tts(raw, email) {
   it.audio = aid; it.audHow = 'tts'; it.audVoice = pick; it.audOk = false; await touch(l);
   return { lesson: l, chars: it.yo.length };
 }
-async function audioGet(raw) { if (!okId(raw.id, 'a')) throw new HttpError(400, 'invalid', 'Which audio?'); const a = await getJson(AUD(raw.id)).catch(() => null); if (!a) throw new HttpError(404, 'not_found', 'That audio has gone.'); return { dataUrl: a.dataUrl }; }
+// older clips may carry the wrong audio type — check the bytes and fix the label when serving
+function relabel(du) {
+  const m = /^data:([^;,]+);base64,(.*)$/.exec(String(du || '')); if (!m) return du;
+  const h = Buffer.from(m[2].slice(0, 24), 'base64'), s4 = h.slice(0, 4).toString('latin1');
+  const t = s4 === 'RIFF' ? 'audio/wav' : s4 === 'OggS' ? 'audio/ogg' : s4 === 'fLaC' ? 'audio/flac' : (h[0] === 0x1a && h[1] === 0x45) ? 'audio/webm' : (h.slice(0, 3).toString('latin1') === 'ID3' || (h[0] === 0xff && (h[1] & 0xe0) === 0xe0)) ? 'audio/mpeg' : h.slice(4, 8).toString('latin1') === 'ftyp' ? 'audio/mp4' : m[1];
+  return t === m[1] ? du : `data:${t};base64,${m[2]}`;
+}
+async function audioGet(raw) { if (!okId(raw.id, 'a')) throw new HttpError(400, 'invalid', 'Which audio?'); const a = await getJson(AUD(raw.id)).catch(() => null); if (!a) throw new HttpError(404, 'not_found', 'That audio has gone.'); return { dataUrl: relabel(a.dataUrl) }; }
 // 🇳🇬 Spitch (spitch.app) — a Nigerian speech-AI service with native Yoruba voices. Key: SPITCH_API_KEY in Netlify (never sent to the browser).
 const SP_VOICES = [{ id: 'sade', name: 'Sade', gender: 'female' }, { id: 'funmi', name: 'Funmi', gender: 'female' }, { id: 'segun', name: 'Segun', gender: 'male' }, { id: 'femi', name: 'Femi', gender: 'male' }];
 const spKey = () => process.env.SPITCH_API_KEY || '';
@@ -184,22 +191,39 @@ async function spitchSay(text, voice) {
     if (r.status === 402 || /balance|credit|insufficient/i.test(why)) throw new HttpError(402, 'no_credits', 'Your Spitch balance has run out — top it up at spitch.app.');
     throw new HttpError(502, 'voice_error', 'Spitch said: ' + (why || 'no reason given') + ' (status ' + r.status + ').');
   }
-  const buf = Buffer.from(await r.arrayBuffer()), ct = String(r.headers.get('content-type') || '').split(';')[0] || 'audio/mpeg';
+  let buf = Buffer.from(await r.arrayBuffer());
+  const ct = String(r.headers.get('content-type') || '').split(';')[0].toLowerCase();
+  // some replies wrap the audio in JSON (base64 or a link) — unwrap it
+  if (/json/.test(ct) || buf.slice(0, 1).toString() === '{') {
+    let j = null; try { j = JSON.parse(buf.toString('utf8')); } catch (_) {}
+    const b64 = j && (j.audio || j.audio_content || j.data || j.content), link = j && (j.url || j.audio_url);
+    if (typeof b64 === 'string' && b64.length > 200) buf = Buffer.from(b64.replace(/^data:[^,]+,/, ''), 'base64');
+    else if (typeof link === 'string' && /^https:\/\//.test(link)) { const r2 = await fetch(link); buf = Buffer.from(await r2.arrayBuffer()); }
+    else throw new HttpError(502, 'voice_error', 'Spitch sent back something that isn’t audio: ' + buf.toString('utf8').slice(0, 160));
+  }
   if (buf.length < 200) throw new HttpError(502, 'voice_error', 'Spitch sent back empty audio — please try again.');
-  if (buf.length > 650000) throw new HttpError(413, 'too_long', 'That audio is too long — keep it to a word or short phrase.');
-  return `data:${/^audio\//.test(ct) ? ct : 'audio/mpeg'};base64,${buf.toString('base64')}`;
+  if (buf.length > 900000) throw new HttpError(413, 'too_long', 'That audio is too long — keep it to a word or short phrase.');
+  // label the audio by what it really is (the browser won't play it if the type is wrong)
+  const h = buf.slice(0, 12), s4 = h.slice(0, 4).toString('latin1');
+  let type = s4 === 'RIFF' ? 'audio/wav' : s4 === 'OggS' ? 'audio/ogg' : s4 === 'fLaC' ? 'audio/flac' : (h[0] === 0x1a && h[1] === 0x45 && h[2] === 0xdf && h[3] === 0xa3) ? 'audio/webm'
+    : (h.slice(0, 3).toString('latin1') === 'ID3' || (h[0] === 0xff && (h[1] & 0xe0) === 0xe0)) ? 'audio/mpeg' : h.slice(4, 8).toString('latin1') === 'ftyp' ? 'audio/mp4' : '';
+  if (!type) {   // raw 16-bit PCM (no header) — wrap it as a WAV file so every browser can play it
+    const rate = 24000, w = Buffer.alloc(44); w.write('RIFF', 0); w.writeUInt32LE(36 + buf.length, 4); w.write('WAVEfmt ', 8); w.writeUInt32LE(16, 16); w.writeUInt16LE(1, 20); w.writeUInt16LE(1, 22); w.writeUInt32LE(rate, 24); w.writeUInt32LE(rate * 2, 28); w.writeUInt16LE(2, 32); w.writeUInt16LE(16, 34); w.write('data', 36); w.writeUInt32LE(buf.length, 40);
+    buf = Buffer.concat([w, buf]); type = 'audio/wav';
+  }
+  return `data:${type};base64,${buf.toString('base64')}`;
 }
 // 🎧 a short sample of a Spitch voice (made once, then saved)
 async function sample(raw) {
   const v = String(raw.voice || ''); if (!/^sp:/.test(v) || !okVoice(v)) throw new HttpError(400, 'invalid', 'Which voice?');
-  const k = 'hq/yo/sample/' + v.slice(3), hit = await getJson(k).catch(() => null); if (hit && hit.dataUrl) return { dataUrl: hit.dataUrl };
+  const k = 'hq/yo/sample/' + v.slice(3), hit = await getJson(k).catch(() => null); if (hit && hit.dataUrl) return { dataUrl: relabel(hit.dataUrl) };
   const du = await spitchSay('Ẹ káàárọ̀. Báwo ni? Ẹ ṣé púpọ̀.', v.slice(3)); await setJson(k, { dataUrl: du, at: core.nowIso() }); return { dataUrl: du };
 }
 // 🩺 a fresh test call to Spitch (not the saved sample), so Auntie Tobi can see it's really working
 async function spitchCheck(raw) {
   const v = okVoice(raw.voice) ? raw.voice : 'sp:sade', t0 = Date.now();
   const du = await spitchSay('Ẹ káàbọ̀ sí Auntie Tobi.', v.slice(3));
-  return { ok: true, voice: v.slice(3), ms: Date.now() - t0, kb: Math.round(du.length * 0.75 / 1024), dataUrl: du };
+  return { ok: true, voice: v.slice(3), ms: Date.now() - t0, kb: Math.round(du.length * 0.75 / 1024), type: du.slice(5, du.indexOf(';')), dataUrl: du };
 }
 async function settingsGet() { const s = (await getJson(SETTINGS).catch(() => null)) || {}; return Object.assign({}, s, { spitch: !!spKey(), spVoices: SP_VOICES }); }
 async function settingsSave(raw) { const s = { voice: okVoice(raw.voice) ? raw.voice : '' }; await setJson(SETTINGS, s); return s; }
