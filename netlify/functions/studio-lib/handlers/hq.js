@@ -390,13 +390,13 @@ exports.handler = handler(async (ctx) => {
     case 'yo-record': return require('../yoruba').record(body, who.email);
     case 'yo-audio': return require('../yoruba').audioGet(body);
     case 'yo-unit': case 'yo-lesson-new': case 'yo-lesson-rename': case 'yo-lesson-del': case 'yo-draft': case 'yo-tts': case 'yo-item-del':
-    case 'yo-publish': case 'yo-unpublish': case 'yo-summary': case 'yo-settings': case 'yo-settings-save': case 'yo-sample': {
+    case 'yo-publish': case 'yo-unpublish': case 'yo-summary': case 'yo-settings': case 'yo-settings-save': case 'yo-sample': case 'yo-spitch-check': {
       if (!who.isAdmin) throw new HttpError(403, 'no_access', 'Only Auntie Tobi can do that.');
       const Y = require('../yoruba'), a = String(body.action);
       if (a === 'yo-draft') await core.rateLimit('hq-yodraft', who.email, 60, 60 * 60 * 1000, 'That’s a lot of drafts this hour — please wait a little.');
       if (a === 'yo-tts') await core.rateLimit('hq-yotts', who.email, 200, 60 * 60 * 1000, 'That’s a lot of audio this hour — please wait a little.');
       return ({ 'yo-unit': () => Y.unitSave(body), 'yo-lesson-new': () => Y.lessonNew(body), 'yo-lesson-rename': () => Y.lessonRename(body), 'yo-lesson-del': () => Y.lessonDel(body), 'yo-draft': () => Y.draft(body, who.email), 'yo-tts': () => Y.tts(body, who.email),
-        'yo-item-del': () => Y.itemDel(body), 'yo-publish': () => Y.publish(body), 'yo-unpublish': () => Y.unpublish(body), 'yo-summary': () => Y.summary(body), 'yo-settings': () => Y.settingsGet(), 'yo-settings-save': () => Y.settingsSave(body), 'yo-sample': () => Y.sample(body) })[a]();
+        'yo-item-del': () => Y.itemDel(body), 'yo-publish': () => Y.publish(body), 'yo-unpublish': () => Y.unpublish(body), 'yo-summary': () => Y.summary(body), 'yo-settings': () => Y.settingsGet(), 'yo-settings-save': () => Y.settingsSave(body), 'yo-sample': () => Y.sample(body), 'yo-spitch-check': () => Y.spitchCheck(body) })[a]();
     }
     case 'qv-status': return require('../quizvideo').status();
     case 'qv-speak': {

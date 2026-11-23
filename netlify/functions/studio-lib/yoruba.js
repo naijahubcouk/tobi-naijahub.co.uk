@@ -144,7 +144,7 @@ async function summary(raw) {
   return { month: m, people: Object.values(by).sort((a, b) => (b.words + b.audio + b.recorded) - (a.words + a.audio + a.recorded)) };
 }
 
-// ── 🔊 audio: recorded by a native speaker (free) or ElevenLabs Eleven v3 (admin, uses credits) ──
+// ── 🔊 audio: recorded by a native speaker (free) or a Spitch Yoruba AI voice (admin, tiny cost) ──
 async function record(raw, email) {
   const l = await lesson(raw.lesson), it = item(l, raw.item), du = String(raw.dataUrl || '');
   if (!/^data:audio\/(webm|ogg|mp4|mpeg|aac|x-m4a|wav)(;[^,]*)?;base64,[A-Za-z0-9+/=]+$/.test(du) || du.length > 900000) throw new HttpError(400, 'bad_audio', 'That recording didn’t work — keep it under 15 seconds and try again.');
@@ -156,39 +156,20 @@ async function record(raw, email) {
 }
 async function tts(raw, email) {
   const l = await lesson(raw.lesson), it = item(l, raw.item); if (!it.yo) throw new HttpError(400, 'invalid', 'Write the Yoruba first.');
-  const qv = require('./quizvideo'), set = (await getJson(SETTINGS).catch(() => null)) || {};
-  const pick = okVoice(raw.voice) ? raw.voice : set.voice;
-  if (/^sp:/.test(String(pick || ''))) {   // 🇳🇬 Spitch — Nigerian Yoruba voices
-    if (pick !== set.voice) await setJson(SETTINGS, Object.assign({}, set, { voice: pick })).catch(() => {});
-    const du = await spitchSay(it.yo, pick.slice(3));
-    const aid = newId('a'); await setJson(AUD(aid), { dataUrl: du, by: email || '', at: core.nowIso(), how: 'tts', voice: pick });
-    if (it.audio) await core.del(AUD(it.audio)).catch(() => {});
-    it.audio = aid; it.audHow = 'tts'; it.audVoice = pick; it.audOk = false; await touch(l);
-    return { lesson: l, chars: it.yo.length };
-  }
-  const voice = /^[A-Za-z0-9]{10,40}$/.test(pick || '') ? pick : ''; if (!voice) throw new HttpError(400, 'no_voice', 'Choose a voice first (the 🔊 Voice box at the top of the lesson).');
-  if (voice !== set.voice) await setJson(SETTINGS, Object.assign({}, set, { voice })).catch(() => {});   // remember the last voice used
-  // Eleven v3 is the ElevenLabs model that speaks Yoruba ("yo")
-  const call = body => qv.el(`/text-to-speech/${voice}?output_format=mp3_44100_128`, { method: 'POST', accept: 'audio/mpeg', timeout: 26000, body });
-  let r = await call({ text: it.yo, model_id: 'eleven_v3', language_code: 'yo' });
-  if (!r.ok && (r.status === 400 || r.status === 422)) { const j0 = await r.clone().json().catch(() => null); if (/language/i.test(JSON.stringify(j0 || {}))) r = await call({ text: it.yo, model_id: 'eleven_v3' }); }
-  if (!r.ok) {
-    const j = await r.json().catch(() => null), d = (j && j.detail) || j || {}, why = (typeof d === 'string' ? d : d.message || JSON.stringify(d)).slice(0, 220); console.error('[yoruba] tts', r.status, why);
-    if (/quota|credit/i.test(why)) throw new HttpError(402, 'no_credits', 'Your ElevenLabs credits have run out for this month.');
-    if (r.status === 401 || r.status === 403) throw new HttpError(400, 'voice_key', 'ElevenLabs said: ' + why + ' — check your key allows “Text to Speech” and that your plan includes Eleven v3.');
-    throw new HttpError(502, 'voice_error', 'ElevenLabs said: ' + (why || 'no reason given') + ' (status ' + r.status + '). Try another voice, or record it instead.');
-  }
-  const du = 'data:audio/mpeg;base64,' + Buffer.from(await r.arrayBuffer()).toString('base64');
-  const aid = newId('a'); await setJson(AUD(aid), { dataUrl: du, by: email || '', at: core.nowIso(), how: 'tts' });
+  const set = (await getJson(SETTINGS).catch(() => null)) || {};
+  const pick = okVoice(raw.voice) ? raw.voice : okVoice(set.voice) ? set.voice : 'sp:sade';   // 🇳🇬 Spitch — native Yoruba voices
+  if (pick !== set.voice) await setJson(SETTINGS, Object.assign({}, set, { voice: pick })).catch(() => {});
+  const du = await spitchSay(it.yo, pick.slice(3));
+  const aid = newId('a'); await setJson(AUD(aid), { dataUrl: du, by: email || '', at: core.nowIso(), how: 'tts', voice: pick });
   if (it.audio) await core.del(AUD(it.audio)).catch(() => {});
-  it.audio = aid; it.audHow = 'tts'; it.audOk = false; await touch(l);
+  it.audio = aid; it.audHow = 'tts'; it.audVoice = pick; it.audOk = false; await touch(l);
   return { lesson: l, chars: it.yo.length };
 }
 async function audioGet(raw) { if (!okId(raw.id, 'a')) throw new HttpError(400, 'invalid', 'Which audio?'); const a = await getJson(AUD(raw.id)).catch(() => null); if (!a) throw new HttpError(404, 'not_found', 'That audio has gone.'); return { dataUrl: a.dataUrl }; }
 // 🇳🇬 Spitch (spitch.app) — a Nigerian speech-AI service with native Yoruba voices. Key: SPITCH_API_KEY in Netlify (never sent to the browser).
 const SP_VOICES = [{ id: 'sade', name: 'Sade', gender: 'female' }, { id: 'funmi', name: 'Funmi', gender: 'female' }, { id: 'segun', name: 'Segun', gender: 'male' }, { id: 'femi', name: 'Femi', gender: 'male' }];
 const spKey = () => process.env.SPITCH_API_KEY || '';
-function okVoice(v) { v = String(v || ''); return /^[A-Za-z0-9]{10,40}$/.test(v) || (/^sp:[a-z]{3,12}$/.test(v) && SP_VOICES.some(x => 'sp:' + x.id === v)); }
+function okVoice(v) { v = String(v || ''); return /^sp:[a-z]{3,12}$/.test(v) && SP_VOICES.some(x => 'sp:' + x.id === v); }
 async function spitchSay(text, voice) {
   if (!spKey()) throw new HttpError(400, 'no_spitch', 'Spitch isn’t set up yet — add SPITCH_API_KEY in Netlify and redeploy.');
   const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 25000);
@@ -213,6 +194,12 @@ async function sample(raw) {
   const v = String(raw.voice || ''); if (!/^sp:/.test(v) || !okVoice(v)) throw new HttpError(400, 'invalid', 'Which voice?');
   const k = 'hq/yo/sample/' + v.slice(3), hit = await getJson(k).catch(() => null); if (hit && hit.dataUrl) return { dataUrl: hit.dataUrl };
   const du = await spitchSay('Ẹ káàárọ̀. Báwo ni? Ẹ ṣé púpọ̀.', v.slice(3)); await setJson(k, { dataUrl: du, at: core.nowIso() }); return { dataUrl: du };
+}
+// 🩺 a fresh test call to Spitch (not the saved sample), so Auntie Tobi can see it's really working
+async function spitchCheck(raw) {
+  const v = okVoice(raw.voice) ? raw.voice : 'sp:sade', t0 = Date.now();
+  const du = await spitchSay('Ẹ káàbọ̀ sí Auntie Tobi.', v.slice(3));
+  return { ok: true, voice: v.slice(3), ms: Date.now() - t0, kb: Math.round(du.length * 0.75 / 1024), dataUrl: du };
 }
 async function settingsGet() { const s = (await getJson(SETTINGS).catch(() => null)) || {}; return Object.assign({}, s, { spitch: !!spKey(), spVoices: SP_VOICES }); }
 async function settingsSave(raw) { const s = { voice: okVoice(raw.voice) ? raw.voice : '' }; await setJson(SETTINGS, s); return s; }
@@ -240,4 +227,4 @@ async function unpublish(raw) {
   return { lesson: l };
 }
 
-module.exports = { sample, spitchSay, index, lesson, unitSave, lessonNew, lessonRename, lessonDel, draft, itemSave, review, audioOk, itemDel, summary, record, tts, audioGet, settingsGet, settingsSave, publish, unpublish };
+module.exports = { spitchCheck, sample, spitchSay, index, lesson, unitSave, lessonNew, lessonRename, lessonDel, draft, itemSave, review, audioOk, itemDel, summary, record, tts, audioGet, settingsGet, settingsSave, publish, unpublish };

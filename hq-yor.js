@@ -24,9 +24,8 @@
   }
   function head() {
     var t = function (k, l) { return '<button class="btn ' + (TAB === k ? 'primary' : 'ghost') + '" data-tab="' + k + '">' + l + '</button>'; };
-    $('#topRight').innerHTML = t('lessons', '📚 Lessons') + ' ' + t('review', '🔎 To check (' + toCheck() + ')') + (ADMIN ? ' ' + t('pay', '💷 Reviewer summary') + ' <button class="btn ghost" id="yoSet">⚙️</button>' : '');
+    $('#topRight').innerHTML = t('lessons', '📚 Lessons') + ' ' + t('review', '🔎 To check (' + toCheck() + ')') + (ADMIN ? ' ' + t('pay', '💷 Reviewer summary') : '');
     $$('[data-tab]').forEach(function (b) { b.onclick = function () { TAB = b.dataset.tab; if (TAB !== 'lessons') CUR = null; head(); draw(); }; });
-    if ($('#yoSet')) $('#yoSet').onclick = settings;
   }
   function toCheck() { var n = 0; (IX ? IX.units : []).forEach(function (u) { u.lessons.forEach(function (l) { n += (l.n - l.ok) + (l.n - l.audOk); }); }); return n; }
   function draw() { if (TAB === 'review') return drawReview(); if (TAB === 'pay') return drawPay(); if (CUR) return drawLesson(); drawCourse(); }
@@ -60,7 +59,7 @@
     var h = '<div style="max-width:980px"><div class="card"><button class="btn link" id="yoBack">← All lessons</button>' +
       '<div class="row" style="gap:8px;align-items:center;margin-top:4px"><h2 style="margin:0;flex:1">' + esc(l.title) + '</h2>' + (ADMIN ? '<button class="btn ghost sm" id="yoRen">✏️ Rename</button>' : '') + '</div>' +
       '<div style="margin-top:4px">' + chips(s) + '</div>';
-    if (ADMIN) h += '<div class="row" style="gap:6px;margin-top:10px;align-items:center;flex-wrap:wrap"><span style="font-weight:700">🔊 Voice for AI audio</span><select id="yoVoice" style="width:auto;flex:1;min-width:220px"><option value="">Loading voices…</option></select><button class="btn ghost sm" id="yoHear">🎧 Preview</button><span class="muted" style="font-size:12px">🇳🇬 Spitch voices are made for Yoruba</span></div>' +
+    if (ADMIN) h += '<div class="row" style="gap:6px;margin-top:10px;align-items:center;flex-wrap:wrap"><span style="font-weight:700">🔊 Voice for AI audio</span><select id="yoVoice" style="width:auto;flex:1;min-width:220px"><option value="">Loading voices…</option></select><button class="btn ghost sm" id="yoHear">🎧 Preview</button><button class="btn ghost sm" id="yoChk">🩺 Check Spitch is working</button><span class="muted" id="yoChkMsg" style="font-size:12px">🇳🇬 Spitch voices are made for Yoruba</span></div>' +
       '<div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap"><input id="yoTopic" placeholder="Topic for the AI (optional) — e.g. greeting older people in the morning" style="flex:1;min-width:240px"><select id="yoN" style="width:auto;flex:none">' + [5, 8, 10, 12].map(function (n) { return '<option' + (n === 8 ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select><button class="btn primary" id="yoDraft">✨ Draft words with AI <span style="font-weight:400">(small cost)</span></button></div>' +
       '<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">' + (l.live ? '<button class="btn ' + (l.changed ? 'primary' : 'ghost') + '" id="yoPub"' + (ready ? '' : ' disabled') + '>📲 Update in the app</button><button class="btn ghost" id="yoUnpub">Take out of the app</button>' : '<button class="btn primary" id="yoPub"' + (ready ? '' : ' disabled') + '>📲 Put in the app</button>') +
         (ready ? '' : '<span class="muted" style="font-size:12.5px;align-self:center">Every word and its audio must be ✅ approved first (at least 3 words).</span>') + (l.live || l.items.length ? '' : '<button class="btn ghost" id="yoDelL" style="color:#B42318">🗑️ Delete lesson</button>') + '</div>';
@@ -93,12 +92,17 @@
     if ($('#yoVoice')) voices().then(function (v) {
       var sel = $('#yoVoice'); if (!sel) return;
       var opt = function (x) { return '<option value="' + x.id + '"' + (x.id === v.cur ? ' selected' : '') + '>' + esc(x.name) + (x.accent ? ' · ' + esc(x.accent) : '') + (x.gender ? ' · ' + esc(x.gender) : '') + '</option>'; };
-      sel.innerHTML = '<option value="">— choose a voice —</option>' + (v.sp.length ? '<optgroup label="🇳🇬 Spitch — native Yoruba voices (recommended)">' + v.sp.map(opt).join('') + '</optgroup>' : '') + (v.list.length ? '<optgroup label="ElevenLabs (Eleven v3)">' + v.list.map(opt).join('') + '</optgroup>' : '');
+      sel.innerHTML = '' + (v.sp.length ? '<optgroup label="🇳🇬 Spitch — native Yoruba voices">' + v.sp.map(opt).join('') + '</optgroup>' : '<option value="">Spitch isn’t set up — add SPITCH_API_KEY in Netlify</option>') + '';
       sel.onchange = function () { VO.cur = sel.value; X.api('yo-settings-save', { voice: sel.value }).then(function () { X.toast('🔊 Voice saved'); }).catch(function () {}); };
       $('#yoHear').onclick = function () {
         if (/^sp:/.test(sel.value)) { var b = this, t = b.textContent; b.textContent = '⏳'; return X.api('yo-sample', { voice: sel.value }).then(function (r) { try { new Audio(r.dataUrl).play(); } catch (e) {} }).catch(function (e) { X.toast(e.message); }).then(function () { b.textContent = t; }); }
-        var x = v.list.filter(function (y) { return y.id === sel.value; })[0]; if (!x || !x.preview) return X.toast(x ? 'No preview for this voice — try 🔊 AI voice on a word.' : 'Choose a voice first'); try { new Audio(x.preview).play(); } catch (e) {} };
+        X.toast('Choose a voice first'); };
     });
+    if ($('#yoChk')) $('#yoChk').onclick = function () {
+      var b = this, m = $('#yoChkMsg'); b.disabled = true; m.textContent = '🩺 Asking Spitch to say a test sentence…';
+      X.api('yo-spitch-check', { voice: ($('#yoVoice') || {}).value || '' }).then(function (r) { m.innerHTML = '✅ <b>Spitch is working</b> — ' + esc(r.voice) + ' answered in ' + (r.ms / 1000).toFixed(1) + 's. You should hear “Ẹ káàbọ̀ sí Auntie Tobi.”'; try { new Audio(r.dataUrl).play(); } catch (e) {} })
+        .catch(function (e) { m.innerHTML = '❌ <b>Not working:</b> ' + esc(e.message); }).then(function () { b.disabled = false; });
+    };
     if ($('#yoDraft')) $('#yoDraft').onclick = function () { var b = this; b.disabled = true; b.textContent = '✨ Drafting…'; X.api('yo-draft', { id: l.id, topic: $('#yoTopic').value, n: +$('#yoN').value }).then(function (r) { upd(r); X.toast('✨ ' + r.added + ' words drafted — now they need checking by a native speaker'); }).catch(function (e) { err(e); b.disabled = false; b.textContent = '✨ Draft words with AI'; }); };
     if ($('#yoPub')) $('#yoPub').onclick = function () { X.api('yo-publish', { id: l.id }).then(function (r) { upd(r); X.toast('📲 In the app ✅'); }).catch(err); };
     if ($('#yoUnpub')) $('#yoUnpub').onclick = function () { if (confirm('Take this lesson out of the app?')) X.api('yo-unpublish', { id: l.id }).then(upd).catch(err); };
@@ -120,13 +124,13 @@
         navigator.clipboard.writeText(t).then(function () { X.toast('📋 Copied — make it in ChatGPT or Gemini, then 📷 Add picture'); }, function () { prompt('Copy the prompt:', t); });
       };
       if ($('[data-pic]', c)) $('[data-pic]', c).onchange = function () { var file = this.files && this.files[0]; if (!file) return; shrink(file, 900).then(function (d) { return X.api('img', { dataUrl: d }); }).then(function (r) { return X.api('yo-item', { lesson: l.id, item: iid, f: { img: r.id } }); }).then(upd).catch(err); };
-      if ($('[data-tts]', c)) $('[data-tts]', c).onclick = function () { var b = this; if (!it.yo) return X.toast('Write the Yoruba first'); var vv = ($('#yoVoice') || {}).value || ''; if (!vv) return X.toast('Choose a voice at the top of the lesson first'); if (!confirm('Make the audio for “' + it.yo + '” with ' + (/^sp:/.test(vv) ? 'Spitch (' + vv.slice(3) + ')? Costs a tiny amount — well under a penny.' : 'ElevenLabs? Uses about ' + it.yo.length + ' credits.') + ' A native speaker still has to tick that it sounds right.')) return; b.disabled = true; b.textContent = '🔊 Making…'; X.api('yo-tts', { lesson: l.id, item: iid, voice: ($('#yoVoice') || {}).value || '' }).then(function (r) { upd(r); X.toast('🔊 Done — play it and tick if it sounds right'); }).catch(function (e) { err(e); b.disabled = false; b.textContent = '🔊 AI voice'; }); };
+      if ($('[data-tts]', c)) $('[data-tts]', c).onclick = function () { var b = this; if (!it.yo) return X.toast('Write the Yoruba first'); var vv = ($('#yoVoice') || {}).value || ''; if (!vv) return X.toast('Choose a voice at the top of the lesson first'); if (!confirm('Make the audio for “' + it.yo + '” with Spitch (' + vv.slice(3) + ')? Costs a tiny amount — well under a penny. A native speaker still has to tick that it sounds right.')) return; b.disabled = true; b.textContent = '🔊 Making…'; X.api('yo-tts', { lesson: l.id, item: iid, voice: ($('#yoVoice') || {}).value || '' }).then(function (r) { upd(r); X.toast('🔊 Done — play it and tick if it sounds right'); }).catch(function (e) { err(e); b.disabled = false; b.textContent = '🔊 AI voice'; }); };
       $('[data-rec]', c).onclick = function () { record(this, function (du) { X.api('yo-record', { lesson: l.id, item: iid, dataUrl: du }).then(function (r) { upd(r); X.toast('🎙️ Saved — play it back, then tick ✅ Audio sounds right'); }).catch(err); }); };
     });
   }
-  // the voices in your ElevenLabs account (Nigerian / African accents first)
+  // 🇳🇬 the Spitch Yoruba voices
   var VO = null;
-  function voices() { if (VO) return Promise.resolve(VO); return Promise.all([X.api('qv-status').catch(function () { return {}; }), X.api('yo-settings').catch(function () { return {}; })]).then(function (r) { var st = r[1] || {}; VO = { list: (r[0] && r[0].voices) || [], sp: st.spitch ? (st.spVoices || []).map(function (x) { return { id: 'sp:' + x.id, name: x.name, accent: 'Yoruba', gender: x.gender }; }) : [], cur: st.voice || (st.spitch ? 'sp:sade' : '') }; if (!VO.list.length && !VO.sp.length) X.toast(r[0] && r[0].error ? r[0].error : 'Couldn’t load your ElevenLabs voices — check the key in Netlify.'); return VO; }); }
+  function voices() { if (VO) return Promise.resolve(VO); return X.api('yo-settings').catch(function () { return {}; }).then(function (st) { VO = { sp: st.spitch ? (st.spVoices || []).map(function (x) { return { id: 'sp:' + x.id, name: x.name, accent: 'Yoruba', gender: x.gender }; }) : [], cur: /^sp:/.test(st.voice || '') ? st.voice : 'sp:sade' }; if (!VO.sp.length) X.toast('Spitch isn’t set up yet — add SPITCH_API_KEY in Netlify and redeploy.'); return VO; }); }
   function play(id, btn) {
     var go = function (du) { try { var a = new Audio(du); a.play(); } catch (e) { X.toast('Couldn’t play it'); } };
     if (AUD[id]) return go(AUD[id]);
@@ -170,16 +174,5 @@
       $('#yoPay').innerHTML = r.people.length ? '<table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left"><th>Reviewer</th><th>✅ Words approved</th><th>❌ Rejected</th><th>🎙️ Recorded</th><th>🔊 Audio checked</th></tr>' + r.people.map(function (p) { return '<tr style="border-top:1px solid #EEE9DD"><td style="padding:6px 0">' + esc(p.email) + '</td><td>' + p.words + '</td><td>' + p.rejected + '</td><td>' + p.recorded + '</td><td>' + p.audio + '</td></tr>'; }).join('') + '</table>' : 'No checks in ' + month + ' yet.';
     }).catch(function (e) { $('#yoPay').textContent = e.message; });
   }
-  // ── ⚙️ the AI voice used for 🔊 ──
-  function settings() {
-    var s = X.sheet('<h3 style="margin:0 0 8px">⚙️ Yoruba Lessons settings</h3><label>AI voice for 🔊 (ElevenLabs, Eleven v3 — Yoruba)</label><select id="yoV"><option value="">Loading voices…</option></select>' +
-      '<div class="muted" style="font-size:12.5px;margin-top:6px">A native speaker still has to tick ✅ Audio sounds right for every AI-made word. Recording real voices 🎙️ is free and usually better for core words.</div><div class="row" style="gap:8px;margin-top:12px"><button class="btn primary" id="yoVOk">Save</button><button class="btn ghost" id="yoVX">Cancel</button></div>');
-    Promise.all([X.api('qv-status').catch(function () { return {}; }), X.api('yo-settings').catch(function () { return {}; })]).then(function (r) {
-      var vs = (r[0] && r[0].voices) || [], cur = r[1].voice || ''; $('#yoV', s).innerHTML = '<option value="">— choose —</option>' + vs.map(function (v) { return '<option value="' + v.id + '"' + (v.id === cur ? ' selected' : '') + '>' + esc(v.name) + (v.accent ? ' · ' + esc(v.accent) : '') + '</option>'; }).join('');
-    });
-    $('#yoVOk', s).onclick = function () { X.api('yo-settings-save', { voice: $('#yoV', s).value }).then(function () { s.remove(); X.toast('Saved'); }).catch(function (e) { X.toast(e.message); }); };
-    $('#yoVX', s).onclick = function () { s.remove(); };
-  }
-
   window.HQYor = { init: function (x) { X = x; }, view: view };
 })();
