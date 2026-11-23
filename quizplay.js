@@ -72,7 +72,7 @@
     $('#qpLB', el).onclick = close;
     list(bank).then(function (items) {
       var box = $('#qpLL', el); if (!items.length) { box.textContent = 'No video quizzes yet — check back soon!'; return; }
-      box.innerHTML = items.map(function (it, i) { return '<button type="button" class="qp-card" data-q="' + esc(it.id) + '"><span class="qp-th" data-th="' + esc(it.id) + '">🎬</span><span><b>' + esc(it.name) + '</b><small>' + it.n + ' questions' + (it.voice ? ' · 🔊 with Auntie Tobi’s voice' : '') + (i === 0 ? ' · 🆕 newest' : '') + '</small></span><span class="pl">▶️</span></button>'; }).join('');
+      box.innerHTML = items.map(function (it, i) { return '<button type="button" class="qp-card" data-q="' + esc(it.id) + '"><span class="qp-th" data-th="' + esc(it.id) + '">🎬</span><span><b>' + esc(it.name) + '</b><small>' + it.n + ' questions' + (i === 0 ? ' · 🆕 newest' : '') + '</small></span><span class="pl">▶️</span></button>'; }).join('');
       [].slice.call(el.querySelectorAll('[data-q]')).forEach(function (b) { b.onclick = function () { play(b.dataset.q, Object.assign({}, hooks, { back: function () { } })); }; });
       // first picture of each quiz as its thumbnail
       items.slice(0, 20).forEach(function (it) { pack(it.id).then(function (p) { var q = p.qs.filter(function (x) { return x.img; })[0], im = p.cImg || (q && q.img), th = el.querySelector('[data-th="' + it.id + '"]'); if (im && th) { th.style.backgroundImage = 'url(' + API + '?vqi=' + encodeURIComponent(im) + ')'; th.textContent = ''; } }).catch(function () {}); });
