@@ -49,18 +49,38 @@
     head(); loadPub().then(head);
     var v = $('#view');
     v.innerHTML = '<div class="card" style="max-width:980px"><div class="muted">Loading…</div></div>';
-    Promise.all([loadBank(QV.bank), ST ? Promise.resolve(ST) : X.api('qv-status').then(function (r) { ST = r; return r; }).catch(function () { ST = { ready: false }; return ST; })]).then(function (r) {
+    loadPrefs().then(function () { if (!QV.qs.length && !QV.savedId && !QV._pr) { QV._pr = 1; applyPrefs(); } return Promise.all([loadBank(QV.bank), ST ? Promise.resolve(ST) : X.api('qv-status').then(function (r) { ST = r; return r; }).catch(function () { ST = { ready: false }; return ST; })]).then(function (r) {
       if (!QV.qs.length) { newSet(r[0]); }
       if (!QV.voice && ST.voices && ST.voices.length) QV.voice = ST.voices[0].id;
       if (!ST.ready) QV.voiceOn = false;
       draw(); refreshBgs(); if (!QV.savedId && !QV._base) setTimeout(function () { if (QV && $('#qvRoot')) QV._base = JSON.stringify(snapshot()); }, 50);
-    });
+    }); });
+  }
+  // ───── ⭐ my default settings (stored in HQ, so they follow me to any device) ─────
+  var PREFS, PKEYS = ['bank', 'n', 'grp', 'voiceOn', 'voice', 'model', 'readOpts', 'outro', 'appOn', 'appT', 'sayApp', 'music', 'musicVol', 'voiceVol', 'duck', 'igOn', 'ig'];
+  function loadPrefs() { return PREFS !== undefined ? Promise.resolve(PREFS) : X.api('qv-prefs').then(function (r) { PREFS = r.prefs || null; }).catch(function () { PREFS = null; }); }
+  function applyPrefs() { if (!PREFS) return; PKEYS.forEach(function (k) { if (PREFS[k] !== undefined && PREFS[k] !== '') QV[k] = PREFS[k]; }); if (!BANKS[QV.bank]) QV.bank = 'lifeuk'; }
+  function prefsSheet() {
+    KEEP();
+    var s = X.sheet('<h3 style="margin:0 0 8px">⭐ My default settings</h3>' +
+      '<div class="muted" style="font-size:13px">Every <b>new</b> quiz will start with what you have now: the quiz (' + esc(bank().name) + ', ' + QV.n + ' questions), Auntie Tobi’s voice and whether she reads the options, the music and volumes, the ending words, the app line, your Instagram handle and the small line under the cover title.</div>' +
+      '<div class="muted" style="font-size:12.5px;margin-top:6px">Questions and pictures still change each time. Saved quizzes keep their own settings.</div>' +
+      (PREFS ? '<div class="muted" style="font-size:12.5px;margin-top:6px">✅ You have defaults saved' + (PREFS.at ? ' (' + new Date(PREFS.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ')' : '') + '.</div>' : '') +
+      '<div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn primary" id="qvPOk">⭐ Save these as my defaults</button>' + (PREFS ? '<button class="btn ghost" id="qvPRes">↺ Back to the original settings</button>' : '') + '<button class="btn ghost" id="qvPX">Cancel</button></div>');
+    var tpl = function (t) { var n = String(QV.qs.length || QV.n); return String(t || '').replace(new RegExp('\\b' + n + '\\b', 'g'), '{n}'); };
+    $('#qvPOk', s).onclick = function () {
+      var P = {}; PKEYS.forEach(function (k) { P[k] = QV[k]; }); if (P.music === 'own') P.music = (PREFS && PREFS.music) || 'upbeat';
+      P.h2T = tpl(QV.h2); P.cSubT = tpl(QV.cSub);
+      X.api('qv-prefs-save', { prefs: P }).then(function (r) { PREFS = r.prefs; s.remove(); X.toast('⭐ Saved — new quizzes will start like this, on any device'); }).catch(function (e) { X.toast(e.message); });
+    };
+    if ($('#qvPRes', s)) $('#qvPRes', s).onclick = function () { X.api('qv-prefs-save', { prefs: null }).then(function () { PREFS = null; s.remove(); X.toast('↺ Back to the original settings for new quizzes'); }).catch(function (e) { X.toast(e.message); }); };
+    $('#qvPX', s).onclick = function () { s.remove(); };
   }
   function head() {
     $('#ttl').textContent = QV.savedName ? 'Quiz videos · ' + QV.savedName : 'Quiz videos';
-    $('#topRight').innerHTML = '<button class="btn ghost" id="qvNewQ">➕ New</button> <button class="btn ghost" id="qvMine">📂 My quizzes</button> <button class="btn primary" id="qvSave">💾 Save</button> <button class="btn ghost" id="qvSet">⚙️ Voice</button> <button class="btn ' + (QV.savedId && PUB[QV.savedId] ? 'primary' : 'ghost') + '" id="qvApp">' + (QV.savedId && PUB[QV.savedId] ? '✅ In the app' : '📺 Show in the app') + '</button>';
+    $('#topRight').innerHTML = '<button class="btn ghost" id="qvNewQ">➕ New</button> <button class="btn ghost" id="qvMine">📂 My quizzes</button> <button class="btn primary" id="qvSave">💾 Save</button> <button class="btn ghost" id="qvSet">⚙️ Voice</button> <button class="btn ghost" id="qvDef">⭐ Defaults</button> <button class="btn ' + (QV.savedId && PUB[QV.savedId] ? 'primary' : 'ghost') + '" id="qvApp">' + (QV.savedId && PUB[QV.savedId] ? '✅ In the app' : '📺 Show in the app') + '</button>';
     $('#qvApp').onclick = appSheet;
-    $('#qvSet').onclick = setupSheet; $('#qvMine').onclick = mine; $('#qvSave').onclick = saveSheet;
+    $('#qvSet').onclick = setupSheet; $('#qvDef').onclick = prefsSheet; $('#qvMine').onclick = mine; $('#qvSave').onclick = saveSheet;
     $('#qvNewQ').onclick = function () { if (!confirm('Start a new quiz? Anything you haven’t saved here will be cleared.')) return; var keepV = { voice: QV.voice, model: QV.model }; QV = null; state(); QV.voice = keepV.voice; QV.model = keepV.model; if (F()) F().lastDraft('qv', ''); view(); };
   }
   function snapshot() { KEEP(); var d = {}; ['bank', 'grp', 'qs', 'bgs', 'voiceOn', 'voice', 'model', 'readOpts', 'h1', 'h2', 'outro', 'appOn', 'appT', 'sayApp', 'music', 'musicVol', 'voiceVol', 'duck', 'igOn', 'ig', 'cTitle', 'cSub', 'cBg'].forEach(function (k) { d[k] = QV[k]; }); return d; }
@@ -144,7 +164,7 @@
       head(); return loadBank(QV.bank).then(function () { draw(); refreshBgs(); QV._last = JSON.stringify(snapshot()); X.toast('📂 Opened “' + r.name + '”'); });
     }).catch(function (e) { X.toast(e.message); throw e; });
   }
-  function newSet(all) { QV.qs = []; QV.out = null; var f = pick(all); QV.qs = f.slice(0, QV.n).map(makeQ); QV.h1 = bank().h1; QV.h2 = fill(bank().h2); QV.cTitle = bank().cover; QV.cSub = fill('{n} questions · Can you get {n}/{n}?'); QV.cBg = 0; }
+  function newSet(all) { QV.qs = []; QV.out = null; var f = pick(all); QV.qs = f.slice(0, QV.n).map(makeQ); QV.h1 = bank().h1; QV.h2 = fill((PREFS && PREFS.h2T) || bank().h2); QV.cTitle = bank().cover; QV.cSub = fill((PREFS && PREFS.cSubT) || '{n} questions · Can you get {n}/{n}?'); QV.cBg = 0; }
   function draw() {
     var v = $('#view'), b = bank(), cr = ST && ST.credits;
     var est = QV.qs.reduce(function (a, q) { return a + q.q.length + (QV.readOpts ? q.opts.join(', ').length + 12 : 0) + q.opts[q.ans].length + 16; }, 60);
