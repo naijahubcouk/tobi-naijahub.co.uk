@@ -392,6 +392,15 @@ exports.handler = handler(async (ctx) => {
     case 'vv-load': return require('../voicevid').load(body.id);
     case 'vv-del': return require('../voicevid').remove(body.id);
     case 'vv-voice': return require('../voicevid').setVoice(body.voice);
+    case 'rx-job': {
+      await core.rateLimit('hq-ai', who.email, 60, 60 * 60 * 1000, 'That\u2019s a lot of AI requests this hour — please wait a little.');
+      return require('../remix').jobStart(body, who.email);
+    }
+    case 'rx-job-check': return require('../remix').jobCheck(body.job);
+    case 'rx-pack-save': return require('../remix').packSave(body, who.email);
+    case 'rx-pack-list': return { items: await require('../remix').packList() };
+    case 'rx-pack-load': return require('../remix').packLoad(body.id);
+    case 'rx-pack-del': return require('../remix').packDel(body.id);
     case 'rx-save': return require('../remix').save(body, who.email);
     case 'rx-list': return { items: await require('../remix').list() };
     case 'rx-load': return require('../remix').load(body.id);

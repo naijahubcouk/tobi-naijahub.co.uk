@@ -152,11 +152,12 @@
   function openById(id) { return X.api('rx-load', { id: id }).then(function (r) { R = null; state(); R.tpl = r.tpl; R.music = r.tpl.base.music; R.savedId = r.id; R.savedName = r.name; R.out = null; R._last = JSON.stringify(slimTpl()); if (F()) F().lastDraft('rx', r.id); view(); return r; }); }
   function view() {
     var want = F() ? F().takeOpen('rx') : ''; if (!want && !R && F()) want = F().lastDraft('rx');
-    if (want && (!R || R.savedId !== want)) { openById(want).then(function (r) { X.toast('📂 Opened “' + r.name + '”'); }).catch(function () { if (F()) F().lastDraft('rx', ''); R = null; view(); }); if (!R) { $('#ttl').textContent = 'Video Remix'; $('#view').innerHTML = '<div class="card"><div class="muted">Opening your remix…</div></div>'; } return; }
+    if (want && !(R && R.pk) && (!R || R.savedId !== want)) { openById(want).then(function (r) { X.toast('📂 Opened “' + r.name + '”'); }).catch(function () { if (F()) F().lastDraft('rx', ''); R = null; view(); }); if (!R) { $('#ttl').textContent = 'Video Remix'; $('#view').innerHTML = '<div class="card"><div class="muted">Opening your remix…</div></div>'; } return; }
     state();
     $('#ttl').textContent = R.savedName ? 'Video Remix · ' + R.savedName : 'Video Remix';
-    $('#topRight').innerHTML = '<button class="btn ghost" id="rxMine">📂 My remixes</button>' + (R.tpl ? ' <button class="btn ghost" id="rxNew">➕ New</button> <button class="btn primary" id="rxSave">💾 Save</button>' : '');
-    $('#rxMine').onclick = mine;
+    $('#topRight').innerHTML = '<button class="btn ghost" id="rxPk">🎬 My packs</button> <button class="btn ghost" id="rxMine">📂 My remixes</button>' + (R.tpl || R.pk ? ' <button class="btn ghost" id="rxNew">➕ New</button> <button class="btn primary" id="rxSave">💾 Save</button>' : '');
+    $('#rxMine').onclick = mine; $('#rxPk').onclick = packs;
+    if (R.pk) { $('#rxSave').remove(); $('#rxNew').onclick = function () { R = null; view(); }; return packView(); }
     if ($('#rxNew')) $('#rxNew').onclick = function () { if (!confirm('Start a new remix? Anything you haven’t saved will be cleared.')) return; R = null; if (F()) F().lastDraft('rx', ''); view(); };
     if ($('#rxSave')) $('#rxSave').onclick = saveSheet;
     if (!R.tpl) return start();
@@ -164,47 +165,150 @@
     edit();
   }
   function start() {
-    $('#view').innerHTML = '<div id="rxRoot" style="max-width:1020px"><style>#rxRoot .card{margin-bottom:12px}#rxRoot label{display:block}.rx-ps{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:8px}.rx-p{border:1.5px solid #ECE8DE;border-radius:14px;padding:12px;background:#fff;text-align:left;cursor:pointer;font-family:inherit}.rx-p:hover{border-color:#057A44}.rx-p b{display:block;font-size:15px;margin:4px 0 2px}.rx-p small{color:#6B7280;font-size:12.5px;line-height:1.4;display:block}.rx-drop{border:2px dashed #C9D2DC;border-radius:16px;padding:22px;text-align:center;background:#FAFBFC;cursor:pointer}</style>' +
-      '<div class="card"><b>1 · Upload a video whose style you like</b><div class="muted" style="font-size:13px;margin:4px 0 10px">A screen recording from Instagram or TikTok is fine (up to 2 minutes). It stays on your computer — HQ only sends a few snapshots to the AI.</div>' +
+    $('#view').innerHTML = '<div id="rxRoot" style="max-width:1020px"><style>#rxRoot .card{margin-bottom:12px}#rxRoot label{display:block}.rx-ps{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:8px}.rx-p{border:1.5px solid #ECE8DE;border-radius:14px;padding:12px;background:#fff;text-align:left;cursor:pointer;font-family:inherit}.rx-p:hover{border-color:#057A44}.rx-p b{display:block;font-size:15px;margin:4px 0 2px}.rx-p small{color:#6B7280;font-size:12.5px;line-height:1.4;display:block}.rx-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:12px}.rx-drop{border:2px dashed #C9D2DC;border-radius:16px;padding:22px;text-align:center;background:#FAFBFC;cursor:pointer}</style>' +
+      '<div class="card"><b>1 · Upload a video whose style you like</b><div class="muted" style="font-size:13px;margin:4px 0 10px">A screen recording from Instagram or TikTok is fine (up to 2 minutes). It stays on your device — HQ only sends snapshots to the AI.</div>' +
       '<label class="rx-drop" id="rxDrop">🎞️ <b>Choose a video</b><div class="muted" style="font-size:13px;margin-top:4px" id="rxRefName">MP4, MOV or WebM</div><input type="file" accept="video/*" id="rxRef" hidden></label>' +
       '<label style="margin-top:12px">2 · What should Auntie Tobi’s version be about?</label><textarea id="rxTopic" rows="3" placeholder="e.g. 5 Nigerian restaurants in Manchester for date night (I’ll add the real details)">' + esc(R.topic || '') + '</textarea>' +
-      '<div class="row" style="gap:8px;margin-top:10px"><button class="btn primary" id="rxRead">✨ Read the style and write my version</button></div><div class="muted" id="rxProg" style="margin-top:8px"></div></div>' +
+      '<div class="muted" style="font-size:12.5px;margin-top:4px">Leave it blank to copy the style as it is.</div><div class="rx-two"><button class="rx-p" id="rxPack"><span style="font-size:26px">🎬</span><b>Get Seedance 2.5 prompts</b><small>A Recreate Pack: every shot, ready-to-copy Seedance 2.5 prompts (with and without the reference video), picture prompts, sound, and step-by-step how to make the same video.</small></button><button class="rx-p" id="rxRead"><span style="font-size:26px">✨</span><b>Remix it here in HQ</b><small>Reads the text style and scenes, writes your version, then you add pictures or clips and HQ makes the MP4.</small></button></div><div class="muted" id="rxProg" style="margin-top:8px"></div></div>' +
       '<div class="card"><b>Or start from a ready-made style</b><div class="rx-ps">' + PRESETS.map(function (p) { return '<button class="rx-p" data-pre="' + p.id + '"><span style="font-size:26px">' + p.ico + '</span><b>' + esc(p.name) + '</b><small>' + esc(p.sub) + '</small></button>'; }).join('') + '</div></div></div>';
     $('#rxRef').onchange = function () { var f = this.files && this.files[0]; if (!f) return; R.ref = f; $('#rxRefName').textContent = '✅ ' + f.name; };
     $('#rxTopic').oninput = function () { R.topic = this.value; };
     $('#rxRead').onclick = function () { read().catch(function (e) { prog(''); X.toast(e.message || 'Something went wrong.'); }); };
+    $('#rxPack').onclick = function () { readPack().catch(function (e) { prog(''); X.toast(e.message || 'Something went wrong.'); }); };
     $$('[data-pre]').forEach(function (b) { b.onclick = function () { var p = PRESETS.filter(function (x) { return x.id === b.dataset.pre; })[0]; R.tpl = clone(p.tpl); R.music = R.tpl.base.music; R.savedId = ''; R.savedName = ''; view(); }; });
   }
 
-  // ✨ read a reference video: snapshots at scene changes + every ~1.5 s → the AI
-  async function read() {
-    if (!R.ref) return X.toast('Choose a video first.');
-    if (R.ref.size > 300e6) return X.toast('That video is too big — please use one under 300 MB.');
-    $('#rxRead').disabled = true;
+  // 📸 snapshots of a video, taken in the browser: at every scene change + every ~1.5 s (max n)
+  async function grab(file, n, bw) {
+    if (file.size > 300e6) throw new Error('That video is too big — please use one under 300 MB.');
+    prog('Opening the video…');
+    var url = URL.createObjectURL(file), v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url;
     try {
-      prog('Opening the video…');
-      var url = URL.createObjectURL(R.ref), v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url;
       await new Promise(function (ok, bad) { v.onloadeddata = ok; v.onerror = function () { bad(new Error('That video won’t open here — try an MP4.')); }; });
       var dur = v.duration; if (!(dur > 0.5)) throw new Error('That video seems empty.'); if (dur > 125) throw new Error('Please use a video under 2 minutes.'); if (!v.videoWidth) throw new Error('That video won’t open in this browser — try saving it as an MP4 or use Chrome.');
       var seek = function (t) { return new Promise(function (ok) { var done = false, fin = function () { if (!done) { done = true; ok(); } }; v.onseeked = fin; setTimeout(fin, 1500); v.currentTime = Math.min(dur - 0.05, t); }); };
       var tiny = document.createElement('canvas'); tiny.width = 36; tiny.height = 64; var tc = tiny.getContext('2d', { willReadFrequently: true });
-      var big = document.createElement('canvas'), bw = 360, bh = Math.round(360 * v.videoHeight / v.videoWidth); big.width = bw; big.height = bh; var bc = big.getContext('2d');
-      var step = Math.max(0.2, dur / 80), prev = null, frames = [], times = [], lastT = -9;
+      var big = document.createElement('canvas'), bh = Math.round(bw * v.videoHeight / v.videoWidth); big.width = bw; big.height = bh; var bc = big.getContext('2d');
+      var step = Math.max(0.2, dur / 80), prev = null, all = [], cuts = [], lastT = -9;
       for (var t = 0.05; t < dur; t += step) {
         await seek(t); prog('Looking at the video… ' + Math.round(t / dur * 100) + '%');
         tc.drawImage(v, 0, 0, 36, 64); var d = tc.getImageData(0, 0, 36, 64).data, diff = 0;
         if (prev) { for (var i = 0; i < d.length; i += 4) diff += Math.abs(d[i] - prev[i]) + Math.abs(d[i + 1] - prev[i + 1]) + Math.abs(d[i + 2] - prev[i + 2]); diff /= (d.length / 4) * 3 * 255; }
-        prev = d;
-        if (!frames.length || diff > 0.09 || t - lastT >= 1.5) { bc.drawImage(v, 0, 0, bw, bh); var du = big.toDataURL('image/jpeg', 0.72); if (du.length > 100) frames.push(du); else continue; times.push(t); lastT = t; }
+        prev = d; var cut = diff > 0.09; if (cut) cuts.push(Math.round(t * 10) / 10);
+        if (!all.length || cut || t - lastT >= 1.5) { bc.drawImage(v, 0, 0, bw, bh); var du = big.toDataURL('image/jpeg', 0.72); if (du.length > 100) { all.push({ u: du, t: t, cut: cut }); lastT = t; } }
       }
-      if (frames.length > 18) { var keep = [], n = frames.length; for (var j = 0; j < 18; j++) keep.push(Math.round(j * (n - 1) / 17)); frames = keep.map(function (k) { return frames[k]; }); times = keep.map(function (k) { return times[k]; }); }
-      URL.revokeObjectURL(url);
-      if (frames.length < 2) throw new Error('Couldn’t take pictures from that video — try saving it as an MP4 or use Chrome.');
-      prog('✨ Reading the style' + (R.topic ? ' and writing your version' : '') + '… (about 20 seconds)');
-      var r = await X.api('rx-analyse', { frames: frames, times: times, dur: dur, topic: R.topic || '' });
+      // too many: keep every scene change first, then fill evenly
+      var pick = all;
+      if (all.length > n) {
+        var idx = all.map(function (x, k) { return k; }), cutIdx = idx.filter(function (k) { return k === 0 || all[k].cut; }), rest = idx.filter(function (k) { return cutIdx.indexOf(k) < 0; });
+        if (cutIdx.length >= n) { var c2 = []; for (var a = 0; a < n; a++) c2.push(cutIdx[Math.round(a * (cutIdx.length - 1) / (n - 1))]); cutIdx = c2; }
+        var room = n - cutIdx.length, fill = []; for (var b = 0; b < room && rest.length; b++) fill.push(rest[Math.round((b + 0.5) * rest.length / room - 0.5)]);
+        pick = cutIdx.concat(fill).filter(function (k, z, arr) { return arr.indexOf(k) === z; }).sort(function (p, q) { return p - q; }).map(function (k) { return all[k]; });
+      }
+      if (pick.length < 2) throw new Error('Couldn’t take pictures from that video — try saving it as an MP4 or use Chrome.');
+      return { frames: pick.map(function (x) { return x.u; }), times: pick.map(function (x) { return Math.round(x.t * 10) / 10; }), cuts: cuts, dur: dur };
+    } finally { URL.revokeObjectURL(url); }
+  }
+  // ⏳ a slow AI job: HQ stores it, the background worker does it (up to 15 minutes), we check every few seconds
+  async function runJob(body, label) {
+    var st = await X.api('rx-job', body), t0 = Date.now();
+    fetch('/.netlify/functions/remix-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ job: st.job, t: st.t }) }).catch(function () {});
+    for (;;) {
+      await new Promise(function (ok) { setTimeout(ok, 4000); });
+      var sec = Math.round((Date.now() - t0) / 1000); prog(label + ' ' + (sec < 60 ? sec + ' s' : Math.floor(sec / 60) + ' min ' + (sec % 60) + ' s') + ' — you can keep working; leave this page open.');
+      var r; try { r = await X.api('rx-job-check', { job: st.job }); } catch (e) { if (Date.now() - t0 > 17 * 60e3) throw e; continue; }
+      if (r.status === 'done') return r.result;
+      if (r.status === 'error') { var er = new Error(r.error || 'Something went wrong — please try again.'); er.notStarted = /didn’t start/.test(r.error || ''); throw er; }
+    }
+  }
+  // ✨ read a reference video's text style into a template (for remixing in HQ)
+  async function read() {
+    if (!R.ref) return X.toast('Choose a video first.');
+    $('#rxRead').disabled = true; $('#rxPack').disabled = true;
+    try {
+      var g = await grab(R.ref, 18, 360), r;
+      try { r = await runJob({ kind: 'style', frames: g.frames, times: g.times, cuts: g.cuts, dur: g.dur, topic: R.topic || '' }, '✨ Reading the style' + (R.topic ? ' and writing your version' : '') + '…'); }
+      catch (e) {
+        if (!e.notStarted) throw e;   // the background worker isn't available — try the quick way with fewer snapshots
+        var k = [], n = g.frames.length; for (var j = 0; j < Math.min(10, n); j++) k.push(Math.round(j * (n - 1) / (Math.min(10, n) - 1)));
+        prog('✨ Reading the style (quick way)…');
+        r = await X.api('rx-analyse', { frames: k.map(function (x) { return g.frames[x]; }), times: k.map(function (x) { return g.times[x]; }), dur: g.dur, topic: R.topic || '' });
+      }
       R.tpl = r.tpl; R.music = R.tpl.base.music; R.savedId = ''; R.savedName = ''; prog(''); view();
       X.toast('✨ Style read — now add your pictures or videos');
-    } finally { var b = $('#rxRead'); if (b) b.disabled = false; }
+    } finally { var b = $('#rxRead'); if (b) b.disabled = false; b = $('#rxPack'); if (b) b.disabled = false; }
+  }
+  // 🎬 Recreate Pack: shot list + Seedance 2.5 prompts + how to make it (saved automatically)
+  async function readPack() {
+    if (!R.ref) return X.toast('Choose a video first.');
+    $('#rxRead').disabled = true; $('#rxPack').disabled = true;
+    try {
+      var g = await grab(R.ref, 24, 480);
+      var r = await runJob({ kind: 'pack', frames: g.frames, times: g.times, cuts: g.cuts, dur: g.dur, topic: R.topic || '', name: R.ref.name.replace(/\.[a-z0-9]+$/i, '').slice(0, 60) }, '🎬 Writing your Recreate Pack (usually 1–3 minutes)…');
+      prog(''); await openPack(r.id); X.toast('🎬 Recreate Pack ready — it’s saved in 🎬 My packs');
+    } finally { var b = $('#rxRead'); if (b) b.disabled = false; b = $('#rxPack'); if (b) b.disabled = false; }
+  }
+  function openPack(id) { return X.api('rx-pack-load', { id: id }).then(function (r) { R = null; state(); R.pk = r; view(); return r; }); }
+  function packText(P) {
+    var L = [], add = function (h, t) { if (t) L.push((h ? h + '\n' : '') + t, ''); };
+    add('🎬 ' + P.title, [P.summary, P.format ? 'Format: ' + P.format : '', 'Length: ' + Math.round(P.dur) + ' seconds'].filter(Boolean).join('\n'));
+    add('🎨 THE LOOK', ['Style: ' + P.look.style, 'Colour: ' + P.look.colour, 'Light: ' + P.look.light, 'Camera: ' + P.look.camera, 'Pace: ' + P.look.pace, 'Editing: ' + P.look.edit].filter(function (x) { return !/: $/.test(x); }).join('\n'));
+    if (P.withRef.prompt) add('⭐ WAY 1 — SEEDANCE 2.5 WITH THE REFERENCE VIDEO', P.withRef.uploads.map(function (u) { return u.tag + ' = ' + u.what + ' — ' + u.role; }).join('\n') + '\n\nPROMPT:\n' + P.withRef.prompt);
+    if (P.oneTake) add('✍️ WAY 2 — PROMPT ONLY (ONE TAKE)', P.oneTake);
+    P.parts.forEach(function (p, i) { add('➕ PART ' + (i + 2), p); });
+    add('🎞️ SHOT BY SHOT', P.shots.map(function (x, i) { return 'Shot ' + (i + 1) + ' (' + x.from.toFixed(1) + '–' + x.to.toFixed(1) + ' s) · ' + [x.framing, x.camera].filter(Boolean).join(' · ') + '\n' + (x.action ? 'What happens: ' + x.action + '\n' : '') + (x.ourText ? 'On-screen text: ' + x.ourText + (x.textStyle ? ' (' + x.textStyle + ')' : '') + '\n' : '') + (x.sound ? 'Sound: ' + x.sound + '\n' : '') + 'Prompt: ' + x.prompt; }).join('\n\n'));
+    add('🔊 SOUND', ['Music: ' + P.audio.music, 'Sound effects: ' + P.audio.sfx, P.audio.voice ? 'Voice: ' + P.audio.voice : ''].filter(function (x) { return x && !/: $/.test(x); }).join('\n'));
+    if (P.pictures.length) add('🖼️ PICTURE PROMPTS', P.pictures.map(function (p) { return p.for + ':\n' + p.prompt; }).join('\n\n'));
+    if (P.steps.length) add('🧭 HOW TO MAKE IT', P.steps.map(function (x, i) { return (i + 1) + '. ' + x.replace(/^\d+[.)]\s*/, ''); }).join('\n'));
+    if (P.edit.length) add('✏️ ADDING THE TEXT', P.edit.map(function (x) { return '• ' + x; }).join('\n'));
+    if (P.tips.length) add('💡 TIPS', P.tips.map(function (x) { return '• ' + x; }).join('\n'));
+    add('✍️ CAPTION', P.caption);
+    return L.join('\n').trim();
+  }
+  function copy(t, what) { try { navigator.clipboard.writeText(t).then(function () { X.toast('📋 ' + (what || 'Copied')); }, function () { X.toast('Couldn’t copy — select the text instead.'); }); } catch (e) { X.toast('Couldn’t copy — select the text instead.'); } }
+  function packView() {
+    var K = R.pk, P = K.pack, CP = [];
+    var box = function (t, label) { CP.push(t); return '<div class="rx-pr"><div class="rx-prt">' + esc(t) + '</div><button class="btn ghost sm" data-cp="' + (CP.length - 1) + '">📋 Copy' + (label ? ' ' + esc(label) : '') + '</button></div>'; };
+    var row = function (k, v) { return v ? '<div><span class="muted">' + k + '</span> ' + esc(v) + '</div>' : ''; };
+    var secs = function (a, b) { return a.toFixed(1) + '–' + b.toFixed(1) + ' s'; };
+    $('#ttl').textContent = 'Recreate Pack · ' + K.name;
+    $('#view').innerHTML = '<div id="rxRoot" style="max-width:1020px"><style>#rxRoot .card{margin-bottom:12px}#rxRoot h3{margin:0 0 6px;font-size:17px}.rx-pr{background:#F7F5EF;border:1px solid #ECE6D6;border-radius:12px;padding:10px 12px;margin-top:8px}.rx-prt{white-space:pre-wrap;font-size:14px;line-height:1.5;margin-bottom:8px;user-select:text}.rx-look{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:4px 16px;font-size:14px;margin-top:6px}.rx-sh{display:flex;gap:12px;border-top:1px solid #EEE9DD;padding:12px 0;align-items:flex-start}.rx-sh:first-of-type{border-top:0}.rx-sh img{flex:none;width:96px;border-radius:10px;background:#111}.rx-sh .d{flex:1;min-width:0;font-size:14px;line-height:1.45}.rx-tag{display:inline-block;background:#057A44;color:#fff;border-radius:6px;padding:1px 7px;font-weight:700;font-size:13px;margin-right:6px}.rx-ol{margin:6px 0 0;padding-left:22px;font-size:14px;line-height:1.55}.rx-ol li{margin-bottom:4px}@media(max-width:560px){.rx-sh img{width:72px}}</style>' +
+      '<div class="card"><div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-start"><div style="flex:1;min-width:240px"><h3>🎬 ' + esc(P.title) + '</h3><div style="font-size:14px">' + esc(P.summary) + '</div><div class="muted" style="font-size:13px;margin-top:4px">' + esc([P.format, Math.round(P.dur) + ' seconds', P.shots.length + ' shots'].filter(Boolean).join(' · ')) + (P.topic ? '<br>Our version: ' + esc(P.topic) : '') + '</div></div>' +
+        '<button class="btn primary" id="pkAll">📋 Copy the whole pack</button></div>' +
+        '<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><input id="pkTopic" placeholder="Same video, another topic — e.g. 5 Nigerian bakeries in Birmingham" style="flex:1;min-width:240px"><button class="btn ghost" id="pkRe">🔁 Write a new pack</button></div><div class="muted" id="rxProg" style="margin-top:6px"></div></div>' +
+      '<div class="card"><h3>🎨 The look</h3><div class="rx-look">' + row('Style:', P.look.style) + row('Colour:', P.look.colour) + row('Light:', P.look.light) + row('Camera:', P.look.camera) + row('Pace:', P.look.pace) + row('Editing:', P.look.edit) + '</div></div>' +
+      (P.withRef.prompt ? '<div class="card"><h3>⭐ Way 1 — Seedance 2.5 with the reference video <span class="muted" style="font-size:13px;font-weight:500">(closest copy)</span></h3><div class="muted" style="font-size:13px">Upload these in Seedance first, then paste the prompt:</div>' +
+        P.withRef.uploads.map(function (u) { return '<div style="font-size:14px;margin-top:6px"><span class="rx-tag">' + esc(u.tag) + '</span><b>' + esc(u.what) + '</b> — ' + esc(u.role) + '</div>'; }).join('') + box(P.withRef.prompt, 'prompt') + '</div>' : '') +
+      (P.oneTake ? '<div class="card"><h3>✍️ Way 2 — prompt only, one take</h3><div class="muted" style="font-size:13px">No uploads needed (add your character picture as @Image 1 if you have one).</div>' + box(P.oneTake, 'prompt') +
+        P.parts.map(function (p, i) { return '<div style="margin-top:10px;font-weight:700;font-size:14px">➕ Part ' + (i + 2) + ' (extend the video)</div>' + box(p, 'part ' + (i + 2)); }).join('') + '</div>' : '') +
+      '<div class="card"><h3>🎞️ Shot by shot</h3><div class="muted" style="font-size:13px">Use these if you’d rather make each shot separately and join them in an editor.</div>' +
+        P.shots.map(function (x, i) { var im = K.frames[x.snap]; return '<div class="rx-sh">' + (im ? '<img src="' + im + '" alt="">' : '') + '<div class="d"><b>Shot ' + (i + 1) + '</b> <span class="muted">' + secs(x.from, x.to) + ' · ' + esc([x.framing, x.camera].filter(Boolean).join(' · ')) + '</span>' +
+          (x.action ? '<div>' + esc(x.action) + '</div>' : '') + (x.text || x.ourText ? '<div style="margin-top:4px">🔤 ' + (x.text ? '<span class="muted">Original:</span> “' + esc(x.text) + '” ' : '') + (x.ourText ? '→ <b>' + esc(x.ourText) + '</b>' : '') + (x.textStyle ? ' <span class="muted">(' + esc(x.textStyle) + ')</span>' : '') + '</div>' : '') +
+          (x.sound ? '<div>🔊 ' + esc(x.sound) + '</div>' : '') + (x.prompt ? box(x.prompt, 'shot ' + (i + 1)) : '') + '</div></div>'; }).join('') + '</div>' +
+      '<div class="card"><h3>🔊 Sound</h3><div style="font-size:14px;line-height:1.5">' + row('Music:', P.audio.music) + row('Sound effects:', P.audio.sfx) + '</div>' + (P.audio.voice ? box(P.audio.voice, 'voice lines') : '') + '<div class="muted" style="font-size:12.5px;margin-top:6px">Only use music you have the right to use — or add a built-in track in HQ Video Remix.</div></div>' +
+      (P.pictures.length ? '<div class="card"><h3>🖼️ Picture prompts</h3><div class="muted" style="font-size:13px">Make these in any image tool (or 👥 Characters in HQ), then upload them to Seedance with their tag.</div>' + P.pictures.map(function (p) { return '<div style="margin-top:10px;font-weight:700;font-size:14px">' + esc(p.for) + '</div>' + box(p.prompt, ''); }).join('') + '</div>' : '') +
+      '<div class="card"><h3>🧭 How to make the same video</h3><ol class="rx-ol">' + P.steps.map(function (x) { return '<li>' + esc(x.replace(/^\d+[.)]\s*/, '')) + '</li>'; }).join('') + '</ol>' +
+        (P.edit.length ? '<div style="margin-top:12px;font-weight:700;font-size:14px">✏️ Adding the on-screen text</div><ul class="rx-ol">' + P.edit.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') +
+        (P.tips.length ? '<div style="margin-top:12px;font-weight:700;font-size:14px">💡 Tips to get closer</div><ul class="rx-ol">' + P.tips.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') + '</div>' +
+      (P.caption ? '<div class="card"><h3>✍️ Caption</h3>' + box(P.caption, 'caption') + '</div>' : '') + '</div>';
+    $$('[data-cp]').forEach(function (b) { b.onclick = function () { copy(CP[+b.dataset.cp], 'Copied'); }; });
+    $('#pkAll').onclick = function () { copy(packText(P), 'Whole pack copied'); };
+    $('#pkRe').onclick = async function () {
+      var tp = $('#pkTopic').value.trim(); if (tp.length < 4) return X.toast('Write the new topic first.');
+      var b = this; b.disabled = true;
+      try { var r = await runJob({ kind: 'pack', frames: K.frames, times: K.times || [], dur: P.dur, topic: tp, name: tp.slice(0, 60) }, '🎬 Writing a new pack…'); prog(''); await openPack(r.id); X.toast('🎬 New pack ready'); }
+      catch (e) { prog(''); X.toast(e.message); } finally { if (document.body.contains(b)) b.disabled = false; }
+    };
+  }
+  function packs() {
+    var s = X.sheet('<h3 style="margin:0 0 8px">🎬 My Recreate Packs</h3><div id="pkL" class="muted">Loading…</div>'), items = [];
+    var paint = function () {
+      var box = $('#pkL', s); if (!items.length) { box.textContent = 'No packs yet — upload a video and press “🎬 Get Seedance 2.5 prompts”.'; return; } box.classList.remove('muted');
+      box.innerHTML = items.map(function (it) { return '<div class="row" style="gap:8px;padding:8px 0;border-top:1px solid #EEE9DD;flex-wrap:nowrap"><div style="flex:1;min-width:0"><b>' + esc(it.name) + '</b><div class="muted" style="font-size:12.5px">' + it.n + ' shots · ' + Math.round(it.dur || 0) + ' s · ' + new Date(it.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</div></div><button class="btn primary sm" data-po="' + it.id + '">Open</button><button class="btn ghost sm" data-pd="' + it.id + '">🗑</button></div>'; }).join('');
+      $$('[data-po]', s).forEach(function (b) { b.onclick = function () { openPack(b.dataset.po).then(function () { s.remove(); }).catch(function (e) { X.toast(e.message); }); }; });
+      $$('[data-pd]', s).forEach(function (b) { b.onclick = function () { if (!confirm('Delete this pack? This can’t be undone.')) return; X.api('rx-pack-del', { id: b.dataset.pd }).then(function () { items = items.filter(function (x) { return x.id !== b.dataset.pd; }); if (R.pk && R.pk.id === b.dataset.pd) { R = null; view(); } paint(); }).catch(function (e) { X.toast(e.message); }); }; });
+    };
+    X.api('rx-pack-list').then(function (r) { items = r.items || []; paint(); }).catch(function (e) { $('#pkL', s).textContent = e.message; });
   }
 
   // ───── the editor ─────
