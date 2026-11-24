@@ -48,7 +48,7 @@ async function list(email) {
 
   // 📸 free Instagram checks to follow up (same rule as the Revamp board's "Follow up" tab)
   const ckN = ck.filter(k => !k.clientId && (k.byHq ? (!k.sentAt || (!k.replied && days(k.sentAt) >= 3)) : !!(k.contact && !k.contacted)));
-  add({ key: 'checks', icon: '📸', n: ckN.length, text: 'free Instagram check' + (ckN.length === 1 ? '' : 's') + ' to follow up', names: ckN.map(k => (k.to && k.to.name) || k.biz || k.handle).filter(Boolean), nav: 'glow', btn: 'Follow up' });
+  add({ key: 'checks', icon: '✅', n: ckN.length, text: 'Instagram Check-Up' + (ckN.length === 1 ? '' : 's') + ' to send or follow up', names: ckN.map(k => (k.to && k.to.name) || k.biz || k.handle).filter(Boolean), nav: 'glow', btn: 'Follow up' });
 
   // 📣 Discovery posts made but not posted yet
   const dpN = dp.filter(p => p.status !== 'posted');

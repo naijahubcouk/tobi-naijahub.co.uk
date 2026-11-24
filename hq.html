@@ -272,7 +272,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
       <button data-nav="tx" id="navTx">🎙️ Transcribe a video</button>
       <button data-nav="mplan" id="navMplan">💚 My Plan users</button>
       <button data-nav="fol" id="navFol">📈 Followers tracker</button>
-      <button data-nav="glow" id="navGlow">✨ Instagram Revamp</button>
+      <button data-nav="glow" id="navGlow">✅ Instagram Check-Up</button>
       <button data-nav="sun" id="navSun">📰 Sunday Update</button>
       <button data-nav="igu" id="navIgu">👥 Comment &amp; like usernames</button>
       <button data-nav="dm" id="navDm">📨 DM Outreach</button>
@@ -315,7 +315,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
 <script src="/hq-transcribe.js?v=20261111c"></script>
 <script src="/hq-myplan.js?v=20261112"></script>
 <script src="/hq-followers.js?v=20261114"></script>
-<script src="/hq-glowup.js?v=20261121c"></script>
+<script src="/hq-glowup.js?v=20261124a"></script>
 <script src="/hq-sunday.js?v=20261115d"></script>
 <script src="/hq-spot.js?v=20261119c"></script>
 <script src="/hq-ideas.js?v=20261118c"></script>
@@ -391,7 +391,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
   var EXTRA = ['club', 'chat', 'ideas', 'dir', 'abiz', 'mkt', 'spot', 'find', 'out', 'mail', 'imgm', 'disc', 'tx', 'mplan', 'fol', 'glow', 'sun', 'igu', 'dm', 'iga', 'yor'];
   var SECTIONS = BASIC.concat(EXTRA);
   var SECTION_NAMES = { yor: '🗣️ Yoruba Lessons (reviewers)', club: '💚 Club check-ups', today: '🏠 Today', board: '🗂️ Board', calendar: '📅 Calendar', posted: '📲 Posted', app: '📣 Publish to App', subs: '🎉 Events (submissions)', igc: '💬 Comment Assistant', cars: '🎬 Animated Carousels', vads: '🎥 Video Ad Studio', bin: '🗑 Bin',
-    chat: '💬 Ask Auntie', ideas: '✨ Weekly ideas', dir: '🏢 Business directory', abiz: '➕ Add your business', mkt: '🛍️ Marketplace', spot: '⭐ Spotlight', find: '🔎 Business Finder', out: '📧 Outreach', mail: '📝 Emails', imgm: '🎨 Image model', disc: '📣 Discovery posts', tx: '🎙️ Transcribe a video', mplan: '💚 My Plan users', fol: '📈 Followers tracker', glow: '✨ Instagram Revamp', sun: '📰 Sunday Update', igu: '👥 Comment & like usernames', dm: '📨 DM Outreach', iga: '⚡ Auto-replies' };
+    chat: '💬 Ask Auntie', ideas: '✨ Weekly ideas', dir: '🏢 Business directory', abiz: '➕ Add your business', mkt: '🛍️ Marketplace', spot: '⭐ Spotlight', find: '🔎 Business Finder', out: '📧 Outreach', mail: '📝 Emails', imgm: '🎨 Image model', disc: '📣 Discovery posts', tx: '🎙️ Transcribe a video', mplan: '💚 My Plan users', fol: '📈 Followers tracker', glow: '✅ Instagram Check-Up & Revamp', sun: '📰 Sunday Update', igu: '👥 Comment & like usernames', dm: '📨 DM Outreach', iga: '⚡ Auto-replies' };
   function allowed(v) { if (v === 'tcars' || v === 'scars' || v === 'qvid' || v === 'rmx' || v === 'vvid' || v === 'fin' || v === 'chars') v = 'cars'; if (v === 'luq') v = 'app'; var ok = function (x) { return !S.sections || S.sections.indexOf(x) >= 0; }; return v === 'subs' ? ok('subs') || ok('app') : ok(v); }   // 🎉 Events page = submissions + live events
   function go(v) {
     S.view = ((SECTIONS.indexOf(v) >= 0 || v === 'tcars' || v === 'scars' || v === 'qvid' || v === 'rmx' || v === 'vvid' || v === 'fin' || v === 'chars' || v === 'luq') && allowed(v)) ? v : (allowed('today') ? 'today' : SECTIONS.filter(allowed)[0] || 'today');

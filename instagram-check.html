@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Free Instagram Check · Auntie Tobi</title>
-<meta name="description" content="Get a free check of your business Instagram from Auntie Tobi: what's working, what to improve, and one quick win for today.">
-<meta property="og:title" content="🆓 Free Instagram check from Auntie Tobi">
+<title>Free Instagram Check-Up · Auntie Tobi</title>
+<meta name="description" content="Get a free Instagram Check-Up for your business from Auntie Tobi: scores, what's working, a new bio, pinned posts, content ideas and an action plan.">
+<meta property="og:title" content="✅ Free Instagram Check-Up from Auntie Tobi">
 <meta property="og:description" content="See what's working on your business Instagram and what to improve — free, in about a minute.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.auntietobi.co.uk/instagram-check">
@@ -75,11 +75,29 @@ details.how{margin-top:14px;font-size:13.5px;color:#4B5563}details.how summary{c
 .adds{display:grid;gap:8px;margin:12px 0 4px}.adds div{background:#F6F4EE;border-radius:10px;padding:10px 12px;font-size:14px}.adds b{display:block;font-size:13.5px;margin-bottom:2px}
 .ring i{font-size:30px}.ring i small{font-size:10.5px}
 .hidden{display:none!important}
+
+.cuh{background:linear-gradient(150deg,#057A44,#0A5C38)}
+.cuh .badge{background:#FFB81C;color:#0F1E36}
+.cusec{font-size:12.5px;letter-spacing:.8px;text-transform:uppercase;color:#057A44;font-weight:800;margin-bottom:10px;display:flex;gap:8px;align-items:center}
+.cusec i{font-style:normal;width:24px;height:24px;border-radius:50%;background:#057A44;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;letter-spacing:0;flex:none}
+.cuf{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:15px}.cuf span{color:#6B7280}
+.cut{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:10px}.cut th{text-align:left;background:#F6F4EE;font-size:12.5px;text-transform:uppercase;letter-spacing:.4px;color:#6B7280;padding:8px 10px}.cut td{padding:9px 10px;border-top:1px solid #F0EDE5;vertical-align:top}.cut td:first-child{font-weight:600}
+.cus{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #F0EDE5}.cus:first-child{border-top:0}.cus b{flex:1;font-size:15px}.cus small{display:block;color:#6B7280;font-size:13px;font-weight:400}.cus em{font-style:normal;font-weight:800;font-size:15px;min-width:46px;text-align:right}
+.cubar{height:6px;border-radius:4px;background:#EEE9DD;width:70px;overflow:hidden}.cubar i{display:block;height:100%}
+.cuov{display:flex;align-items:center;gap:14px;margin-top:12px;padding-top:12px;border-top:2px solid #EEE9DD}.cuov b{font-size:34px;line-height:1}.cuov small{font-size:15px;color:#6B7280}
+.cuchips{display:flex;flex-wrap:wrap;gap:8px}.cuchips span{background:#FFF7E3;border:1.5px solid #F2D58A;color:#7A5300;border-radius:999px;padding:7px 14px;font-weight:700;font-size:14px}
+.cupin{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.cupin div{border-radius:12px;padding:12px 10px;color:#fff;min-height:150px;display:flex;flex-direction:column}.cupin div:nth-child(1){background:linear-gradient(160deg,#0F1E36,#24406B)}.cupin div:nth-child(2){background:linear-gradient(160deg,#057A44,#0A5C38)}.cupin div:nth-child(3){background:linear-gradient(160deg,#B4532A,#7A2E12)}
+.cupin u{text-decoration:none;font-size:28px}.cupin b{font-size:14.5px;line-height:1.3;margin-top:auto}.cupin small{font-size:12.5px;opacity:.85;margin-top:4px;line-height:1.35}
+@media(max-width:420px){.cupin{grid-template-columns:1fr}.cupin div{min-height:0}.cupin b{margin-top:6px}}
+.cuck{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid #F0EDE5;cursor:pointer;font-size:15px}.cuck:first-of-type{border-top:0}.cuck input{width:20px;height:20px;flex:none;margin-top:1px;accent-color:#057A44}.cuck.on span{text-decoration:line-through;color:#6B7280}
+.cupr{background:#FFF7E3;border-radius:12px;padding:12px 14px;margin-top:10px;font-size:15px}
+.cumsg{white-space:pre-wrap;background:#F6FAF7;border:1px dashed #A7D7BC;border-radius:12px;padding:12px 14px;font-size:15px}
+.cuopt{margin-top:10px}.cuopt small{color:#6B7280;font-weight:700;font-size:13px}
 </style>
 <template data-icons><link rel="icon" href="/tobi-face-128.png"></template>
 </head>
 <body>
-<div class="top"><img data-lsrc="/tobi-face-128.png" alt=""><div><b>Auntie Tobi</b><span>Free Instagram check</span></div><a href="/">🏠 App</a></div>
+<div class="top"><img data-lsrc="/tobi-face-128.png" alt=""><div><b>Auntie Tobi</b><span>Free Instagram Check-Up</span></div><a href="/">🏠 App</a></div>
 <div class="wrap" id="app"></div>
 <script>
 (function () {
@@ -94,7 +112,7 @@ details.how{margin-top:14px;font-size:13.5px;color:#4B5563}details.how summary{c
   // ── 1. the form ──
   function form() {
     var shots = [], goal = '', listing = null;
-    app.innerHTML = '<div class="hero"><div class="badge">🆓 Free Instagram check</div><h1>Is your Instagram <span>bringing you customers?</span></h1><p>Send Auntie Tobi a screenshot of your business page. In about a minute you’ll get your score out of 100, what’s working, your top fixes with step-by-step how-tos, a new bio idea and one quick win for today.</p></div>' +
+    app.innerHTML = '<div class="hero"><div class="badge">✅ Free Instagram Check-Up</div><h1>Is your Instagram <span>bringing you customers?</span></h1><p>Send Auntie Tobi a screenshot of your business page. In about a minute you’ll get your Check-Up: scores out of 10, what’s working, what to improve, two new bios, Story Highlights, 3 pinned posts, content ideas and an action plan.</p></div>' +
       '<div class="card">' +
       '<div class="stp"><i>1</i>Is your business on Auntie Tobi?</div>' +
       '<div id="s1"><div class="find" id="fnd"><input id="lq" placeholder="Type your business name" autocomplete="off"><div class="res" id="res"></div></div>' +
@@ -107,7 +125,7 @@ details.how{margin-top:14px;font-size:13.5px;color:#4B5563}details.how summary{c
       '<div class="stp" style="margin-top:22px"><i>2</i>A screenshot of your Instagram</div>' +
       '<div class="shot" id="sh">📷 Add your screenshot<small>Your profile with your bio and the top of your posts. You can add a 2nd one (like your highlights or a post).</small></div><input type="file" id="shF" accept="image/*" multiple hidden><div class="thumbs" id="th"></div>' +
       '<div class="stp" style="margin-top:22px"><i>3</i>What do you want most from Instagram?</div><div class="chips" id="goal">' + GOALS.map(function (g) { return '<button type="button" data-g="' + g + '">' + g + '</button>'; }).join('') + '</div>' +
-      '<div class="err" id="err"></div><button class="go" id="go">✨ Check my page — free</button>' +
+      '<div class="err" id="err"></div><button class="go" id="go">✨ Get my free Check-Up</button>' +
       '<p class="note" style="margin-top:10px">Your screenshot is only used for your check — we don’t keep it.</p></div>';
     var th = function () { $('#th').innerHTML = shots.map(function (u, i) { return '<div><img src="' + u + '" alt=""><button type="button" data-rm="' + i + '" aria-label="Remove">✕</button></div>'; }).join(''); $('#sh').firstChild.textContent = shots.length ? (shots.length < 2 ? '📷 Add a 2nd screenshot (optional)' : '✓ 2 screenshots added') : '📷 Add your screenshot'; [].forEach.call(document.querySelectorAll('[data-rm]'), function (b) { b.onclick = function () { shots.splice(+b.dataset.rm, 1); th(); }; }); };
     $('#sh').onclick = function () { if (shots.length < 2) $('#shF').click(); };
@@ -155,14 +173,57 @@ details.how{margin-top:14px;font-size:13.5px;color:#4B5563}details.how summary{c
   }
   function showErrAgain(m) { var e = $('#err'); if (e) { e.textContent = m + ' (Please add your screenshot again.)'; e.style.display = 'block'; e.scrollIntoView({ block: 'center' }); } }
   function waiting() {
-    var msgs = ['Looking at your profile…', 'Reading your bio…', 'Checking your posts…', 'Spotting what’s working…', 'Finding your quick win…'], k = 0;
+    var msgs = ['Looking at your profile…', 'Reading your bio…', 'Scoring your page…', 'Spotting what’s working…', 'Writing your new bio…', 'Planning your pinned posts…', 'Making your action plan…'], k = 0;
     app.innerHTML = '<div class="card wait"><div class="spin"></div><b style="font-size:18px" id="wm">' + msgs[0] + '</b><p class="note" style="margin-top:6px">Auntie Tobi is checking your page — this takes about a minute.</p></div>';
     var iv = setInterval(function () { var m = $('#wm'); if (!m) return clearInterval(iv); k = (k + 1) % msgs.length; m.textContent = msgs[k]; }, 3500);
     window.scrollTo(0, 0);
   }
 
+
+  // ✅ the Instagram Check-Up (10 sections)
+  function checkup(d) {
+    var C = d.cu, P = C.profile || {}, n = 0, link = SITE + '/instagram-check?c=' + encodeURIComponent(d.t);
+    var sec = function (t, b) { n++; return '<div class="card"><div class="cusec"><i>' + n + '</i>' + t + '</div>' + b + '</div>'; };
+    var col = function (v) { return v >= 8 ? '#057A44' : v >= 6 ? '#2FA36B' : v >= 4 ? '#E9A100' : '#D9480F'; };
+    var dt = d.date ? new Date(d.date + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+    var h = '<div class="hero cuh"><div class="badge">' + (d.club ? '💚 Auntie Tobi Business Club' : '✅ Your free Instagram Check-Up') + '</div><h1>' + esc(P.name || d.biz) + '</h1><p>' + (d.club ? 'Member Profile &amp; Instagram Check-Up' : 'Instagram Check-Up') + (dt ? ' · ' + esc(dt) : '') + '</p></div>';
+    var f = [['Instagram', P.handle ? '<a href="https://www.instagram.com/' + encodeURIComponent(P.handle) + '/" target="_blank" rel="noopener" style="color:#057A44;font-weight:700">@' + esc(P.handle) + '</a>' : ''], ['Industry', esc(P.industry)], ['Location', esc(P.location)], ['Established', esc(P.established)], ['Speciality', esc(P.speciality)]].filter(function (x) { return x[1]; });
+    var st = [['Followers', P.followers], ['Following', P.following], ['Posts', P.posts], ['Booking link', P.booking], ['Story Highlights', P.highlights]].filter(function (x) { return x[1]; });
+    h += sec('Business profile', (f.length ? '<div class="cuf">' + f.map(function (x) { return '<span>' + x[0] + '</span><div>' + x[1] + '</div>'; }).join('') + '</div>' : '') +
+      (st.length ? '<table class="cut"><tr><th>Profile statistics</th><th>Current</th></tr>' + st.map(function (x) { return '<tr><td>' + x[0] + '</td><td>' + esc(x[1]) + '</td></tr>'; }).join('') + '</table>' : '') +
+      (P.situation ? '<p style="margin-top:10px;font-size:15px"><b>Current situation:</b> ' + esc(P.situation) + '</p>' : ''));
+    var S = d.cuScores || [['username', 'Username'], ['photo', 'Profile picture'], ['name', 'Searchable profile name'], ['bio', 'Bio optimisation'], ['highlights', 'Story Highlights'], ['visual', 'Visual content'], ['booking', 'Booking process']];
+    h += sec('Instagram profile assessment', S.map(function (k) { var x = (C.scores || {})[k[0]] || {}, v = x.s;
+      return '<div class="cus"><b>' + k[1] + (x.note ? '<small>' + esc(x.note) + '</small>' : '') + '</b>' + (v == null ? '<em style="color:#9CA3AF;font-size:13px">Couldn’t see</em>' : '<div class="cubar"><i style="width:' + v * 10 + '%;background:' + col(v) + '"></i></div><em style="color:' + col(v) + '">' + v + '/10</em>') + '</div>'; }).join('') +
+      (C.overall != null ? '<div class="cuov"><b style="color:' + col(C.overall) + '">' + C.overall + '<small>/10</small></b><div style="font-weight:800">Overall profile score<div class="note" style="text-align:left;font-weight:400;margin-top:2px">Indicative, based on the screenshots supplied.</div></div></div>' : ''));
+    if (C.working.length) h += sec('What’s working well', C.working.map(function (x) { return '<div class="li"><span>✅</span><div>' + esc(x) + '</div></div>'; }).join(''));
+    if (C.improve.length) h += sec('Areas for improvement', '<table class="cut" style="margin-top:0"><tr><th>Current issue</th><th>Recommended action</th></tr>' + C.improve.map(function (x) { return '<tr><td>' + esc(x.issue) + '</td><td>' + esc(x.action) + '</td></tr>'; }).join('') + '</table>');
+    if (C.bios.length || C.profileName) h += sec('Recommended Instagram bio', (C.profileName ? '<div><small style="color:#6B7280;font-weight:700;font-size:13px">Profile name</small><div class="biob">' + esc(C.profileName) + '</div><button type="button" class="cpb" data-cp="' + esc(C.profileName) + '">📋 Copy name</button></div>' : '') +
+      C.bios.map(function (b) { return '<div class="cuopt"><small>' + esc(b.label) + '</small><div class="biob">' + esc(b.text) + '</div><button type="button" class="cpb" data-cp="' + esc(b.text) + '">📋 Copy bio</button></div>'; }).join('') +
+      (C.bioPick ? '<p style="margin-top:12px;font-size:15px">💡 ' + esc(C.bioPick) + '</p>' : '') + '<p class="note" style="text-align:left;margin-top:6px">Edit profile → Name and Bio. Change anything you like.</p>');
+    if (C.highlights.length) h += sec('Recommended Story Highlights', '<div class="cuchips">' + C.highlights.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</div>' + (C.highlightNote ? '<p style="margin-top:10px;font-size:15px">' + esc(C.highlightNote) + '</p>' : ''));
+    if (C.pinned.length) h += sec('Three recommended pinned posts', '<div class="cupin">' + C.pinned.map(function (x) { return '<div><u>' + esc(x.emoji || '📌') + '</u><b>' + esc(x.title) + '</b><small>' + esc(x.body) + '</small></div>'; }).join('') + '</div>');
+    if (C.ideas.length) h += sec('Content improvement ideas', '<p style="font-size:15px">Give people reasons to follow, trust and book — not just your finished work.</p><table class="cut"><tr><th>Content pillar</th><th>Post idea</th></tr>' + C.ideas.map(function (x) { return '<tr><td>' + esc(x.pillar) + '</td><td>' + esc(x.idea) + '</td></tr>'; }).join('') + '</table>');
+    if (C.plan.length) h += sec(d.club ? 'Business Club action plan' : 'Your action plan', '<div style="display:flex;justify-content:space-between;font-weight:800;font-size:14px"><span>' + (d.club ? 'Member improvement checklist' : 'Your checklist') + '</span><span id="cuN"></span></div><div class="pbar" style="height:8px;border-radius:6px;background:#EEE9DD;overflow:hidden;margin:6px 0 4px"><i id="cuB" style="display:block;height:100%;background:#057A44;width:0;transition:width .3s"></i></div>' +
+      C.plan.map(function (x, i) { var on = !!(d.cuTicks || {})[i]; return '<label class="cuck' + (on ? ' on' : '') + '"><input type="checkbox" data-ck="' + i + '"' + (on ? ' checked' : '') + '><span>' + esc(x) + '</span></label>'; }).join('') +
+      (C.priority ? '<div class="cupr"><b>Priority for this week:</b> ' + esc(C.priority) + '</div>' : ''));
+    if (C.message) h += sec('Personalised feedback', '<div class="cumsg">' + esc(C.message) + '</div>');
+    h += '<p class="note" style="text-align:left;padding:0 4px"><b>Review note:</b> ' + esc(d.cuNote || '') + '</p>';
+    h += '<a class="go wa" style="text-decoration:none;text-align:center;margin-top:0" target="_blank" rel="noopener" href="https://wa.me/' + WA + '?text=' + encodeURIComponent('Hi Auntie Tobi 👋🏾 I have a question about my Instagram Check-Up for ' + d.biz + ': ' + link) + '">💬 Questions? Message Auntie Tobi</a>';
+    if (!d.listed) h += '<div class="list"><b>📍 Get found on Auntie Tobi too</b><p>Add your business to the Auntie Tobi directory for free, so Nigerians across the UK can find you.</p><a href="/add-business?from=igcheck" target="_blank" rel="noopener">Add my business free →</a></div>';
+    h += '<div class="save"><span>🔖 Come back to your Check-Up: ' + esc(link.replace(/^https?:\/\//, '')) + '</span><button type="button" id="cpy">Copy</button></div>' +
+      '<p class="note">💚 Auntie Tobi — Your UK Guide for Nigerians<br><a href="/instagram-check" style="color:#057A44">Check another page</a></p>';
+    app.innerHTML = h;
+    var prog = function () { var all = document.querySelectorAll('[data-ck]'), on = document.querySelectorAll('[data-ck]:checked').length; if (!all.length) return; $('#cuN').textContent = on + '/' + all.length + ' completed'; $('#cuB').style.width = Math.round(on * 100 / all.length) + '%'; };
+    prog();
+    [].forEach.call(document.querySelectorAll('[data-ck]'), function (x) { x.onchange = function () { x.parentNode.classList.toggle('on', x.checked); prog(); if (new URLSearchParams(location.search).get('hq') === '1') return; post({ action: 'cutick', t: d.t, i: +x.dataset.ck, on: x.checked }).catch(function () {}); }; });
+    $('#cpy').onclick = function () { try { navigator.clipboard.writeText(link); this.textContent = 'Copied ✓'; } catch (e) {} };
+    [].slice.call(document.querySelectorAll('[data-cp]')).forEach(function (x) { x.onclick = function () { try { navigator.clipboard.writeText(x.dataset.cp); x.textContent = 'Copied ✓'; } catch (e) {} }; });
+  }
+
   // ── 2. the results ──
   function result(d) {
+    if (d.cu) return checkup(d);
     var TONE = { great: '#057A44', good: '#2FA36B', mid: '#E9A100', low: '#D9480F' }, col = TONE[d.tone] || '#057A44', goalW = d.goal ? d.goal.replace('More ', '') : 'customers';
     var link = SITE + '/instagram-check?c=' + encodeURIComponent(d.t);
     var say = { great: 'Your page is working hard for you — a few tweaks will make it even better.', good: 'A good page — some simple changes could bring you a lot more ' + goalW + '.', mid: 'You’re getting there — a few clear changes could make a real difference.', low: 'There’s a big opportunity here — your page could be bringing you much more.' }[d.tone] || '';

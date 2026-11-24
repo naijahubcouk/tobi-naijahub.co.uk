@@ -1,5 +1,6 @@
 /*
- * ✨ HQ → Instagram Revamp (admin only): the paid page-revamp service, client by client, through the 10 steps.
+ * ✅ HQ → Instagram Check-Up & ✨ Revamp (admin only). Check-Ups: the free 10-section report (Business Club members and /instagram-check).
+ * Revamp: the free page-revamp service, client by client, through the 10 steps.
  *   Part 1: clients board, the 10 steps, the client's form link, page audit, competitors (+ a library by category),
  *   check-in numbers and ready-to-send WhatsApp messages A–F.
  */
@@ -24,34 +25,34 @@
     if (c.checkin && c.checkin <= todayIso() || d[9]) return 'check';
     return 'sent';
   }
-  var COLS = [['enq', 'Enquiries (not paid)'], ['form', 'Waiting for form'], ['work', 'Working on it'], ['sent', 'Delivered'], ['check', 'Check-in & review']];
+  var COLS = [['enq', 'Enquiries (not started)'], ['form', 'Waiting for form'], ['work', 'Working on it'], ['sent', 'Delivered'], ['check', 'Check-in & review']];
   function pill(t, k) { var c = { g: ['#E3F2EA', '#057A44'], y: ['#FFF1CF', '#7A5300'], r: ['#FDE2E1', '#B42318'], b: ['#E7EFFD', '#1D3D7A'] }[k || 'b']; return '<span style="display:inline-block;font-size:11.5px;font-weight:800;border-radius:10px;padding:2px 8px;margin-top:5px;background:' + c[0] + ';color:' + c[1] + '">' + t + '</span>'; }
 
   async function load() { var r = await Promise.all([X.api('gu-list'), X.api('gu-checks').catch(function () { return { checks: [] }; })]); D = r[0]; D.checks = r[1].checks || []; }
   async function view() {
-    $('#ttl').textContent = 'Instagram Revamp';
-    $('#topRight').innerHTML = '<button class="btn primary" id="guNew">＋ New client</button>';
-    $('#guNew').onclick = function () { details(null); };
+    $('#ttl').textContent = 'Instagram Check-Up';
+    topBtns();
     var main = $('#view'); main.innerHTML = '<div class="wrap"><p class="muted">Loading…</p></div>';
     try { await load(); } catch (e) { main.innerHTML = '<div class="wrap"><div class="err">' + esc(e.message) + '</div></div>'; return; }
     if (PENDING) { var p = PENDING; PENDING = null; if (byId(p)) return client(p); }
     if (PENDING_CK) { var pk = PENDING_CK; PENDING_CK = null; TAB = 'checks'; board(); if (pk !== '*' && ckById(pk)) checkSheet(pk); return; }
     board();
   }
-  var TAB = 'clients', CKF = 'follow';
+  var TAB = 'checks', CKF = 'follow';
+  function topBtns() { $('#topRight').innerHTML = TAB === 'checks' ? '<button class="btn primary" id="guNew">＋ New Check-Up</button>' : '<button class="btn primary" id="guNew">＋ New Revamp client</button>'; $('#guNew').onclick = function () { if (TAB === 'checks') makeSheet(); else details(null); }; }
   function ckSc(k) { return (k.sc && k.sc.score) || 0; }
-  function ckPill(k) { var t = (k.sc || {}).tone; return pill(ckSc(k) + '/100', t === 'great' || t === 'good' ? 'g' : t === 'mid' ? 'y' : 'r'); }
+  function ckPill(k) { var o = k.cu && k.cu.overall; if (o != null) return pill(o + '/10', o >= 7 ? 'g' : o >= 5 ? 'y' : 'r'); var t = (k.sc || {}).tone; return pill(ckSc(k) + '/100', t === 'great' || t === 'good' ? 'g' : t === 'mid' ? 'y' : 'r'); }
   function ckDays(iso) { return iso ? Math.floor((Date.now() - new Date(iso).getTime()) / 864e5) : 0; }
   function ckTodo(k) {   // a free check that needs Auntie Tobi
     if (k.clientId) return false;
     if (k.byHq) return !k.sentAt || (!k.replied && ckDays(k.sentAt) >= 3);
     return !!(k.contact && !k.contacted);
   }
-  function board() { return TAB === 'checks' ? checksView() : clientsBoard(); }
+  function board() { topBtns(); $('#ttl').textContent = TAB === 'checks' ? 'Instagram Check-Up' : 'Instagram Revamp'; return TAB === 'checks' ? checksView() : clientsBoard(); }
   function tabs() {
     var n = (D.checks || []).filter(ckTodo).length;
     var t = function (k, l) { var on = TAB === k; return '<button data-tab="' + k + '" style="border:0;background:none;font:inherit;font-weight:800;font-size:15px;padding:10px 4px;margin-right:18px;cursor:pointer;color:' + (on ? '#057A44' : '#6B7280') + ';border-bottom:3px solid ' + (on ? '#057A44' : 'transparent') + '">' + l + '</button>'; };
-    return '<div style="border-bottom:1px solid #E5E1D6;margin-bottom:14px;display:flex">' + t('clients', '👥 Clients') + t('checks', '🆓 Free checks' + (n ? ' <span style="background:#B42318;color:#fff;border-radius:10px;font-size:11.5px;padding:1px 7px;margin-left:2px">' + n + '</span>' : '')) + '</div>';
+    return '<div style="border-bottom:1px solid #E5E1D6;margin-bottom:14px;display:flex">' + t('checks', '✅ Check-Ups' + (n ? ' <span style="background:#B42318;color:#fff;border-radius:10px;font-size:11.5px;padding:1px 7px;margin-left:2px">' + n + '</span>' : '')) + t('clients', '✨ Revamp clients') + '</div>';
   }
   function bindTabs(main) { $$('[data-tab]', main).forEach(function (b) { b.onclick = function () { TAB = b.dataset.tab; board(); }; }); }
   function checksView() {
@@ -67,10 +68,10 @@
         '<div style="font-size:12.5px;text-align:right">' + (k.clientId ? '➡️ Now a client' : k.byHq ? ckState(k) : k.contacted ? '✓ Contacted ' + nice(k.contacted) : ct ? '<b style="color:#B42318">Follow up</b>' : '') + '<div class="muted">' + (k.listing ? '📍 Listed' : 'Not listed') + ' · ' + nice(k.createdAt) + '</div></div></div>';
     };
     main.innerHTML = '<div class="wrap">' + tabs() +
-      '<div class="card" style="padding:12px 14px;margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:200px;font-size:13.5px"><b>🔗 Your free check link</b><div class="muted">' + esc(link.replace(/^https?:\/\//, '')) + ' — share it in your bio, Stories and DMs</div></div><button class="btn primary sm" id="ckMake">＋ Check a page for someone</button><button class="btn ghost sm" id="ckCopy">📋 Copy link</button><a class="btn ghost sm" href="' + link + '" target="_blank" rel="noopener">👀 Open</a></div>' +
+      '<div class="card" style="padding:12px 14px;margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:200px;font-size:13.5px"><b>🔗 Your free Check-Up link</b><div class="muted">' + esc(link.replace(/^https?:\/\//, '')) + ' — share it in your bio, Stories and DMs</div></div><button class="btn primary sm" id="ckMake">＋ New Check-Up</button><button class="btn ghost sm" id="ckCopy">📋 Copy link</button><a class="btn ghost sm" href="' + link + '" target="_blank" rel="noopener">👀 Open</a></div>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:12px">' + tile(L.filter(function (k) { return day(k) === t; }).length, 'today') + tile(L.filter(function (k) { return day(k) >= wk; }).length, 'last 7 days') + tile(L.length, 'all time') + tile(L.filter(function (k) { return k.contact; }).length, 'left their WhatsApp') + tile(L.filter(function (k) { return k.clientId; }).length, 'became clients') + '</div>' +
       '<div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:12px">' + F.map(function (x) { var n = L.filter(x[2]).length, on = x[0] === f[0]; return '<button class="btn sm ' + (on ? 'primary' : 'ghost') + '" data-ckf="' + x[0] + '">' + x[1] + ' (' + n + ')</button>'; }).join('') + '</div>' +
-      (list.length ? list.map(row).join('') : '<div class="card" style="padding:18px"><b>' + (L.length ? 'Nothing here' : 'No free checks yet') + '</b><p class="muted" style="margin-top:6px">' + (L.length ? 'Try another filter.' : 'When someone checks their page at ' + esc(link.replace(/^https?:\/\//, '')) + ' it shows here, with their score and results. Once they leave their WhatsApp you’ll get a ready-made follow-up message, and you can make them a Revamp client in one tap. Try a test check yourself!') + '</p></div>') + '</div>';
+      (list.length ? list.map(row).join('') : '<div class="card" style="padding:18px"><b>' + (L.length ? 'Nothing here' : 'No Check-Ups yet') + '</b><p class="muted" style="margin-top:6px">' + (L.length ? 'Try another filter.' : 'Tap ＋ New Check-Up to make one for a Business Club member. When anyone does a free Check-Up at ' + esc(link.replace(/^https?:\/\//, '')) + ' it shows here too, ready to follow up.') + '</p></div>') + '</div>';
     bindTabs(main);
     $$('[data-ck]', main).forEach(function (el) { el.onclick = function () { checkSheet(el.dataset.ck); }; });
     $$('[data-ckf]', main).forEach(function (b) { b.onclick = function () { CKF = b.dataset.ckf; checksView(); }; });
@@ -86,16 +87,16 @@
     var tile = function (n, l) { return '<div class="card" style="padding:12px;text-align:center;flex:1;min-width:120px"><div style="font-size:22px;font-weight:800">' + n + '</div><div class="muted" style="font-size:12.5px">' + l + '</div></div>'; };
     var card = function (c) {
       var d = c.done || {}, n = stepNow(c), late = c.due && !d[8] && c.due < t, col = column(c);
-      var p = col === 'enq' ? pill('Not paid yet', 'y') : col === 'form' ? pill('Form sent', 'y') : col === 'work' ? pill('Step ' + n + ' · ' + D.steps[n - 1], late ? 'r' : 'b') : col === 'sent' ? pill('Check-in ' + nice(c.checkin), 'g') : col === 'check' ? pill(d[9] ? 'Ask for a review' : 'Check-in due', 'r') : pill('Finished', 'g');
-      return '<div class="card" data-gu="' + esc(c.id) + '" style="padding:10px 12px;margin-bottom:8px;cursor:pointer"><b style="display:block">' + esc(c.name) + '</b><div class="muted" style="font-size:12.5px">' + esc((D.pkgs[c.pkg] || {}).name || '') + (c.due && !d[8] ? ' · due ' + nice(c.due) : c.paidAt ? ' · paid ' + nice(c.paidAt) : '') + (late ? ' · <b style="color:#B42318">late</b>' : '') + (c.reportOn && (c.checklist || []).length ? ' · ✅ ' + clProgress(c).n + '/' + clProgress(c).of : '') + '</div>' + p + '</div>';
+      var p = col === 'enq' ? pill('Not started', 'y') : col === 'form' ? pill('Form sent', 'y') : col === 'work' ? pill('Step ' + n + ' · ' + D.steps[n - 1], late ? 'r' : 'b') : col === 'sent' ? pill('Check-in ' + nice(c.checkin), 'g') : col === 'check' ? pill(d[9] ? 'Ask for a review' : 'Check-in due', 'r') : pill('Finished', 'g');
+      return '<div class="card" data-gu="' + esc(c.id) + '" style="padding:10px 12px;margin-bottom:8px;cursor:pointer"><b style="display:block">' + esc(c.name) + '</b><div class="muted" style="font-size:12.5px">' + esc((D.pkgs[c.pkg] || {}).name || '') + (c.due && !d[8] ? ' · due ' + nice(c.due) : c.paidAt ? ' · started ' + nice(c.paidAt) : '') + (late ? ' · <b style="color:#B42318">late</b>' : '') + (c.reportOn && (c.checklist || []).length ? ' · ✅ ' + clProgress(c).n + '/' + clProgress(c).of : '') + '</div>' + p + '</div>';
     };
     var fin = cs.filter(function (c) { return column(c) === 'done'; });
     main.innerHTML = '<div class="wrap">' + tabs() +
-      '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:14px">' + tile(active.length, 'active clients') + tile(dueWk.length, 'due this week') + tile(chk.length, 'check-ins due') + tile(gbp(money), 'paid this month') + '</div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:14px">' + tile(active.length, 'active clients') + tile(dueWk.length, 'due this week') + tile(chk.length, 'check-ins due') + tile(cs.filter(function (c) { return column(c) === 'done'; }).length, 'finished') + '</div>' +
       (cs.length ? '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;align-items:start">' + COLS.map(function (k) {
         var list = cs.filter(function (c) { return column(c) === k[0]; });
         return '<div><div style="font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#6B7280;margin:0 2px 8px">' + k[1] + ' (' + list.length + ')</div>' + list.map(card).join('') + '</div>';
-      }).join('') + '</div>' : '<div class="card" style="padding:18px"><b>No clients yet</b><p class="muted" style="margin-top:6px">Tap <b>＋ New client</b> when someone asks about an Instagram Revamp. You’ll get their form link and ready-to-send messages.</p></div>') +
+      }).join('') + '</div>' : '<div class="card" style="padding:18px"><b>No Revamp clients yet</b><p class="muted" style="margin-top:6px">Tap <b>＋ New Revamp client</b> when someone wants the full Instagram Revamp (free). You’ll get their form link and ready-to-send messages.</p></div>') +
       '<label style="display:flex;gap:8px;align-items:center;margin-top:16px;font-size:14px;cursor:pointer"><input type="checkbox" id="guMail"' + ((D.settings || {}).email !== false ? ' checked' : '') + ' style="width:18px;height:18px"> 📧 Email me when a client sends their Revamp form</label>' +
       (fin.length ? '<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">✅ Finished (' + fin.length + ')</summary><div style="margin-top:8px">' + fin.map(card).join('') + '</div></details>' : '') + '</div>';
     $$('[data-gu]', main).forEach(function (el) { el.onclick = function () { client(el.dataset.gu); }; });
@@ -107,9 +108,9 @@
   function ckById(id) { return (D.checks || []).filter(function (k) { return k.id === id; })[0]; }
   function ckMsg(k) {
     var nm = k.contact && k.contact.name ? ' ' + k.contact.name.split(/\s+/)[0] : '', top = (k.improve || [])[0], good = ((k.working || [])[0] || {}).t || '';
-    return 'Hi' + nm + '! 👋🏾 It’s Auntie Tobi. Thank you for doing the free Instagram check for ' + k.biz + '. You scored ' + ckSc(k) + '/100' + (good ? ' — and I love that ' + good.charAt(0).toLowerCase() + good.slice(1).replace(/\.$/, '') : '') + ' 💚' +
-      (top ? '\n\nYour biggest win: ' + top.fix : '') +
-      '\n\nIf you’d like, I can do the full Instagram Revamp for you — a new bio, a study of your competitors, Reel scripts and a 30-day plan with a step-by-step checklist.\n• Starter £35\n• Revamp £75\n• Revamp + Done for you £150' +
+    return 'Hi' + nm + '! 👋🏾 It’s Auntie Tobi. Thank you for doing the free Instagram ' + (k.cu ? 'Check-Up' : 'check') + ' for ' + k.biz + '. You scored ' + (k.cu && k.cu.overall != null ? k.cu.overall + '/10' : ckSc(k) + '/100') + (good ? ' — and I love that ' + good.charAt(0).toLowerCase() + good.slice(1).replace(/\.$/, '') : '') + ' 💚' +
+      (k.cu && k.cu.priority ? '\n\nYour priority for this week: ' + k.cu.priority : top ? '\n\nYour biggest win: ' + top.fix : '') +
+      '\n\nIf you’d like more help, I can also do a full Instagram Revamp for you — free — with a study of your competitors, Reel scripts and a 30-day plan with a step-by-step checklist.' +
       (k.listing ? '' : '\n\nAlso — you’re not on Auntie Tobi yet! Add your business free so Nigerians across the UK can find you: ' + SITE + '/add-business') +
       '\n\nWould you like me to tell you more? 😊';
   }
@@ -123,13 +124,14 @@
   function mineMsg(k, follow) {
     var nm = k.to && k.to.name ? ' ' + k.to.name.split(/\s+/)[0] : '', goal = k.goal ? k.goal.replace('More ', '') : 'customers';
     if (follow) return 'Hi' + nm + '! 👋🏾 Did you get a chance to look at the free Instagram check I made for ' + k.biz + '? ' + ckLink(k) +
-      '\n\nIf you’d like, I can do the full Instagram Revamp for you — a new bio, a study of your competitors, Reel scripts and a 30-day plan with a step-by-step checklist.\n• Starter £35\n• Revamp £75\n• Revamp + Done for you £150\n\nWould you like me to tell you more? 😊';
+      '\n\nIf you’d like more help, I can also do a full Instagram Revamp for you — free — with a study of your competitors, Reel scripts and a 30-day plan with a step-by-step checklist.\n\nWould you like me to tell you more? 😊';
     return 'Hi' + nm + '! 👋🏾 It’s Auntie Tobi. I had a look at ' + k.biz + '’s Instagram and made you a free page check 💚\n\nYour page scored ' + ckSc(k) + '/100 — and I found 3 simple changes that could bring you more ' + goal + ', with step-by-step how-tos and a new bio written for you.\n\nHere it is: ' + ckLink(k) +
       (k.listing ? '' : '\n\nP.S. You’re not on Auntie Tobi yet — add your business free (it takes 2 mins) so Nigerians across the UK can find you: ' + SITE + '/add-business') + '\n\nNo cost at all — just a little gift from Auntie Tobi 😊';
   }
   function makeSheet() {
     var shots = [], listing = null, prof = null, readSeq = 0;
-    var s = X.sheet('<h3 style="margin:0 0 4px">＋ Check a page for someone</h3><div class="muted" style="font-size:13px">Add a screenshot of their profile first — Auntie Tobi fills in the details, reads their website, then checks the page and the bio in detail.</div>' +
+    var s = X.sheet('<h3 style="margin:0 0 4px">＋ New Instagram Check-Up</h3><div class="muted" style="font-size:13px">Add a screenshot of their profile first — Auntie Tobi fills in the details, reads their website, then writes the full Check-Up. You can change anything before you send it.</div>' +
+      '<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-weight:700;cursor:pointer"><input type="checkbox" id="mkClub" checked style="width:18px;height:18px"> 💚 Business Club member</label>' +
       '<label style="margin-top:10px">Screenshots of their Instagram <span class="muted" style="font-weight:400">(the top of their profile, with the bio)</span></label><label class="btn ghost" style="display:block;text-align:center;cursor:pointer;margin-top:0">📷 Add screenshots (up to 2)<input type="file" id="mkF" accept="image/*" multiple hidden></label><div id="mkT" style="display:flex;gap:8px;margin-top:8px"></div><div id="mkRS" style="display:none;margin-top:8px;font-size:13px;background:#F3FAF6;border:1px solid #CFE3D8;border-radius:10px;padding:8px 10px"></div>' +
       '<label style="margin-top:10px">Find them on Auntie Tobi <span class="muted" style="font-weight:400">(optional)</span></label><div style="position:relative"><input id="mkL" placeholder="Type their business name" autocomplete="off"><div id="mkR" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid #E5E1D6;border-radius:10px;box-shadow:0 8px 24px rgba(15,30,54,.12);z-index:5;max-height:240px;overflow:auto"></div></div><div class="muted" id="mkLM" style="font-size:12.5px;margin-top:4px">Fills in their details for you.</div>' +
       '<div class="row" style="gap:8px"><div style="flex:1"><label>Business name</label><input id="mkB"></div><div style="flex:1"><label>Instagram</label><input id="mkI" placeholder="@theirbusiness"></div></div>' +
@@ -140,7 +142,7 @@
       '<label>Their goal</label><select id="mkG"><option>More sales</option><option>More enquiries</option><option>More followers</option></select>' +
       '<label>Notes <span class="muted" style="font-weight:400">(optional)</span></label><textarea id="mkNo" rows="2" placeholder="e.g. posts about once a month, no prices anywhere"></textarea>' +
       '<div class="err" id="mkE" style="display:none;margin-top:8px"></div>' +
-      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="mkX">Cancel</button><button class="btn primary" id="mkGo">✨ Do the check</button></div>');
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn ghost" id="mkX">Cancel</button><button class="btn primary" id="mkGo">✨ Write the Check-Up</button></div>');
     var th = function () { $('#mkT', s).innerHTML = shots.map(function (u, i) { return '<div style="position:relative"><img src="' + u + '" style="width:72px;height:104px;object-fit:cover;border-radius:8px;border:1px solid #E5E1D6"><button type="button" data-rm="' + i + '" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:#0F1E36;color:#fff;cursor:pointer">✕</button></div>'; }).join(''); $$('[data-rm]', s).forEach(function (b) { b.onclick = function () { shots.splice(+b.dataset.rm, 1); th(); }; }); };
     // 📸 read the screenshot and fill in the form (never overwrites what you typed)
     var put2 = function (id, v) { var el = $(id, s); if (el && v && !el.value.trim()) el.value = v; };
@@ -172,12 +174,12 @@
       var b = this, err = $('#mkE', s); err.style.display = 'none';
       if (!shots.length) { err.textContent = 'Add a screenshot of their Instagram profile.'; err.style.display = 'block'; return; }
       if (!$('#mkB', s).value.trim()) { err.textContent = 'Add their business name.'; err.style.display = 'block'; return; }
-      b.disabled = true; b.textContent = $('#mkU', s).value.trim() ? '✨ Checking the page and their website…' : '✨ Auntie Tobi is looking…';
+      b.disabled = true; b.textContent = '✨ Writing the Check-Up… (about a minute)';
       try {
         var pf = Object.assign({}, prof || {}, { displayName: $('#mkB', s).value, handle: $('#mkI', s).value.replace(/^@/, ''), bio: $('#mkBio', s).value, link: $('#mkU', s).value, sells: $('#mkS', s).value });
-        var r = await X.api('gu-check-make', { profile: pf, website: $('#mkU', s).value, shots: shots, listing: listing ? listing.slug : '', biz: $('#mkB', s).value, ig: $('#mkI', s).value, name: $('#mkN', s).value, wa: $('#mkW', s).value, sells: $('#mkS', s).value, goal: $('#mkG', s).value, notes: $('#mkNo', s).value });
+        var r = await X.api('gu-check-make', { profile: pf, website: $('#mkU', s).value, shots: shots, listing: listing ? listing.slug : '', biz: $('#mkB', s).value, ig: $('#mkI', s).value, name: $('#mkN', s).value, wa: $('#mkW', s).value, sells: $('#mkS', s).value, goal: $('#mkG', s).value, notes: $('#mkNo', s).value, club: $('#mkClub', s).checked });
         D.checks = [r.check].concat(D.checks || []); s.remove(); TAB = 'checks'; CKF = 'mine'; board(); mineSheet(r.check);
-      } catch (e) { err.textContent = e.message; err.style.display = 'block'; b.disabled = false; b.textContent = '✨ Do the check'; }
+      } catch (e) { err.textContent = e.message; err.style.display = 'block'; b.disabled = false; b.textContent = '✨ Write the Check-Up'; }
     };
   }
   // 🔎 the detailed bio & website check (HQ) — every part can be changed, and any section removed, before sending
@@ -241,13 +243,61 @@
       linkTip: has('website') ? $('#bTip', s).value.trim() : '',
     };
   }
+
+  // ✅ the Check-Up editor (HQ) — every section can be changed before sending
+  var CU_S = [['username', 'Username'], ['photo', 'Profile picture'], ['name', 'Searchable profile name'], ['bio', 'Bio'], ['highlights', 'Story Highlights'], ['visual', 'Visual content'], ['booking', 'Booking / ordering']];
+  function cuMsg(k, follow) {
+    var nm = k.to && k.to.name ? ' ' + k.to.name.split(/\s+/)[0] : '', C = k.cu || {};
+    if (follow) return 'Hi' + nm + '! 👋🏾 Just checking you got your Instagram Check-Up for ' + k.biz + ' 💚 ' + ckLink(k) + '\n\nHave you had a chance to try your action for this week? Any questions, just reply here 😊';
+    var m = (C.message || '').replace(/^\s*(hi|hello|hey)\b[^\n]*\n+/i, '').trim();
+    return 'Hi' + nm + ', hope you’re doing well. 💚\n\n' + m + '\n\nHere’s your full Check-Up — your scores, new bio options, pinned posts, content ideas and your checklist to tick off: ' + ckLink(k) +
+      (k.listing ? '' : '\n\nP.S. You’re not on Auntie Tobi yet — add your business free so Nigerians across the UK can find you: ' + SITE + '/add-business');
+  }
+  function cuHtml(k) {
+    var C = k.cu, P = C.profile || {}, IN = 'font-size:14px;padding:7px 9px';
+    var inp = function (id, v, ph, st) { return '<input id="' + id + '" value="' + esc(v || '') + '" placeholder="' + esc(ph || '') + '" style="' + IN + (st || '') + '">'; };
+    var ta = function (id, v, r, ph) { return '<textarea id="' + id + '" rows="' + (r || 3) + '" placeholder="' + esc(ph || '') + '" style="' + IN + '">' + esc(v || '') + '</textarea>'; };
+    var box = function (t, inner) { return '<div style="border:1px solid #EEE9DD;border-radius:12px;padding:12px 14px;margin-top:10px;background:#fff"><b style="display:block;margin-bottom:6px">' + t + '</b>' + inner + '</div>'; };
+    var g2 = function (a) { return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px">' + a.join('') + '</div>'; };
+    var lab = function (t, x) { return '<div><div class="muted" style="font-size:12px;font-weight:700">' + t + '</div>' + x + '</div>'; };
+    var b = C.bios || [], b1 = b[0] || { label: 'Option 1 — Professional', text: '' }, b2 = b[1] || { label: 'Option 2', text: '' };
+    return '<div style="font-weight:800;margin-top:14px;font-size:18px">✅ The Check-Up ' + (C.overall != null ? pill(C.overall + '/10', C.overall >= 7 ? 'g' : C.overall >= 5 ? 'y' : 'r') : '') + ' <span class="muted" style="font-weight:500;font-size:13.5px">— change anything, then 💾 Save changes</span></div>' +
+      '<label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-weight:700;cursor:pointer"><input type="checkbox" id="cuClub"' + (k.club ? ' checked' : '') + ' style="width:18px;height:18px"> 💚 Business Club member <span class="muted" style="font-weight:400">(shows the Club heading and checklist)</span></label>' +
+      box('1 · Business profile', g2([lab('Business name', inp('cuPn', P.name)), lab('Instagram', inp('cuPh', P.handle ? '@' + P.handle : '')), lab('Industry', inp('cuPi', P.industry)), lab('Location', inp('cuPl', P.location)), lab('Established', inp('cuPe', P.established)), lab('Speciality', inp('cuPs', P.speciality)),
+        lab('Followers', inp('cuSf', P.followers)), lab('Following', inp('cuSg', P.following)), lab('Posts', inp('cuSp', P.posts)), lab('Booking link', inp('cuSb', P.booking, 'Available / Not seen')), lab('Story Highlights', inp('cuSh', P.highlights, 'Available / None'))]) +
+        '<div style="margin-top:6px">' + lab('Current situation', ta('cuPx', P.situation, 2)) + '</div>') +
+      box('2 · Scores out of 10 <span class="muted" style="font-weight:500">(leave empty if you can’t tell)</span>', CU_S.map(function (x) { var v = (C.scores || {})[x[0]] || {};
+        return '<div style="display:flex;gap:6px;align-items:center;margin-top:5px"><span style="width:170px;flex:none;font-size:14px">' + x[1] + '</span><input data-cus="' + x[0] + '" type="number" min="0" max="10" value="' + (v.s == null ? '' : v.s) + '" style="' + IN + ';width:64px;flex:none"><input data-cun="' + x[0] + '" value="' + esc(v.note || '') + '" placeholder="Short note" style="' + IN + '"></div>'; }).join('') + '<div class="muted" style="font-size:12.5px;margin-top:6px">The overall score is the average.</div>') +
+      box('3 · What’s working well <span class="muted" style="font-weight:500">(one per line)</span>', ta('cuW', (C.working || []).join('\n'), 5)) +
+      box('4 · Areas for improvement <span class="muted" style="font-weight:500">(one per line: current issue | recommended action)</span>', ta('cuI', (C.improve || []).map(function (x) { return x.issue + ' | ' + x.action; }).join('\n'), 6)) +
+      box('5 · Recommended bio', lab('Profile name', inp('cuNm', C.profileName)) + '<div style="margin-top:6px">' + lab('Option 1', inp('cuB1l', b1.label) + ta('cuB1', b1.text, 4)) + '</div><div style="margin-top:6px">' + lab('Option 2', inp('cuB2l', b2.label) + ta('cuB2', b2.text, 4)) + '</div><div style="margin-top:6px">' + lab('Which one and why', ta('cuBp', C.bioPick, 2)) + '</div>') +
+      box('6 · Story Highlights <span class="muted" style="font-weight:500">(separate with commas)</span>', inp('cuH', (C.highlights || []).join(', ')) + '<div style="margin-top:6px">' + lab('Cover style note', ta('cuHn', C.highlightNote, 2)) + '</div>') +
+      box('7 · Three pinned posts <span class="muted" style="font-weight:500">(one per line: emoji | title | what goes in it)</span>', ta('cuPin', (C.pinned || []).map(function (x) { return (x.emoji || '📌') + ' | ' + x.title + ' | ' + x.body; }).join('\n'), 3)) +
+      box('8 · Content ideas <span class="muted" style="font-weight:500">(one per line: pillar | post idea)</span>', ta('cuId', (C.ideas || []).map(function (x) { return x.pillar + ' | ' + x.idea; }).join('\n'), 8)) +
+      box('9 · Action plan <span class="muted" style="font-weight:500">(one per line — they tick these off)</span>', ta('cuPl2', (C.plan || []).join('\n'), 6) + '<div style="margin-top:6px">' + lab('Priority for this week', ta('cuPr', C.priority, 2)) + '</div>' +
+        (Object.keys(k.cuTicks || {}).length ? '<div style="margin-top:6px;font-weight:700;color:#057A44">✅ They’ve ticked ' + Object.keys(k.cuTicks).length + ' of ' + (C.plan || []).length + '</div>' : '')) +
+      box('10 · Personalised feedback <span class="muted" style="font-weight:500">(shows on their Check-Up)</span>', ta('cuM', C.message, 7));
+  }
+  function readCu(s, k) {
+    if (!k.cu || !$('#cuPn', s)) return undefined;
+    var v = function (id) { var el = $('#' + id, s); return el ? el.value.trim() : ''; }, L = function (id) { return v(id).split('\n').map(function (x) { return x.trim(); }).filter(Boolean); };
+    var pipe = function (id, n) { return L(id).map(function (x) { var p = x.split('|').map(function (y) { return y.trim(); }); while (p.length < n) p.unshift(''); return p; }); };
+    var sc = {}; CU_S.forEach(function (x) { var n = $('[data-cus="' + x[0] + '"]', s).value; sc[x[0]] = { s: n === '' ? null : Math.max(0, Math.min(10, Math.round(+n))), note: $('[data-cun="' + x[0] + '"]', s).value.trim() }; });
+    return { profile: { name: v('cuPn'), handle: v('cuPh').replace(/^@/, ''), industry: v('cuPi'), location: v('cuPl'), established: v('cuPe'), speciality: v('cuPs'), followers: v('cuSf'), following: v('cuSg'), posts: v('cuSp'), booking: v('cuSb'), highlights: v('cuSh'), situation: v('cuPx') },
+      scores: sc, working: L('cuW'), improve: L('cuI').map(function (x) { var p = x.split('|'); return { issue: (p[0] || '').trim(), action: p.slice(1).join('|').trim() }; }),
+      profileName: v('cuNm'), bios: [{ label: v('cuB1l'), text: $('#cuB1', s).value.trim() }, { label: v('cuB2l'), text: $('#cuB2', s).value.trim() }], bioPick: v('cuBp'),
+      highlights: v('cuH').split(',').map(function (x) { return x.trim(); }).filter(Boolean), highlightNote: v('cuHn'),
+      pinned: pipe('cuPin', 3).map(function (p) { return { emoji: p[0] || '📌', title: p[1], body: p.slice(2).join(' | ') }; }),
+      ideas: pipe('cuId', 2).map(function (p) { return { pillar: p[0], idea: p.slice(1).join(' | ') }; }),
+      plan: L('cuPl2'), priority: v('cuPr'), message: $('#cuM', s).value.trim() };
+  }
   function mineSheet(k) {
     var to = k.to || {}, imp = (k.improve || []).slice(); while (imp.length < 3) imp.push({ area: '', why: '', fix: '' });
     var follow = !!(k.sentAt && !k.replied), canMail = !!(k.listing && to.email);
     var ta = function (id, v, rows) { return '<textarea id="' + id + '" rows="' + (rows || 2) + '" style="font-size:13.5px">' + esc(v || '') + '</textarea>'; };
     var s = X.sheet('<h3 style="margin:0 0 2px">✍🏾 ' + esc(k.biz) + ' ' + ckPill(k) + '</h3><div class="muted" style="font-size:13px">' + nice(k.createdAt) + ' · wants ' + esc((k.goal || 'more sales').toLowerCase()) + (k.followers ? ' · ' + esc(k.followers) + ' followers' : '') + (k.listing ? ' · 📍 <a href="' + esc(k.listing.url) + '" target="_blank" rel="noopener">on Auntie Tobi</a>' : ' · not on Auntie Tobi') + '</div>' +
       '<div style="background:#F6F4EE;border-radius:10px;padding:9px 12px;margin-top:10px;font-size:13.5px">' + (k.clientId ? '➡️ Now a client' : ckState(k)) + (k.sentVia && k.sentVia.length ? ' · sent by ' + esc(k.sentVia.join(', ')) : '') + '</div>' +
-      bioHtml(k) +
+      (k.cu ? cuHtml(k) + '<div style="display:none">' : bioHtml(k)) +
       '<div style="font-weight:800;margin-top:12px">✏️ Their results <span class="muted" style="font-weight:500;font-size:12.5px">— change anything before you send</span></div>' +
       '<label>The big picture</label>' + ta('eO', k.overall, 3) +
       '<label>💚 What’s working <span class="muted" style="font-weight:400">(one per line: what’s working | why it helps)</span></label>' + ta('eW', (k.working || []).map(function (x) { return x.why ? x.t + ' | ' + x.why : x.t; }).join('\n'), 4) +
@@ -256,10 +306,11 @@
           f('f', 'The fix, one sentence', x.fix) + f('s', 'What you saw', x.saw) + f('w', 'Why it matters', x.why) + f('t', 'How to do it — one step per line', (x.steps || []).join('\n'), 3) + f('e', 'Example for them', x.example) + '</div>'; }).join('') +
       '<label>✍🏾 Suggested bio</label>' + ta('eB', k.bio, 3) +
       '<label>⚡ Quick win</label>' + ta('eQ', k.quickWin, 2) +
-      '<div style="text-align:right;margin-top:6px"><button class="btn ghost sm" id="eS">💾 Save changes</button> <a class="btn ghost sm" href="' + ckLink(k) + '&hq=1" target="_blank" rel="noopener">👀 Preview their page</a></div>' +
+      (k.cu ? '</div>' : '') +
+      '<div style="text-align:right;margin-top:6px"><button class="btn ghost sm" id="eS">💾 Save changes</button> <a class="btn ghost sm" href="' + ckLink(k) + '&hq=1" target="_blank" rel="noopener">👀 Preview their ' + (k.cu ? 'Check-Up' : 'page') + '</a></div>' +
       '<div style="font-weight:800;margin-top:14px">📤 Send it</div>' +
       '<div class="row" style="gap:8px"><div style="flex:1"><label>First name</label><input id="tN" value="' + esc(to.name || '') + '"></div><div style="flex:1"><label>WhatsApp</label><input id="tW" value="' + esc(to.wa || '') + '"></div><div style="flex:1"><label>Instagram</label><input id="tI" value="' + esc(to.ig ? '@' + to.ig : '') + '"></div></div>' +
-      '<label>' + (follow ? 'Follow-up message' : 'Message') + ' <a href="#" id="mSw" style="font-weight:500;font-size:12.5px">' + (follow ? 'use the first message' : (k.sentAt ? 'use the follow-up' : '')) + '</a></label><textarea id="ckT" rows="8" style="font-size:13.5px">' + esc(mineMsg(k, follow)) + '</textarea>' +
+      '<label>' + (follow ? 'Follow-up message' : 'Message') + ' <a href="#" id="mSw" style="font-weight:500;font-size:12.5px">' + (follow ? 'use the first message' : (k.sentAt ? 'use the follow-up' : '')) + '</a></label><textarea id="ckT" rows="8" style="font-size:13.5px">' + esc(k.cu ? cuMsg(k, follow) : mineMsg(k, follow)) + '</textarea>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px;justify-content:flex-end"><button class="btn ghost sm" id="sW">💬 WhatsApp</button><button class="btn ghost sm" id="sI">📸 Instagram DM</button><button class="btn ghost sm" id="sE"' + (canMail ? '' : ' disabled title="Email works for businesses on Auntie Tobi that have an email"') + '>📧 Email</button><button class="btn ghost sm" id="sC">📋 Copy</button></div>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center;border-top:1px solid #EEE9DD;padding-top:12px"><button class="btn ghost sm" id="ckDel" style="color:#B42318">Delete</button><span style="flex:1"></span>' +
       (k.sentAt ? '<button class="btn ghost sm" id="sR">' + (k.replied ? '↩️ Not replied' : '✓ They replied') + '</button>' : '') +
@@ -267,13 +318,13 @@
     var fields = function () {
       var v = function (k, i) { var el = $('[data-i' + k + '="' + i + '"]', s); return el ? el.value : ''; };
       var im = [0, 1, 2].map(function (i) { return { area: v('a', i), fix: v('f', i), saw: v('s', i), why: v('w', i), steps: v('t', i).split('\n').map(function (x) { return x.trim(); }).filter(Boolean), example: v('e', i), impact: v('p', i), mins: v('m', i) }; });
-      return { id: k.id, overall: $('#eO', s).value, quickWin: $('#eQ', s).value, bio: $('#eB', s).value, working: $('#eW', s).value.split('\n').map(function (x) { var p = x.split(' | '); return { t: p[0].trim(), why: (p.slice(1).join(' | ') || '').trim() }; }).filter(function (x) { return x.t; }), improve: im, bioCheck: readBio(s, k), to: { name: $('#tN', s).value, wa: $('#tW', s).value, ig: $('#tI', s).value } };
+      return { id: k.id, overall: $('#eO', s).value, quickWin: $('#eQ', s).value, bio: $('#eB', s).value, working: $('#eW', s).value.split('\n').map(function (x) { var p = x.split(' | '); return { t: p[0].trim(), why: (p.slice(1).join(' | ') || '').trim() }; }).filter(function (x) { return x.t; }), improve: im, bioCheck: k.cu ? undefined : readBio(s, k), cu: readCu(s, k), club: k.cu ? $('#cuClub', s).checked : undefined, to: { name: $('#tN', s).value, wa: $('#tW', s).value, ig: $('#tI', s).value } };
     };
     var saveIt = async function (quiet) { var r = await X.api('gu-check-edit', fields()); Object.assign(k, r.check); if (!quiet) X.toast('💾 Saved'); };
     var sent = async function (via) { try { var r = await X.api('gu-check-mark', { id: k.id, sent: via }); Object.assign(k, r.check); board(); } catch (e) { X.toast(e.message); } };
     $('#eS', s).onclick = function () { saveIt().catch(function (e) { X.toast(e.message); }); };
     bindBio(s);
-    var sw = $('#mSw', s); if (sw) sw.onclick = function (e) { e.preventDefault(); follow = !follow; $('#ckT', s).value = mineMsg(Object.assign({}, k, { to: { name: $('#tN', s).value } }), follow); this.textContent = follow ? 'use the first message' : 'use the follow-up'; };
+    var sw = $('#mSw', s); if (sw) sw.onclick = function (e) { e.preventDefault(); follow = !follow; var kk = Object.assign({}, k, { to: { name: $('#tN', s).value } }); $('#ckT', s).value = k.cu ? cuMsg(kk, follow) : mineMsg(kk, follow); this.textContent = follow ? 'use the first message' : 'use the follow-up'; };
     $('#sW', s).onclick = async function () {
       var ph = String($('#tW', s).value).replace(/\D/g, '').replace(/^0/, '44'); if (ph.length < 10) return X.toast('Add their WhatsApp number first');
       var txt = $('#ckT', s).value; try { await saveIt(true); } catch (e) {} window.open('https://wa.me/' + ph + '?text=' + encodeURIComponent(txt), '_blank', 'noopener'); sent('WhatsApp'); X.toast('💬 Opened WhatsApp — marked as sent');
@@ -286,7 +337,7 @@
     $('#sC', s).onclick = function () { try { navigator.clipboard.writeText($('#ckT', s).value); X.toast('📋 Copied'); } catch (e) {} };
     $('#sE', s).onclick = async function () {
       try { await saveIt(true); } catch (e) {}
-      var es = X.sheet('<h3 style="margin:0 0 8px">📧 Email ' + esc(k.biz) + '</h3><div class="muted" style="font-size:13px">To their email on Auntie Tobi. Nothing sends until you tap Send.</div><label>Subject</label><input id="emS" value="' + esc('I checked your Instagram for you, ' + k.biz + ' 💚') + '"><label>Message</label><textarea id="emB" rows="11" style="font-size:13.5px">' + esc($('#ckT', s).value) + '</textarea>' +
+      var es = X.sheet('<h3 style="margin:0 0 8px">📧 Email ' + esc(k.biz) + '</h3><div class="muted" style="font-size:13px">To their email on Auntie Tobi. Nothing sends until you tap Send.</div><label>Subject</label><input id="emS" value="' + esc((k.cu ? 'Your Instagram Check-Up, ' : 'I checked your Instagram for you, ') + k.biz + ' 💚') + '"><label>Message</label><textarea id="emB" rows="11" style="font-size:13.5px">' + esc($('#ckT', s).value) + '</textarea>' +
         '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px"><button class="btn ghost" id="emX">Cancel</button><button class="btn primary" id="emGo">📧 Send email</button></div>');
       $('#emX', es).onclick = function () { es.remove(); };
       $('#emGo', es).onclick = async function () { var b = this; b.disabled = true; b.textContent = 'Sending…';
@@ -297,32 +348,32 @@
     if ($('#ckOpen', s)) $('#ckOpen', s).onclick = function () { s.remove(); client(k.clientId); };
     if ($('#ckGo', s)) $('#ckGo', s).onclick = async function () {
       if (!confirm('Make ' + k.biz + ' a Revamp client? Their details and audit will be filled in for you.')) return;
-      try { await saveIt(true); var r = await X.api('gu-check-convert', { id: k.id }); k.clientId = r.client.id; put(r.client); s.remove(); X.toast('➡️ Added — set the package and paid date in ✏️ Details'); client(r.client.id); } catch (e) { X.toast(e.message); }
+      try { await saveIt(true); var r = await X.api('gu-check-convert', { id: k.id }); k.clientId = r.client.id; put(r.client); s.remove(); X.toast('➡️ Added — set the package and start date in ✏️ Details'); client(r.client.id); } catch (e) { X.toast(e.message); }
     };
   }
   function checkSheet(id) {
     var k = ckById(id); if (!k) return;
     if (k.byHq) return mineSheet(k);
     var ct = k.contact || (k.listing && k.listing.wa ? { name: '', wa: k.listing.wa } : null), ph = ct ? String(ct.wa).replace(/\D/g, '').replace(/^0/, '44') : '';
-    var s = X.sheet('<h3 style="margin:0 0 2px">🆓 ' + esc(k.biz) + ' ' + ckPill(k) + '</h3><div class="muted" style="font-size:13px">' + nice(k.createdAt) + (k.goal ? ' · wants ' + esc(k.goal.toLowerCase()) : '') + (k.followers ? ' · ' + esc(k.followers) + ' followers' : '') + (k.sells ? '<br>Sells: ' + esc(k.sells) : '') + '</div>' +
-      '<div style="background:#F6F4EE;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13.5px">' + (ct ? '👤 <b>' + esc(ct.name) + '</b> · 📱 ' + esc(ct.wa) + (ct.email ? ' · 📧 ' + esc(ct.email) : '') : '<span class="muted">They saw their score but didn’t unlock their fixes, so there are no contact details.</span>') +
+    var s = X.sheet('<h3 style="margin:0 0 2px">✅ ' + esc(k.biz) + ' ' + ckPill(k) + '</h3><div class="muted" style="font-size:13px">' + nice(k.createdAt) + (k.goal ? ' · wants ' + esc(k.goal.toLowerCase()) : '') + (k.followers ? ' · ' + esc(k.followers) + ' followers' : '') + (k.sells ? '<br>Sells: ' + esc(k.sells) : '') + '</div>' +
+      '<div style="background:#F6F4EE;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13.5px">' + (ct ? '👤 <b>' + esc(ct.name) + '</b> · 📱 ' + esc(ct.wa) + (ct.email ? ' · 📧 ' + esc(ct.email) : '') : '<span class="muted">They didn’t leave contact details.</span>') +
       '<div style="margin-top:4px">' + (k.listing ? '📍 <a href="' + esc(k.listing.url) + '" target="_blank" rel="noopener">' + esc(k.listing.name) + '</a> on Auntie Tobi' : '📍 Not on Auntie Tobi yet') + '</div></div>' +
       ((k.working || []).length ? '<div style="font-weight:700;font-size:13.5px;margin-top:10px">💚 Working</div><ul style="margin:2px 0 0 18px;font-size:13.5px">' + k.working.map(function (x) { return '<li>' + esc(x.t || x) + '</li>'; }).join('') + '</ul>' : '') +
       ((k.improve || []).length ? '<div style="font-weight:700;font-size:13.5px;margin-top:8px">🔧 To improve</div><ol style="margin:2px 0 0 18px;font-size:13.5px">' + k.improve.map(function (x) { return '<li><b>' + esc(x.area) + '</b> — ' + esc(x.fix) + '</li>'; }).join('') + '</ol>' : '') +
       (k.quickWin ? '<div style="font-size:13.5px;margin-top:8px">⚡ <b>Quick win:</b> ' + esc(k.quickWin) + '</div>' : '') +
       (ct ? '<label style="margin-top:12px">💬 Follow-up message</label><textarea id="ckT" rows="8" style="font-size:13.5px">' + esc(ckMsg(k)) + '</textarea>' : '') +
       '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center"><button class="btn ghost sm" id="ckDel" style="color:#B42318">Delete</button><span style="flex:1"></span>' +
-      '<a class="btn ghost sm" href="' + SITE + '/instagram-check?c=' + encodeURIComponent(k.token) + '" target="_blank" rel="noopener">👀 Their results</a>' +
+      '<a class="btn ghost sm" href="' + SITE + '/instagram-check?c=' + encodeURIComponent(k.token) + '" target="_blank" rel="noopener">👀 Their ' + (k.cu ? 'Check-Up' : 'results') + '</a>' +
       (ct ? '<button class="btn ghost sm" id="ckC">' + (k.contacted ? '↩️ Not contacted' : '✓ Mark contacted') + '</button><button class="btn ghost sm" id="ckW">💬 Send on WhatsApp</button>' : '') +
       (k.clientId ? '<button class="btn primary sm" id="ckOpen">➡️ Open client</button>' : '<button class="btn primary sm" id="ckGo">➡️ Make them a client</button>') + '</div>');
     var mark = async function (on) { try { var r = await X.api('gu-check-mark', { id: k.id, contacted: on }); Object.assign(k, r.check); } catch (e) { X.toast(e.message); } };
     if ($('#ckW', s)) $('#ckW', s).onclick = function () { window.open('https://wa.me/' + ph + '?text=' + encodeURIComponent($('#ckT', s).value), '_blank', 'noopener'); if (!k.contacted) mark(true).then(function () { X.toast('✓ Marked as contacted'); board(); }); };
     if ($('#ckC', s)) $('#ckC', s).onclick = async function () { await mark(!k.contacted); s.remove(); board(); };
-    $('#ckDel', s).onclick = async function () { if (!confirm('Delete the free check for ' + k.biz + '?')) return; try { await X.api('gu-check-del', { id: k.id }); D.checks = D.checks.filter(function (x) { return x.id !== k.id; }); s.remove(); board(); } catch (e) { X.toast(e.message); } };
+    $('#ckDel', s).onclick = async function () { if (!confirm('Delete the Check-Up for ' + k.biz + '?')) return; try { await X.api('gu-check-del', { id: k.id }); D.checks = D.checks.filter(function (x) { return x.id !== k.id; }); s.remove(); board(); } catch (e) { X.toast(e.message); } };
     if ($('#ckOpen', s)) $('#ckOpen', s).onclick = function () { s.remove(); client(k.clientId); };
     if ($('#ckGo', s)) $('#ckGo', s).onclick = async function () {
       if (!confirm('Make ' + k.biz + ' a Revamp client? Their details and audit will be filled in for you.')) return;
-      try { var r = await X.api('gu-check-convert', { id: k.id }); k.clientId = r.client.id; put(r.client); s.remove(); X.toast('➡️ Added — set the package and paid date in ✏️ Details'); client(r.client.id); } catch (e) { X.toast(e.message); }
+      try { var r = await X.api('gu-check-convert', { id: k.id }); k.clientId = r.client.id; put(r.client); s.remove(); X.toast('➡️ Added — set the package and start date in ✏️ Details'); client(r.client.id); } catch (e) { X.toast(e.message); }
     };
   }
 
@@ -337,7 +388,7 @@
     var c = cur, d = c.done || {}, n = stepNow(c), main = $('#view');
     $('#ttl').textContent = c.name;
     $('#topRight').innerHTML = '<button class="btn ghost" id="guBack">← All clients</button> <button class="btn ghost" id="guEdit">✏️ Details</button>';
-    $('#guBack').onclick = function () { $('#ttl').textContent = 'Instagram Revamp'; $('#topRight').innerHTML = '<button class="btn primary" id="guNew">＋ New client</button>'; $('#guNew').onclick = function () { details(null); }; board(); };
+    $('#guBack').onclick = function () { TAB = 'clients'; board(); };
     $('#guEdit').onclick = function () { details(c); };
     var bar = '<div style="display:flex;gap:4px;margin:4px 0 14px">' + D.steps.map(function (s, i) {
       var k = i + 1, on = !!d[k], now = k === n;
@@ -345,8 +396,8 @@
     }).join('') + '</div>';
     var formUrl = SITE + '/glowup-form?t=' + encodeURIComponent(c.token);
     var head = '<div class="card" style="padding:14px 16px;margin-bottom:12px"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><div><b style="font-size:17px">' + esc(c.name) + '</b>' + (c.handle ? ' · <a href="https://www.instagram.com/' + esc(c.handle) + '/" target="_blank" rel="noopener">@' + esc(c.handle) + '</a>' : '') +
-      '<div class="muted" style="font-size:13px;margin-top:2px">' + esc((D.pkgs[c.pkg] || {}).name) + ' · ' + gbp(c.price) + (c.paidAt ? ' · paid ' + nice(c.paidAt) : ' · <b style="color:#B42318">not paid yet</b>') + (c.due ? ' · due ' + nice(c.due) : '') + (c.checkin ? ' · check-in ' + nice(c.checkin) : '') + (c.cat ? ' · ' + esc(c.cat) : '') + '</div>' + (c.listing ? '<div style="font-size:13px;margin-top:4px">🏢 <a href="' + esc(c.listing.url) + '" target="_blank" rel="noopener">Auntie Tobi listing</a>' + (c.listing.loc ? ' · ' + esc(c.listing.loc) : '') + (c.listing.website ? ' · <a href="' + esc(/^https?:/.test(c.listing.website) ? c.listing.website : 'https://' + c.listing.website) + '" target="_blank" rel="noopener">website</a>' : '') + '</div>' + (c.listing.desc ? '<div class="muted" style="font-size:12.5px;margin-top:3px">' + esc(c.listing.desc.slice(0, 220)) + (c.listing.desc.length > 220 ? '…' : '') + '</div>' : '') : '') + '</div>' +
-      (!c.paidAt ? '<button class="btn primary sm" id="guPaid">💷 Mark as paid today</button>' : '') + '</div>' + (c.notes ? '<div style="font-size:13.5px;margin-top:8px;white-space:pre-wrap">' + esc(c.notes) + '</div>' : '') + '</div>';
+      '<div class="muted" style="font-size:13px;margin-top:2px">' + esc((D.pkgs[c.pkg] || {}).name) + (c.paidAt ? ' · started ' + nice(c.paidAt) : ' · <b style="color:#B42318">not started yet</b>') + (c.due ? ' · due ' + nice(c.due) : '') + (c.checkin ? ' · check-in ' + nice(c.checkin) : '') + (c.cat ? ' · ' + esc(c.cat) : '') + '</div>' + (c.listing ? '<div style="font-size:13px;margin-top:4px">🏢 <a href="' + esc(c.listing.url) + '" target="_blank" rel="noopener">Auntie Tobi listing</a>' + (c.listing.loc ? ' · ' + esc(c.listing.loc) : '') + (c.listing.website ? ' · <a href="' + esc(/^https?:/.test(c.listing.website) ? c.listing.website : 'https://' + c.listing.website) + '" target="_blank" rel="noopener">website</a>' : '') + '</div>' + (c.listing.desc ? '<div class="muted" style="font-size:12.5px;margin-top:3px">' + esc(c.listing.desc.slice(0, 220)) + (c.listing.desc.length > 220 ? '…' : '') + '</div>' : '') : '') + '</div>' +
+      (!c.paidAt ? '<button class="btn primary sm" id="guPaid">▶️ Start today</button>' : '') + '</div>' + (c.notes ? '<div style="font-size:13.5px;margin-top:8px;white-space:pre-wrap">' + esc(c.notes) + '</div>' : '') + '</div>';
     main.innerHTML = '<div class="wrap">' + bar + head +
       sec('3', '📝 Their form', formBox(c, formUrl)) +
       sec('4', '🔍 Page audit', auditBox(c)) +
@@ -627,8 +678,8 @@
   function msgs(c, formUrl) {
     var nm = (c.name || '').split(/\s+/)[0], due = c.due ? nice(c.due) : '[date]';
     return [
-      ['A', 'Packages', 'Hi ' + nm + '! Thank you for asking about the Instagram Revamp ✨ We study your page and your competitors, then give you a ready-to-use plan to get more followers and enquiries.\n\n• Starter £' + D.pkgs.starter.price + ' — page review, bio fixes, 10 post and Reel ideas\n• Revamp £' + D.pkgs.glowup.price + ' — plus 5 competitors studied, 3 Reel scripts and a 30-day plan\n• Revamp + Done for you £' + D.pkgs.dfy.price + ' — plus 9 posts designed for you\n\nWhich one suits you? 💚'],
-      ['B', 'Form link', 'Thank you, payment received! 💚 Please answer 5 quick questions so we can start: ' + formUrl + '\nIt takes about 2 minutes. Your Revamp starts as soon as it’s back.'],
+      ['A', 'Options', 'Hi ' + nm + '! Thank you for asking about the Instagram Revamp ✨ It’s free. We study your page and your competitors, then give you a ready-to-use plan to get more followers and enquiries.\n\n• Starter — page review, bio fixes, 10 post and Reel ideas\n• Revamp — plus 5 competitors studied, 3 Reel scripts and a 30-day plan\n• Revamp + Done for you — plus 9 posts designed for you\n\nWhich one suits you? 💚'],
+      ['B', 'Form link', 'Lovely, let’s get started! 💚 Please answer 5 quick questions: ' + formUrl + '\nIt takes about 2 minutes. Your Revamp starts as soon as it’s back.'],
       ['C', 'Start date', 'Got it, thank you! We’re starting on ' + (c.handle ? '@' + c.handle : 'your page') + ' now. You’ll have your Revamp by ' + due + ' ✨'],
       ['D', 'Report ready', 'Your Instagram Revamp is ready ✨ ' + (c.reportOn && c.reportToken ? reportUrl(c) : '[report link]') + '\nStart with “Fix first” — those 3 changes make the biggest difference. I’ve sent a short voice note walking you through it. Any questions, just reply here.'],
       ['E', '30-day check-in', 'Hi ' + nm + ', it’s been 30 days since your Revamp! How’s it going? Have you noticed more views, messages or sales? Tell me what’s changed and what’s worked best for you 📈'],
@@ -658,18 +709,17 @@
 
   // ✏️ new client / details
   function details(c) {
-    var p = c || { pkg: 'glowup' }, opts = Object.keys(D.pkgs).map(function (k) { return '<option value="' + k + '"' + (p.pkg === k ? ' selected' : '') + '>' + esc(D.pkgs[k].name) + ' — ' + gbp(D.pkgs[k].price) + '</option>'; }).join('');
+    var p = c || { pkg: 'glowup' }, opts = Object.keys(D.pkgs).map(function (k) { return '<option value="' + k + '"' + (p.pkg === k ? ' selected' : '') + '>' + esc(D.pkgs[k].name) + '</option>'; }).join('');
     var s = X.sheet('<h3 style="margin:0 0 8px">' + (c ? '✏️ ' + esc(c.name) : '＋ New Revamp client') + '</h3>' +
       '<label>Find their Auntie Tobi listing</label><div style="position:relative"><div class="row" style="gap:6px"><input id="dL" value="' + esc((p.listing || {}).url || '') + '" placeholder="Type their business name, or paste their link" autocomplete="off" style="flex:1"><button class="btn ghost" id="dLGo" type="button">Fill in</button></div><div id="dLRes" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid #E5E1D6;border-radius:10px;box-shadow:0 8px 24px rgba(15,30,54,.12);z-index:5;max-height:260px;overflow:auto"></div></div><div class="muted" id="dLMsg" style="font-size:12.5px;margin-top:4px">Fills in the name, Instagram, WhatsApp, category and town for you.</div>' +
       '<label>Business name</label><input id="dN" value="' + esc(p.name || '') + '" placeholder="e.g. Saamipeniel Fragrance">' +
       '<label>Instagram handle</label><input id="dH" value="' + esc(p.handle ? '@' + p.handle : '') + '" placeholder="@yourbusiness">' +
-      '<div class="row" style="gap:8px"><div style="flex:2"><label>Package</label><select id="dP">' + opts + '</select></div><div style="flex:1"><label>Price (£)</label><input id="dPr" inputmode="numeric" value="' + esc(p.price != null ? p.price : D.pkgs[p.pkg || 'glowup'].price) + '"></div></div>' +
+      '<label>Package</label><select id="dP">' + opts + '</select>' +
       '<div class="row" style="gap:8px"><div style="flex:1"><label>WhatsApp number</label><input id="dW" value="' + esc(p.phone || '') + '" placeholder="07…"></div><div style="flex:1"><label>Category</label><input id="dC" value="' + esc(p.cat || '') + '" placeholder="e.g. perfume, catering, hair"></div></div>' +
-      '<div class="row" style="gap:8px"><div style="flex:1"><label>Paid on</label><input id="dPd" type="date" value="' + esc(p.paidAt || '') + '"></div><div style="flex:1"><label>Due</label><input id="dD" type="date" value="' + esc(p.due || '') + '"></div></div>' +
+      '<div class="row" style="gap:8px"><div style="flex:1"><label>Started on</label><input id="dPd" type="date" value="' + esc(p.paidAt || '') + '"></div><div style="flex:1"><label>Due</label><input id="dD" type="date" value="' + esc(p.due || '') + '"></div></div>' +
       '<label>Notes</label><textarea id="dNo" rows="3">' + esc(p.notes || '') + '</textarea>' +
-      '<p class="muted" style="font-size:12.5px;margin-top:6px">The due date fills itself from the paid date (Starter 3 days, Revamp 5, Done for you 7).</p>' +
+      '<p class="muted" style="font-size:12.5px;margin-top:6px">The due date fills itself from the start date (Starter 3 days, Revamp 5, Done for you 7). The Revamp is free.</p>' +
       '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px"><button class="btn ghost" id="dX">Cancel</button><button class="btn primary" id="dGo">' + (c ? 'Save' : 'Add client') + '</button></div>');
-    $('#dP', s).onchange = function () { $('#dPr', s).value = D.pkgs[this.value].price; };
     var listing = p.listing || null;
     var isLink = function (v) { return /\/biz\/|auntietobi\.co\.uk|^https?:/i.test(v); }, res = $('#dLRes', s), tmr = null, seq = 0;
     var addUrl = SITE + '/add-business';
@@ -702,7 +752,7 @@
     }
     $('#dX', s).onclick = function () { s.remove(); };
     $('#dGo', s).onclick = async function () {
-      var f = { listing: listing, name: $('#dN', s).value.trim(), handle: $('#dH', s).value.trim(), pkg: $('#dP', s).value, price: $('#dPr', s).value, phone: $('#dW', s).value.trim(), cat: $('#dC', s).value.trim(), paidAt: $('#dPd', s).value, due: $('#dD', s).value, notes: $('#dNo', s).value };
+      var f = { listing: listing, name: $('#dN', s).value.trim(), handle: $('#dH', s).value.trim(), pkg: $('#dP', s).value, price: 0, phone: $('#dW', s).value.trim(), cat: $('#dC', s).value.trim(), paidAt: $('#dPd', s).value, due: $('#dD', s).value, notes: $('#dNo', s).value };
       if (c) f.id = c.id;
       try { var r = await X.api('gu-save', { client: f }); put(r.client); s.remove(); client(r.client.id); } catch (e) { X.toast(e.message); }
     };
@@ -713,9 +763,9 @@
     try { await load(); } catch (e) { return ''; }
     var t = todayIso(), forms = D.clients.filter(function (c) { var d = c.done || {}; return d[3] && !d[4]; }), chk = D.clients.filter(function (c) { var d = c.done || {}; return c.checkin && c.checkin <= t && !d[9]; }), late = D.clients.filter(function (c) { var d = c.done || {}; return c.due && c.due < t && d[2] && !d[8]; });
     var leads = (D.checks || []).filter(ckTodo), wk = addDays(t, -7), quiet = D.clients.filter(function (c) { var d = c.done || {}, pr = clProgress(c); return c.reportOn && pr.of && pr.n < pr.of && !d[9] && String(c.lastTickAt || c.reportAt || '').slice(0, 10) < wk; });
-    var tdy = (D.checks || []).filter(function (k) { return String(k.createdAt).slice(0, 10) === t; }).length, ckLine = '<a href="#" data-ck-open="" style="display:block;padding:10px 0;border-bottom:1px solid var(--line,#eee);color:inherit;text-decoration:none">🆓 <b>Free Instagram checks:</b> <span class="muted">' + tdy + ' today · ' + leads.length + ' to follow up</span></a>';
+    var tdy = (D.checks || []).filter(function (k) { return String(k.createdAt).slice(0, 10) === t; }).length, ckLine = '<a href="#" data-ck-open="" style="display:block;padding:10px 0;border-bottom:1px solid var(--line,#eee);color:inherit;text-decoration:none">✅ <b>Instagram Check-Ups:</b> <span class="muted">' + tdy + ' today · ' + leads.length + ' to follow up</span></a>';
     var line = function (c, why) { return '<a href="#" data-gu-open="' + esc(c.id) + '" style="display:block;padding:10px 0;border-bottom:1px solid var(--line,#eee);color:inherit;text-decoration:none"><b>' + esc(c.name) + '</b> <span class="muted">· ' + why + '</span></a>'; };
-    return '<div class="h2">✨ Instagram Revamp</div><div class="card" style="padding:0 14px;margin-bottom:12px">' + forms.map(function (c) { return line(c, '📝 form received ' + nice(c.form && c.form.at) + ' — start the audit'); }).join('') + late.map(function (c) { return line(c, '⏰ was due ' + nice(c.due)); }).join('') + chk.map(function (c) { return line(c, '📈 30-day check-in due'); }).join('') + ckLine + leads.slice(0, 8).map(function (k) { return '<a href="#" data-ck-open="' + esc(k.id) + '" style="display:block;padding:10px 0;border-bottom:1px solid var(--line,#eee);color:inherit;text-decoration:none"><b>' + esc(k.biz) + '</b> <span class="muted">· ' + (k.byHq ? (k.sentAt ? '✍🏾 your check ' + (k.opens ? 'was opened' : 'was sent') + ' ' + ckDays(k.sentAt) + ' days ago, no reply — send a follow-up' : '✍🏾 your check is ready — send it') : '🆓 free check from ' + esc(k.contact.name) + ' (' + ckSc(k) + '/100) — follow up') + '</span></a>'; }).join('') + quiet.map(function (c) { var pr = clProgress(c); return line(c, '😴 no ticks for a week (' + pr.n + '/' + pr.of + ' done) — send nudge G'); }).join('') + '</div>';
+    return '<div class="h2">✅ Instagram Check-Up &amp; Revamp</div><div class="card" style="padding:0 14px;margin-bottom:12px">' + forms.map(function (c) { return line(c, '📝 form received ' + nice(c.form && c.form.at) + ' — start the audit'); }).join('') + late.map(function (c) { return line(c, '⏰ was due ' + nice(c.due)); }).join('') + chk.map(function (c) { return line(c, '📈 30-day check-in due'); }).join('') + ckLine + leads.slice(0, 8).map(function (k) { return '<a href="#" data-ck-open="' + esc(k.id) + '" style="display:block;padding:10px 0;border-bottom:1px solid var(--line,#eee);color:inherit;text-decoration:none"><b>' + esc(k.biz) + '</b> <span class="muted">· ' + (k.byHq ? (k.sentAt ? '✍🏾 your check ' + (k.opens ? 'was opened' : 'was sent') + ' ' + ckDays(k.sentAt) + ' days ago, no reply — send a follow-up' : '✍🏾 your check is ready — send it') : '🆓 free check from ' + esc(k.contact.name) + ' (' + ckSc(k) + '/100) — follow up') + '</span></a>'; }).join('') + quiet.map(function (c) { var pr = clProgress(c); return line(c, '😴 no ticks for a week (' + pr.n + '/' + pr.of + ' done) — send nudge G'); }).join('') + '</div>';
   }
   var PENDING = null, PENDING_CK = null;
   function open(id) { PENDING = id; }   // the next view() opens this client

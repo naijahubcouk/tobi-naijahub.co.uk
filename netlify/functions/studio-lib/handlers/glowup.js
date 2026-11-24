@@ -30,6 +30,7 @@ exports.handler = core.handler(async (ctx) => {
     return { statusCode: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' }, body: JSON.stringify(r) };
   }
   if (body.action === 'check') return require('../igcheck').run(event, ip, body);           // 🆓 free Instagram check
+  if (body.action === 'cutick') return require('../igcheck').cuTick(body.t, body.i, !!body.on, ip);   // ✅ they tick their Check-Up action plan
   if (body.action === 'unlock') return require('../igcheck').unlock(body.t, body, ip);
   if (body.action === 'tick') return glowup.tick(body.r, body.i, !!body.on);   // ✅ the client ticks their checklist
   if (body.action === 'form') return glowup.formSend(body.t, body.answers, ip);
