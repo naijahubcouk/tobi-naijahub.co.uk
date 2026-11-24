@@ -77,7 +77,6 @@
 /group-advertising-policy  /group-advertising-policy.html  200
 /featured-businesses  /featured-businesses.html  200
 /marketplace/list  /marketplace-list.html  200
-/marketplace/:product  /.netlify/functions/studio-market?page=:product  200
 /listing  /listing.html  200
 /hq  /hq.html  200
 /marketplace  /marketplace.html  200
