@@ -93,6 +93,17 @@ details.how{margin-top:14px;font-size:13.5px;color:#4B5563}details.how summary{c
 .cupr{background:#FFF7E3;border-radius:12px;padding:12px 14px;margin-top:10px;font-size:15px}
 .cumsg{white-space:pre-wrap;background:#F6FAF7;border:1px dashed #A7D7BC;border-radius:12px;padding:12px 14px;font-size:15px}
 .cuopt{margin-top:10px}.cuopt small{color:#6B7280;font-weight:700;font-size:13px}
+
+/* ✅ Check-Up results: bigger, easier-to-read text */
+.cuw .hero h1{font-size:30px}.cuw .hero p{font-size:17px}.cuw .badge{font-size:14px}
+.cuw .cusec{font-size:14.5px}.cuw .cusec i{width:28px;height:28px;font-size:14px}
+.cuw .cuf{font-size:18px;gap:6px 16px}.cuw .cut{font-size:17.5px}.cuw .cut th{font-size:14px}.cuw .cut td{padding:11px 10px}
+.cuw .cus b{font-size:18px}.cuw .cus small{font-size:15px}.cuw .cus em{font-size:18px;min-width:56px}.cuw .cuov b{font-size:40px}.cuw .cuov small{font-size:17px}
+.cuw .li{font-size:18px}.cuw .biob{font-size:18px}.cuw .cuopt small{font-size:15px}.cuw .cpb{font-size:16px;padding:10px 16px}
+.cuw .cuchips span{font-size:16.5px;padding:8px 16px}.cuw .cupin b{font-size:17px}.cuw .cupin small{font-size:15px}.cuw .cupin u{font-size:32px}
+.cuw .cuck{font-size:18px}.cuw .cuck input{width:22px;height:22px}.cuw .cupr{font-size:17.5px}.cuw .cumsg{font-size:18px}
+.cuw .card p,.cuw p[style]{font-size:17.5px!important}.cuw .note{font-size:15.5px}.cuw .save{font-size:15.5px}.cuw .go{font-size:18px}
+.cuw .list b{font-size:18px}.cuw .list p{font-size:16px}
 </style>
 <template data-icons><link rel="icon" href="/tobi-face-128.png"></template>
 </head>
@@ -213,7 +224,7 @@ details.how{margin-top:14px;font-size:13.5px;color:#4B5563}details.how summary{c
     if (!d.listed) h += '<div class="list"><b>📍 Get found on Auntie Tobi too</b><p>Add your business to the Auntie Tobi directory for free, so Nigerians across the UK can find you.</p><a href="/add-business?from=igcheck" target="_blank" rel="noopener">Add my business free →</a></div>';
     h += '<div class="save"><span>🔖 Come back to your Check-Up: ' + esc(link.replace(/^https?:\/\//, '')) + '</span><button type="button" id="cpy">Copy</button></div>' +
       '<p class="note">💚 Auntie Tobi — Your UK Guide for Nigerians<br><a href="/instagram-check" style="color:#057A44">Check another page</a></p>';
-    app.innerHTML = h;
+    app.innerHTML = h; app.classList.add('cuw');
     var prog = function () { var all = document.querySelectorAll('[data-ck]'), on = document.querySelectorAll('[data-ck]:checked').length; if (!all.length) return; $('#cuN').textContent = on + '/' + all.length + ' completed'; $('#cuB').style.width = Math.round(on * 100 / all.length) + '%'; };
     prog();
     [].forEach.call(document.querySelectorAll('[data-ck]'), function (x) { x.onchange = function () { x.parentNode.classList.toggle('on', x.checked); prog(); if (new URLSearchParams(location.search).get('hq') === '1') return; post({ action: 'cutick', t: d.t, i: +x.dataset.ck, on: x.checked }).catch(function () {}); }; });
