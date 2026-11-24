@@ -43,7 +43,9 @@ exports.handler = handler(async (ctx) => {
       const m = img.dataUrl.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/);
       return { statusCode: 200, headers: { 'Content-Type': m[1], 'Cache-Control': 'public, max-age=86400', 'Netlify-CDN-Cache-Control': 'public, max-age=604800, durable', 'X-Content-Type-Options': 'nosniff' }, body: m[2], isBase64Encoded: true };
     }
-    if (q.page !== undefined) return market.productPage(q.page);   // 🔗 /marketplace/<product>
+    // 🔗 /marketplace/<product> — Netlify passes the address people typed (not the rewritten one), so read it from the path
+    const fromPath = (String(event.path || '').match(/^\/marketplace\/([^/?#]+)\/?$/) || [])[1];
+    if (q.page !== undefined || (fromPath && fromPath !== 'list')) return market.productPage(q.page !== undefined ? q.page : decodeURIComponent(fromPath));
     if (q.bizq !== undefined) {
       await core.rateLimit('mkt-bizq', ctx.ip || 'x', 300, 60 * 60 * 1000, 'Too many searches. Please wait a little.');
       const results = await directory.search(event, String(q.bizq).slice(0, 80), 8);
