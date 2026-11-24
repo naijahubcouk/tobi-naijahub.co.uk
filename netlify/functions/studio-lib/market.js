@@ -449,7 +449,7 @@ h2{font-size:16px;margin:4px 2px -4px}.more{display:grid;grid-template-columns:r
 .sell{background:#0F1E36;color:#fff;border-radius:16px;padding:18px;text-align:center}.sell b{display:block;font-size:16.5px}.sell p{font-size:13.5px;opacity:.75;margin:4px 0 12px}.sell a{display:inline-block;background:#FFB81C;color:#0F1E36;font-weight:800;text-decoration:none;border-radius:10px;padding:10px 16px;font-size:14px}
 .foot{text-align:center;font-size:12.5px;color:#6B7280;line-height:1.6}</style></head><body>
 <div class="top"><img src="/tobi-face-128.png" alt=""><div><b>Auntie Tobi</b><span>Marketplace</span></div><a href="/marketplace">← All products</a></div>
-<div class="wrap">${body}<div class="sell"><b>🛍️ Sell on Auntie Tobi</b><p>Nigerian businesses across the UK list their products here.</p><a href="/marketplace/list">List your product →</a></div>
+<div class="wrap">${body}<div class="sell"><b>🛍️ Sell on Auntie Tobi</b><p>Listing on the Marketplace is for Auntie Tobi Business Club members.</p><a href="/business-club">💚 Join the Business Club →</a></div>
 <p class="foot">💚 Auntie Tobi — Your UK Guide for Nigerians<br>Products are sold by the businesses shown, not by Auntie Tobi.</p></div></body></html>`;
   return { statusCode: status, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60', 'Netlify-CDN-Cache-Control': 'public, max-age=120, stale-while-revalidate=600, durable', 'X-Content-Type-Options': 'nosniff' }, body: html };
 }
