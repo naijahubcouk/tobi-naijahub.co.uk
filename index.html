@@ -6046,6 +6046,7 @@ function showHomeMarketStrip(){
     if (!list.length) { host.innerHTML = ''; return; }
     host.innerHTML = '<div class="home-sec-h"><b>🛍️ Marketplace</b><a href="javascript:void(0)" onclick="showMarketplace()">See all →</a></div><div class="home-strip">' + list.slice(0, 12).map(function(p){
       var link = (p.wa && !p.link) ? 'https://wa.me/' + String(p.wa).replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent('Hi, I saw ' + p.name + ' on Auntie Tobi and I\'d like to enquire') : (p.link || '/marketplace');
+      if (p.url) link = p.url;   // 🔗 the product's own page (photos, price, order button, share)
       return '<a class="home-cd" href="' + homeEsc(link) + '" target="_blank" rel="noopener">' + (p.img ? '<img src="' + homeEsc(p.img) + '" alt="" loading="lazy" style="object-fit:contain;background:#f8f8f8">' : '<span class="home-ph">🛍️</span>') + '<b>' + homeEsc(p.name) + '</b><small>' + homeEsc(p.price || p.business || p.category || '') + '</small></a>';
     }).join('') + '</div>';
   }

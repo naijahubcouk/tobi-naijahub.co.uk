@@ -148,7 +148,7 @@ async function marketAction(action, body, ctx, actor) {
     case 'market-list': {
       const list = await market.all();
       const allowance = (await getJson('market/allowance')) || {};
-      return { listings: list.map(r => ({ ...r, status: market.status(r) })).sort((a, b) => (b.submittedAt || b.updatedAt || '').localeCompare(a.submittedAt || a.updatedAt || '')), allowance, cats: market.CATS, buttons: market.BUTTONS };
+      return { listings: list.map(r => ({ ...r, status: market.status(r), url: market.urlOf(r) })).sort((a, b) => (b.submittedAt || b.updatedAt || '').localeCompare(a.submittedAt || a.updatedAt || '')), allowance, cats: market.CATS, buttons: market.BUTTONS };
     }
     case 'market-get': {
       const r = await market.get(body.id);

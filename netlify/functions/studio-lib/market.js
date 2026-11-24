@@ -229,7 +229,7 @@ async function mine(email) {
   return { listings: list.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || '')).map(r => forOwner(r)), allowance, used, canAdd: used < allowance };
 }
 function forOwner(r) {
-  return { id: r.id, status: status(r), live: r.live, draft: r.draft, link: r.link || null, note: r.state === 'changes' || r.state === 'rejected' ? r.note || '' : '', submittedAt: r.submittedAt || '', approvedAt: r.approvedAt || '' };
+  return { id: r.id, status: status(r), url: r.live ? urlOf(r) : '', live: r.live, draft: r.draft, link: r.link || null, note: r.state === 'changes' || r.state === 'rejected' ? r.note || '' : '', submittedAt: r.submittedAt || '', approvedAt: r.approvedAt || '' };
 }
 
 // Member creates or edits their listing → goes to review. A live version stays up meanwhile.
@@ -363,7 +363,7 @@ function toCard(r) {
   if (f.endsAt) { const d = new Date(`${f.endsAt}T23:59:00Z`); expires = d.toISOString(); }
   return {
     id: r.id, name: escH(f.name), shortName: escH(f.name), business: escH(f.business), bizSlug: f.bizSlug, category: f.category, emoji: EMOJI[f.category] || '🛍️',
-    img: imgs[0] || '', imgs, price: escH(f.price), desc: escH(f.desc), link: f.link, btnText: escH(f.btnText), wa: f.wa, expires, pinned: !!r.pinned,
+    img: imgs[0] || '', imgs, url: pathOf(r), price: escH(f.price), desc: escH(f.desc), link: f.link, btnText: escH(f.btnText), wa: f.wa, expires, pinned: !!r.pinned,
   };
 }
 async function feed() {
@@ -382,8 +382,80 @@ async function feed() {
   return out.map(toCard);
 }
 
+
+// ───── 🔗 a page for every product: /marketplace/<name>-<6 characters of its id> ─────
+// The last part finds the product, so the link keeps working if the name changes (it then moves to the new address).
+const slugify = v => String(v || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50).replace(/-+$/, '');
+const idTail = id => String(id || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(-6);
+function pathOf(r) { const f = r.live || r.draft || {}, n = slugify(f.name); return `/marketplace/${n ? n + '-' : ''}${idTail(r.id)}`; }
+function urlOf(r) { return core.siteBase() + pathOf(r); }
+function orderLink(f, name) {
+  const txt = `Hi, I saw your ${name} on Auntie Tobi and I'd like to ${f.btnText === 'Buy Now' ? 'order' : 'enquire'} 💚`;
+  const wa = `https://wa.me/${String(f.wa || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(txt)}`;
+  if (f.wa && !f.link) return wa;
+  if (f.link && /wa\.me/.test(f.link)) return f.link + (f.link.includes('?') ? '&' : '?') + 'text=' + encodeURIComponent(txt);
+  return f.link || '';
+}
+const absImg = ref => { const u = imgUrl(ref); return /^https?:/.test(u) ? u : core.siteBase() + u; };
+async function productPage(slug) {
+  slug = String(slug || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 80);
+  const tail = slug.split('-').pop(), cards = await feed(), recs = await all();
+  const live = recs.filter(r => cards.some(c => c.id === r.id));
+  const hits = tail && tail.length >= 3 ? live.filter(r => idTail(r.id) === tail) : [];
+  const r = hits.find(x => pathOf(x) === '/marketplace/' + slug) || hits[0] || null;
+  if (r && pathOf(r) !== '/marketplace/' + slug) return { statusCode: 301, headers: { Location: pathOf(r), 'Cache-Control': 'public, max-age=300' }, body: '' };
+  const card = id => cards.find(c => c.id === id), mini = x => { const c = card(x.id); return `<a class="mc" href="${pathOf(x)}">${c.img ? `<img src="${escH(c.img)}" alt="" loading="lazy">` : '<span>🛍️</span>'}<b>${c.name}</b><em>${c.price}</em></a>`; };
+  const others = (list, n) => list.slice().sort(() => Math.random() - 0.5).slice(0, n);
+  let body, title, desc, img = '', status = 200, ld = '';
+  if (!r) {
+    status = 404; title = 'This product isn’t available any more · Auntie Tobi Marketplace'; desc = 'See what Nigerian businesses across the UK are selling on the Auntie Tobi Marketplace.';
+    body = `<div class="card gone"><div style="font-size:40px">🛍️</div><h1>This product isn’t available any more</h1><p>It may have sold out or ended. Have a look at what else is on the Marketplace 👇</p></div>` +
+      (live.length ? `<h2>On the Marketplace now</h2><div class="more">${others(live, 6).map(mini).join('')}</div>` : '');
+  } else {
+    const f = r.live, c = card(r.id), link = orderLink(f, f.name), url = urlOf(r);
+    title = `${f.name}${f.price ? ' · ' + f.price : ''} · ${f.business}`; desc = String(f.desc || '').replace(/\s+/g, ' ').slice(0, 180) || `${f.name} from ${f.business} on the Auntie Tobi Marketplace.`;
+    img = f.imgs[0] ? absImg(f.imgs[0]) : '';
+    const same = live.filter(x => x.id !== r.id && ((f.bizSlug && x.live.bizSlug === f.bizSlug) || (x.live.business || '').toLowerCase() === (f.business || '').toLowerCase()));
+    const rest = live.filter(x => x.id !== r.id && !same.includes(x));
+    const imgs = c.imgs.length ? c.imgs : [];
+    ld = JSON.stringify({ '@context': 'https://schema.org', '@type': 'Product', name: f.name, description: f.desc || undefined, image: f.imgs.map(absImg), brand: { '@type': 'Brand', name: f.business }, url }).replace(/</g, '\\u003c');
+    body = `<div class="card prod">` +
+      (imgs.length ? `<div class="gal" id="gal">${imgs.map(u => `<img src="${escH(u)}" alt="${c.name}">`).join('')}</div>${imgs.length > 1 ? `<div class="cnt" id="cnt">1/${imgs.length} · swipe</div>` : ''}` : '<div class="noimg">' + (EMOJI[f.category] || '🛍️') + '</div>') +
+      `<div class="pb"><div class="cat">${EMOJI[f.category] || '🛍️'} ${escH(f.category)}</div><h1>${c.name}</h1>` +
+      `<div class="biz">by ${f.bizSlug ? `<a href="/?biz=${encodeURIComponent(f.bizSlug)}">${c.business}</a>` : c.business}</div>` +
+      (f.price ? `<div class="price">${c.price}</div>` : '') + (f.desc ? `<p class="desc">${c.desc}</p>` : '') +
+      (link ? `<a class="buy" href="${escH(link)}" target="_blank" rel="noopener">${c.btnText || 'Enquire'}</a>` : '') +
+      `<div class="share"><button type="button" id="shr">📤 Share</button><button type="button" id="cpy">📋 Copy link</button></div></div></div>` +
+      (same.length ? `<h2>More from ${c.business}</h2><div class="more">${same.slice(0, 6).map(mini).join('')}</div>` : '') +
+      (rest.length ? `<h2>More on the Marketplace</h2><div class="more">${others(rest, 4).map(mini).join('')}</div>` : '');
+    body += `<script>(function(){var u=${JSON.stringify(url)},t=${JSON.stringify(f.name + ' — ' + f.business + ' on Auntie Tobi')};var c=document.getElementById('cpy'),s=document.getElementById('shr');function cp(b){try{navigator.clipboard.writeText(u).then(function(){b.textContent='✅ Copied';setTimeout(function(){b.textContent='📋 Copy link';},1800);});}catch(e){prompt('Copy the link',u);}}c.onclick=function(){cp(c);};s.onclick=function(){if(navigator.share){navigator.share({title:t,url:u}).catch(function(){});}else cp(c);};var g=document.getElementById('gal'),n=document.getElementById('cnt');if(g&&n)g.onscroll=function(){var i=Math.round(g.scrollLeft/g.clientWidth)+1;n.textContent=i+'/'+g.children.length+(i===1?' · swipe':'');};})();</script>`;
+  }
+  const esc = escH, canon = r ? urlOf(r) : core.siteBase() + '/marketplace';
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><link rel="canonical" href="${esc(canon)}">
+<meta property="og:type" content="product"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${esc(canon)}"><meta property="og:site_name" content="Auntie Tobi Marketplace">${img ? `<meta property="og:image" content="${esc(img)}"><meta name="twitter:card" content="summary_large_image">` : ''}${r ? '' : '<meta name="robots" content="noindex">'}
+${ld ? `<script type="application/ld+json">${ld}</script>` : ''}<link rel="icon" href="/tobi-face-128.png">
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#0F1E36;padding-bottom:50px}
+.top{background:#0F1E36;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}.top img{width:38px;height:38px;border-radius:50%}.top div{flex:1}.top b{display:block;color:#fff;font-size:15.5px}.top span{color:rgba(255,255,255,.6);font-size:12px}.top a{color:#fff;text-decoration:none;font-size:12.5px;font-weight:700;border:1.5px solid rgba(255,255,255,.25);border-radius:20px;padding:6px 11px;white-space:nowrap}
+.wrap{max-width:560px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:14px}.card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.gal{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;background:#f8f8f8}.gal::-webkit-scrollbar{display:none}.gal img{flex:0 0 100%;width:100%;aspect-ratio:1/1;object-fit:contain;scroll-snap-align:start;padding:10px}
+.cnt{text-align:center;font-size:12px;color:#6B7280;padding:6px;background:#f8f8f8}.noimg{font-size:80px;text-align:center;padding:40px;background:#f8f8f8}
+.pb{padding:16px 18px 18px}.cat{font-size:11.5px;font-weight:800;color:#057A44;text-transform:uppercase;letter-spacing:.5px}.pb h1{font-size:23px;line-height:1.25;margin:6px 0 4px}.biz{font-size:14.5px;color:#6B7280}.biz a{color:#057A44;font-weight:700;text-decoration:none}
+.price{font-size:26px;font-weight:800;margin-top:10px}.desc{font-size:15.5px;line-height:1.6;color:#374151;margin-top:10px;white-space:pre-line}
+.buy{display:block;text-align:center;background:#057A44;color:#fff;text-decoration:none;font-weight:800;font-size:17px;border-radius:12px;padding:15px;margin-top:16px}
+.share{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.share button{border:1.5px solid #E5E1D6;background:#fff;border-radius:12px;padding:11px;font:inherit;font-weight:700;font-size:14.5px;cursor:pointer;color:#0F1E36}
+h2{font-size:16px;margin:4px 2px -4px}.more{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.mc{background:#fff;border-radius:12px;overflow:hidden;text-decoration:none;color:#0F1E36;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(0,0,0,.06)}.mc img,.mc span{width:100%;aspect-ratio:1/1;object-fit:contain;background:#f8f8f8;padding:6px;display:flex;align-items:center;justify-content:center;font-size:40px}.mc b{font-size:13.5px;padding:8px 10px 0;line-height:1.35}.mc em{font-style:normal;font-weight:800;font-size:14px;padding:4px 10px 10px}
+.gone{padding:26px 20px;text-align:center}.gone h1{font-size:21px;margin:8px 0}.gone p{color:#6B7280;font-size:15px}
+.sell{background:#0F1E36;color:#fff;border-radius:16px;padding:18px;text-align:center}.sell b{display:block;font-size:16.5px}.sell p{font-size:13.5px;opacity:.75;margin:4px 0 12px}.sell a{display:inline-block;background:#FFB81C;color:#0F1E36;font-weight:800;text-decoration:none;border-radius:10px;padding:10px 16px;font-size:14px}
+.foot{text-align:center;font-size:12.5px;color:#6B7280;line-height:1.6}</style></head><body>
+<div class="top"><img src="/tobi-face-128.png" alt=""><div><b>Auntie Tobi</b><span>Marketplace</span></div><a href="/marketplace">← All products</a></div>
+<div class="wrap">${body}<div class="sell"><b>🛍️ Sell on Auntie Tobi</b><p>Nigerian businesses across the UK list their products here.</p><a href="/marketplace/list">List your product →</a></div>
+<p class="foot">💚 Auntie Tobi — Your UK Guide for Nigerians<br>Products are sold by the businesses shown, not by Auntie Tobi.</p></div></body></html>`;
+  return { statusCode: status, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60', 'Netlify-CDN-Cache-Control': 'public, max-age=120, stale-while-revalidate=600, durable', 'X-Content-Type-Options': 'nosniff' }, body: html };
+}
+
 module.exports = {
-  chNumber, chUrl,
+  pathOf, urlOf, productPage, chNumber, chUrl,
   CATS, BUTTONS, EMOJI, MAX_IMGS, clean, saveImage, getImage, all, get, status, mine, forOwner, memberSave, memberWithdraw, memberRemove,
   publicCreate, adminSave, review, adminDelete, allowanceOf, setAllowance, feed, toCard, ensureSeed, isImgId,
 };

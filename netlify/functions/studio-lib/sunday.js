@@ -54,7 +54,7 @@ async function options(week) {
   const bizes = dir.map(b => ({ slug: b.slug, name: b.name, cat: b.cat || '', loc: String(b.loc || '').split(',')[0], desc: cleanText(b.desc, 260), url: `${SITE()}/?biz=${b.slug}`, img: b.img || '' }));
   const t = core.dayKey();
   const prods = (await market.all()).filter(r => r.live && !r.hidden && !(r.live.endsAt && r.live.endsAt < t))
-    .map(r => ({ id: r.id, name: cleanText(r.live.name, 100), business: cleanText(r.live.business, 80), price: cleanText(r.live.price, 24), url: `${SITE()}/marketplace?item=${encodeURIComponent(r.id)}`, img: (r.live.imgs && r.live.imgs[0]) ? `${SITE()}/.netlify/functions/studio-market?img=${r.live.imgs[0]}` : '' }));
+    .map(r => ({ id: r.id, name: cleanText(r.live.name, 100), business: cleanText(r.live.business, 80), price: cleanText(r.live.price, 24), url: market.urlOf(r), img: (r.live.imgs && r.live.imgs[0]) ? `${SITE()}/.netlify/functions/studio-market?img=${r.live.imgs[0]}` : '' }));
   return { posts, events, bizes, prods };
 }
 

@@ -99,7 +99,7 @@ async function mktList() {
   for (const r of await market.all()) {
     if (market.status(r) !== 'live') continue;
     const f = r.live;
-    out.push({ id: r.id, name: f.name, business: f.business, bizSlug: f.bizSlug || '', category: f.category, price: f.price || '', hasImg: !!(f.imgs && f.imgs.length), at: r.approvedAt || r.updatedAt || '' });
+    out.push({ id: r.id, name: f.name, business: f.business, bizSlug: f.bizSlug || '', category: f.category, price: f.price || '', hasImg: !!(f.imgs && f.imgs.length), url: market.urlOf(r), at: r.approvedAt || r.updatedAt || '' });
   }
   return out.sort((a, b) => String(b.at).localeCompare(String(a.at)));
 }
