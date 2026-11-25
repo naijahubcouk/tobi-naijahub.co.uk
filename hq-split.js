@@ -147,6 +147,7 @@
     if (lines.length > 2 && INTRO.test(clean(lines[0])) && clean(lines[0]).length < 160) lines.shift();
     while (lines.length && (!lines[lines.length - 1].trim() || OUTRO.test(clean(lines[lines.length - 1])))) lines.pop();
     if (!lines.join('').trim()) return [];
+    if (opts.mode !== 'one') lines = promoteH3(lines);
     if (opts.mode !== 'one' && isBrief(lines)) { var bc = splitBrief(lines); if (bc.length >= 2) return bc; }
     var kind = opts.mode === 'one' ? 'none' : pickBoundary(lines);
     if (kind === 'num') {
@@ -202,6 +203,31 @@
   var boldOnly = function (l) { return /^\s*\*\*[^*]+\*\*\s*$/.test(l); };
   var quoteish = function (t) { return /^["“‘']/.test(t.trim()); };
 
+  // A paste that uses only ### headings (ChatGPT's "Daily Brief" style): numbered ### = ideas, other ### = sections.
+  // "### 10" / "### 7.7/10" (just a number or score) is plain text. Markdown escapes ("1\.") are removed everywhere.
+  var NUMHEAD = /^\s*#{3,6}\s+\d{1,2}[.)]\s+\S/;
+  function promoteH3(lines) {
+    lines = lines.map(function (l) { return l.replace(/\\([\\`*_{}\[\]()#+\-.!|>~])/g, '$1'); });
+    if (lines.some(function (l) { var h = headLevel(l); return h === 1 || h === 2; })) return lines;
+    var h3 = lines.filter(function (l) { return headLevel(l) >= 3; });
+    var items = h3.filter(function (l) { return NUMHEAD.test(l); }).length;
+    var secs = h3.filter(function (l) { return !NUMHEAD.test(l) && !/^\s*#+\s*[\d.\/\s]+$/.test(l); }).length;
+    if (items < 2 || secs < 1) return lines;
+    // …and only when the numbered items read like content ideas (Hook / CTA / Angle / Format / Message lines under them)
+    var idea = 0, inItem = false, hit = false;
+    lines.forEach(function (l) {
+      if (headLevel(l) >= 3) { if (inItem && hit) idea++; inItem = NUMHEAD.test(l); hit = false; return; }
+      if (inItem && /^\s*[*_]*(hook|cta|call to action|angle|format|message|caption|voiceover)[*_]*\s*:/i.test(l)) hit = true;
+    });
+    if (inItem && hit) idea++;
+    if (idea < 2 || idea < items / 2) return lines;
+    return lines.map(function (l) {
+      if (headLevel(l) < 3 || NUMHEAD.test(l)) return l;
+      if (/^\s*#+\s*[\d.\/\s]+$/.test(l)) return l.replace(/^\s*#+\s*/, '');
+      return l.replace(/^\s*#+\s*/, '## ');
+    });
+  }
+
   function isBrief(lines) {
     var big = lines.filter(function (l) { var h = headLevel(l); return h >= 1 && h <= 2; }).length;
     var tables = lines.filter(isTable).length;
@@ -225,6 +251,8 @@
       if (key === 'format' || key === 'post type') { type = mapType(val); continue; }
       if (key === 'cta' || key === 'call to action') { cta = val; continue; }
       if (/sponsor|tag|credit/.test(key) && val) { notes.push(lab[1].trim() + ': ' + val); continue; }
+      if (/^(why it matters|sources?|status|research status|verify|note)$/.test(key) && val) { notes.push(lab[1].trim() + ': ' + linkText(val).replace(/[.\s]+$/, '')); continue; }
+      if (/^\d{1,2}(\.\d)?\/10\b/.test(t)) { notes.push('Score: ' + t); if (!type) type = mapType(t.split('·').slice(1).join(' ')); continue; }
       if (key === 'keywords' || key === 'keyword line') { keywords = val; continue; }
       if (/^\[[^\]]+\]\(https?:\/\/[^)]+\)$/.test(t)) { takeLinks(t, sources); continue; }
       body.push(takeLinks(t, sources));
@@ -236,6 +264,8 @@
     var hay = heading + ' ' + caption.slice(0, 500);
     return { title: title.slice(0, 120) || 'Untitled idea', type: type || ctx.type || detectType(hay), topic: ctx.topic || topicFromLabel(heading) || detectTopic(hay), caption: caption.slice(0, 8000), hashtags: hashtags, keywords: keywords, notes: notesText(notes, sources), section: ctx.section, selected: ctx.selected !== false };
   }
+  // "[GOV.UK — Pensions](https://…)" → "GOV.UK — Pensions https://…" (tracking bits removed)
+  function linkText(v) { return String(v || '').replace(/\[([^\]]{1,200})\]\((https?:\/\/[^\s)]+)\)/g, function (m, a, u) { u = noUtm(u); return /^https?:/.test(a) ? noUtm(a) : a + ' ' + u; }); }
   function notesText(notes, sources) { return notes.concat(sources.length ? ['Sources:\n' + sources.join('\n')] : []).join('\n\n'); }
   function mapType(v) {
     v = String(v || '').toLowerCase();
@@ -253,7 +283,8 @@
     if (/MOTIVATION|FAITH|MORNING|AFTERNOON|EVENING/.test(t)) return 'motivation';
     if (/FAMILY|IMMIGRATION|SCHOLARSHIP|JOBS?|SCHOOL|HOUSING|HEALTH|NHS|GOVERNMENT|DEADLINE|UK INFO|OPPORTUNIT/.test(t)) return 'uk-info';
     if (/PROMO|SPONSOR|OFFER/.test(t)) return 'promo';
-    if (/COMMUNITY|ENGAGEMENT/.test(t)) return 'community';
+    if (/COMMUNITY|ENGAGEMENT|CONNECTION/.test(t)) return 'community';
+    if (/\bVALUE\b/.test(t)) return 'uk-info';
     if (/DISCOVERY/.test(t)) return 'discovery';
     return '';
   }
@@ -285,6 +316,47 @@
     return out;
   }
 
+  // Loose text inside a section: "1. Black Friday reminder … 2. …" (ready-to-post texts) or "Story 1 — …" frames.
+  var NUMLINE = /^\s*(\d{1,2})[.)]\s+(\S.*)$/, STORYLINE = /^\s*(?:story|frame)\s*(\d{1,2})\s*[—–:\-.]\s*(.*)$/i;
+  var STICKER = /^(poll|quiz|question box|question|slider|emoji slider|countdown|link sticker|add yours|quick reactions?)\s*:/i, TIMELINE = /^\d{1,2}(?::\d{2})?\s*(?:am|pm)$/i;
+  function looseSplit(lines, ctx, isStory, name) {
+    var t = lines.map(stripMd);
+    var storyIdx = [], numIdx = [];
+    t.forEach(function (x, i) { if (STORYLINE.test(x)) storyIdx.push(i); else if (NUMLINE.test(x) && x.length < 90) numIdx.push(i); });
+    var out = [], pre = [];
+    if (isStory && storyIdx.length >= 2) {
+      storyIdx.forEach(function (st, k) {
+        var end = k + 1 < storyIdx.length ? storyIdx[k + 1] : t.length, m = STORYLINE.exec(t[st]), time = '', say = [], stick = [], notes = [], src = [], after = false;
+        for (var j = st + 1; j < end; j++) {
+          var x = t[j]; if (!x) continue;
+          if (TIMELINE.test(x) && !time && !say.length) { time = x; continue; }
+          if (STICKER.test(x)) { stick.push(x); after = true; continue; }
+          if (/^source\s*:/i.test(x)) { notes.push('Source: ' + linkText(lines[j].replace(/^[\s*_]*source[\s*_]*:\s*/i, '')).replace(/\*\*/g, '').replace(/[.\s]+$/, '')); continue; }
+          if (!after && /^["“‘']/.test(x)) { say.push(x); continue; }
+          if (after && /^(use|collect|share|ask|save|repost|follow up|turn)\b/i.test(x)) { notes.push(x); after = false; continue; }
+          after = false;   // anything else is the preview of the next Story — skip it
+        }
+        out.push({ title: niceCase(dropLead(m[2])) || 'Story ' + m[1], type: 'story', topic: detectTopic(say.join(' ') + ' ' + m[2]) , caption: [time ? '⏰ ' + time : '', say.join('\n'), stick.join('\n')].filter(Boolean).join('\n'), hashtags: [], keywords: '', notes: notesText(notes, src), section: ctx.section, selected: true });
+      });
+      return out;
+    }
+    // numbered ready-to-post texts: only in a section about posting/copies, or when ChatGPT shows "Copy" buttons
+    if (numIdx.length >= 2 && (/TOP \d|READY|COPY|CAPTION|WHATSAPP|STATUS|TEXT/i.test(name) || t.some(function (x) { return /^copy$/i.test(x); }))) {
+      for (var i = 0; i < numIdx[0]; i++) pre.push(t[i]);
+      var preText = pre.filter(Boolean).map(function (x) { return takeLinks(x, []); }).join('\n');
+      if (preText) out.push({ title: name || 'Notes', type: 'post', topic: 'community', caption: preText, hashtags: [], keywords: '', notes: '', section: ctx.section, selected: false, isNote: true });
+      numIdx.forEach(function (st, k) {
+        var end = k + 1 < numIdx.length ? numIdx[k + 1] : t.length, body = [], src = [];
+        for (var j = st + 1; j < end; j++) { var x = lines[j].replace(/\s+$/, ''); if (/^\s*copy\s*$/i.test(x)) continue; body.push(x.replace(/\[([^\]]{1,200})\]\((https?:\/\/[^\s)]+)\)/g, function (mm, a, u) { u = noUtm(u); if (src.indexOf(u) < 0) src.push(u); return /^https?:/.test(a) ? noUtm(a) : a + ' ' + u; }).trim()); }
+        while (body.length && !body[0]) body.shift(); while (body.length && !body[body.length - 1]) body.pop();
+        var cap = body.join('\n').replace(/\n{3,}/g, '\n\n'), ti = NUMLINE.exec(t[st])[2];
+        out.push({ title: niceCase(dropLead(ti)), type: ctx.type || 'post', topic: detectTopic(ti + ' ' + cap), caption: cap, hashtags: (cap.match(/#[\wÀ-ɏ]+/g) || []), keywords: '', notes: '', section: ctx.section + ' — ready to post', selected: true });
+      });
+      return out;
+    }
+    return null;
+  }
+
   function splitBrief(lines) {
     // Global hashtags / keywords (usually at the end) apply to every card without its own.
     var gTags = [], gKw = '';
@@ -309,8 +381,8 @@
       var isIntro = si === 0 && (/BRIEF|EDITION|DIGEST|ROUND-?UP|NEWSLETTER/.test(T) || !sec.title);
       var isPlan = /POSTING PLAN|SCHEDULE|TIMETABLE/.test(T);
       var isStory = /STOR(Y|IES)/.test(T);
-      var isNote = /PRIORITY|SUMMARY|TAKEAWAY|RECOMMENDATION|STRATEGY|FOCUS/.test(T) && !/IDEA/.test(T);
-      var ctx = { section: name || 'Ideas', type: isStory ? 'story' : '', topic: /MOTIVATION/.test(T) ? 'motivation' : '' };
+      var isNote = /PRIORITY|SUMMARY|TAKEAWAY|RECOMMENDATION|STRATEGY|FOCUS|GROWTH ACTION|TOP \d/.test(T) && !/IDEA/.test(T);
+      var ctx = { section: name || 'Ideas', type: isStory ? 'story' : '', topic: /MOTIVATION/.test(T) ? 'motivation' : /\b(VALUE|DISCOVERY|CONNECTION)\b/.test(T) ? topicFromLabel(sec.title) : '' };
       // Split the section into blocks: ### items, tables and loose text.
       var blocks = [], b = { head: '', lines: [], sub: false };
       sec.lines.forEach(function (l) {
@@ -352,7 +424,9 @@
           return;
         }
         if (!blk.head) {
-          if (isNote && hasText) {
+          var looseCards = looseSplit(bodyLines, ctx, isStory, name);
+          if (looseCards) { cards = cards.concat(looseCards); return; }
+          if ((isNote || /TOP \d|GROWTH|ACTION/.test(T)) && hasText) {
             var nt = bodyLines.map(stripMd).filter(Boolean).join('\n');
             cards.push({ title: name || 'Notes', type: 'post', topic: 'community', caption: nt, hashtags: [], keywords: '', notes: '', section: ctx.section, selected: false, isNote: true });
           }
