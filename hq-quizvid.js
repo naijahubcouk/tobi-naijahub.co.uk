@@ -105,16 +105,16 @@
       if (PUB[r.id]) { X.toast('💾 Saved — updating the app version…'); publish().catch(function (e) { X.toast(e.message); }); } else X.toast('💾 Saved — find it in 📂 My quizzes');
     });
   }
-  // 💾 auto-save a few seconds after a change (a fresh, untouched quiz isn't saved until you change something)
+  // 💾 auto-save: a new quiz is saved as soon as it opens (so it gets its number and shows in 📂 My quizzes),
+  // then a few seconds after each change
   var asvBusy = false;
   setInterval(function () {
     if (!QV || !QV.qs || !QV.qs.length || asvBusy || !$('#qvRoot') || !F()) return;
     var j = JSON.stringify(snapshot()); if (j === QV._last) return;
-    if (!QV.savedId && j === QV._base) return;
-    if (QV._pend !== j) { QV._pend = j; return; }
+    if (QV.savedId && QV._pend !== j) { QV._pend = j; return; }
     asvBusy = true; F().saveNote('saving');
     doSave(QV.savedName || '', false, true).then(function () { F().saveNote('saved'); }).catch(function () { F().saveNote('error'); }).then(function () { asvBusy = false; });
-  }, 2500);
+  }, 1500);
   // ───── 📺 show a saved quiz in the app (Life in the UK / Driving Theory → 📺 Video quizzes) ─────
   var PUB = {}, PUBLOADED = false;
   function loadPub() { if (PUBLOADED) return Promise.resolve(); return X.api('qv-app-ids').then(function (r) { PUB = {}; (r.ids || []).forEach(function (id) { PUB[id] = 1; }); PUBLOADED = true; }).catch(function () {}); }
