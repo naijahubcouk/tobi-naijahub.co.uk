@@ -98,3 +98,13 @@
   from = "/content-tools"
   to = "/index.html"
   status = 200
+
+# 🌐 test-site previews on the main site aren't for search engines (the real sites are lifeinuk / ukdriving .auntietobi.co.uk)
+[[headers]]
+  for = "/test-sites/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+[[headers]]
+  for = "/testsite-sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"

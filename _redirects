@@ -1,3 +1,38 @@
+# ── 🌐 Standalone test sites (Nov 2026). Only match once lifeinuk / ukdriving .auntietobi.co.uk are added as domains in Netlify. ──
+https://lifeinuk.auntietobi.co.uk/                   /lifeinuk.html  200!
+https://lifeinuk.auntietobi.co.uk/practice           /lifeinuk.html  200!
+https://lifeinuk.auntietobi.co.uk/mock               /lifeinuk.html  200!
+https://lifeinuk.auntietobi.co.uk/before             /lifeinuk.html  200!
+https://lifeinuk.auntietobi.co.uk/results            /lifeinuk.html  200!
+https://lifeinuk.auntietobi.co.uk/videos             /lifeinuk.html  200!
+https://lifeinuk.auntietobi.co.uk/resume             /lifeinuk.html  200!
+https://lifeinuk.auntietobi.co.uk/index.html         /lifeinuk.html  200!
+https://lifeinuk.auntietobi.co.uk/privacy            /testsite-privacy.html  200!
+https://lifeinuk.auntietobi.co.uk/manifest.json      /lifeinuk-manifest.json  200!
+https://lifeinuk.auntietobi.co.uk/sw.js              /testsite-sw.js  200!
+https://lifeinuk.auntietobi.co.uk/sitemap.xml        /lifeinuk-sitemap.xml  200!
+https://lifeinuk.auntietobi.co.uk/robots.txt         /lifeinuk-robots.txt  200!
+https://ukdriving.auntietobi.co.uk/                  /ukdriving.html  200!
+https://ukdriving.auntietobi.co.uk/practice          /ukdriving.html  200!
+https://ukdriving.auntietobi.co.uk/mock              /ukdriving.html  200!
+https://ukdriving.auntietobi.co.uk/before            /ukdriving.html  200!
+https://ukdriving.auntietobi.co.uk/results           /ukdriving.html  200!
+https://ukdriving.auntietobi.co.uk/videos            /ukdriving.html  200!
+https://ukdriving.auntietobi.co.uk/resume            /ukdriving.html  200!
+https://ukdriving.auntietobi.co.uk/signs             /ukdriving.html  200!
+https://ukdriving.auntietobi.co.uk/index.html        /ukdriving.html  200!
+https://ukdriving.auntietobi.co.uk/privacy           /testsite-privacy.html  200!
+https://ukdriving.auntietobi.co.uk/manifest.json     /ukdriving-manifest.json  200!
+https://ukdriving.auntietobi.co.uk/sw.js             /testsite-sw.js  200!
+https://ukdriving.auntietobi.co.uk/sitemap.xml       /ukdriving-sitemap.xml  200!
+https://ukdriving.auntietobi.co.uk/robots.txt        /ukdriving-robots.txt  200!
+# preview on the main site (not indexed) — e.g. auntietobi.co.uk/test-sites/ukdriving/mock
+/test-sites/lifeinuk     /lifeinuk.html   200
+/test-sites/lifeinuk/*   /lifeinuk.html   200
+/test-sites/ukdriving    /ukdriving.html  200
+/test-sites/ukdriving/*  /ukdriving.html  200
+/test-sites/privacy      /testsite-privacy.html  200
+
 # Auntie Tobi — Clean URL redirects
 
 # Action deep links

@@ -129,6 +129,9 @@
     i_hospital: function () { return svg('<rect x="10" y="10" width="100" height="100" rx="8" fill="' + B + '" stroke="#fff" stroke-width="3"/>' + txt('H', 50, 86, 70, W, 900) + '<rect x="80" y="20" width="8" height="24" fill="#E4002B"/><rect x="72" y="28" width="24" height="8" fill="#E4002B"/>'); },
   };
 
+
+  // 🌐 on the standalone test sites (lifeinuk / ukdriving .auntietobi.co.uk) the page sets window.TEST_SITE — neutral wording, no My Plan
+  var SITE = window.TEST_SITE || null;
   // ───── open / leave ─────
   var obs = null, timer = null;
   function open(view) {
@@ -152,7 +155,7 @@
     document.head.appendChild(st);
   }
   function root() { return document.getElementById('dtRoot'); }
-  function leave() { stopTimer(); document.body.classList.remove('lu-nochat', 'lu-examon'); if (typeof resetToWelcome === 'function') resetToWelcome(); }
+  function leave() { stopTimer(); document.body.classList.remove('lu-nochat', 'lu-examon'); if (SITE && SITE.home) return SITE.home(); if (typeof resetToWelcome === 'function') resetToWelcome(); }
   function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
   function top() { var r = document.getElementById('messages'); try { if (r) r.scrollTop = 0; window.scrollTo(0, 0); } catch (e) {} }
   function draw() { stopTimer(); var r = root(); if (!r) return; document.body.classList.toggle('lu-examon', /^(intro|mock|review|result|pq)$/.test(S.v)); ({ hist: hist, home: home, setup: setup, pq: pracQ, intro: intro, mock: mockQ, review: mockReview, result: result, before: before, hazard: hazard, licence: licence })[S.v](r); }
@@ -244,10 +247,11 @@
       syncCard(false) + progressCard(d, best, acc) +
       '<button class="lu-big w" id="dtHaz"><i>🎬</i><span><b>Hazard Perception Test</b><small>How part 2 works and is scored · practice clips not available yet</small></span></button>' +
       '<button class="lu-big w" id="dtBefore"><i>📋</i><span><b>Before your test</b><small>Cost, what to bring, pass marks — checked on GOV.UK</small></span></button>' +
-      '<button class="lu-big w" id="dtLic"><i>🇳🇬</i><span><b>Driving here on a Nigerian licence</b><small>How long you can use it and what to do next</small></span></button>' +
+      (SITE ? '' : '<button class="lu-big w" id="dtLic"><i>🇳🇬</i><span><b>Driving here on a Nigerian licence</b><small>How long you can use it and what to do next</small></span></button>') +
+      (SITE ? '<button class="lu-big w" id="tsDate"><i>📅</i><span><b>' + (d.date ? 'Change your test date' : 'Add my theory test date') + '</b><small>A countdown here, and a reminder in your phone’s calendar</small></span></button>' : '') +
       (window.MyPlan && window.MyPlan.driveTest ? '<button class="lu-big w" id="dtPlan"><i>💚</i><span><b>' + (d.date ? 'Change your test date' : 'Add your theory test to My Plan') + '</b><small>Countdown, reminders and a checklist</small></span></button>' : '') +
-      '<button class="lu-big w" id="dtShare"><i>📤</i><span><b>Share with a friend</b><small>auntietobi.co.uk/driving-theory-test</small></span></button>' +
-      '<div class="lu-note">Practice questions written independently by Auntie Tobi from <a href="' + GOV.hc + '" target="_blank" rel="noopener">The Highway Code</a>, <i>Know your traffic signs</i> and NHS first-aid guidance. They are not official DVSA questions. Road sign images: Crown copyright, Department for Transport, used under the Open Government Licence. Always check the latest rules on GOV.UK.</div>';
+      '<button class="lu-big w" id="dtShare"><i>📤</i><span><b>Share with a friend</b><small>' + (SITE ? SITE.short : 'auntietobi.co.uk/driving-theory-test') + '</small></span></button>' +
+      '<div class="lu-note">Practice questions written independently' + (SITE ? '' : ' by Auntie Tobi') + ' from <a href="' + GOV.hc + '" target="_blank" rel="noopener">The Highway Code</a>, <i>Know your traffic signs</i> and NHS first-aid guidance. They are not official DVSA questions. Road sign images: Crown copyright, Department for Transport, used under the Open Government Licence. Always check the latest rules on GOV.UK.</div>';
     $('#dtBack', r).onclick = leave;
     $('#dtMock', r).onclick = function () { if (live && !confirm('Start a new mock test? Your unfinished one will be lost.')) return; go('intro'); };
     if ($('#dtResume', r)) $('#dtResume', r).onclick = resumeMock;
@@ -256,10 +260,11 @@
     $('#dtPrac', r).onclick = function () { go('setup', { mode: 0, n: 10, fb: 'now' }); };
     vqCard(r, 'drive', 'Driving Theory Test');
     if ($('#dtWeak', r)) $('#dtWeak', r).onclick = function () { go('setup', { mode: 'weak', n: weak <= 5 ? 5 : 10, fb: 'now' }); };
-    $('#dtHaz', r).onclick = function () { go('hazard'); }; $('#dtBefore', r).onclick = function () { go('before'); }; $('#dtLic', r).onclick = function () { go('licence'); };
+    $('#dtHaz', r).onclick = function () { go('hazard'); }; $('#dtBefore', r).onclick = function () { go('before'); }; if ($('#dtLic', r)) $('#dtLic', r).onclick = function () { go('licence'); };
+    if ($('#tsDate', r)) $('#tsDate', r).onclick = function () { SITE.date(d.date, function (iso) { setDate(iso); draw(); }); };
     if ($('#dtPlan', r)) $('#dtPlan', r).onclick = function () { window.MyPlan.driveTest(); };
     $('#dtShare', r).onclick = function () {
-      var url = 'https://auntietobi.co.uk/driving-theory-test', text = 'Practise for the UK driving theory test free on Auntie Tobi 🚗 — exam-style questions based on The Highway Code, road signs and 57-minute mock tests:';
+      var url = SITE ? SITE.url : 'https://auntietobi.co.uk/driving-theory-test', text = SITE ? SITE.shareText : 'Practise for the UK driving theory test free on Auntie Tobi 🚗 — exam-style questions based on The Highway Code, road signs and 57-minute mock tests:';
       gt('drive_share'); if (navigator.share) { navigator.share({ title: 'Driving theory test practice', text: text, url: url }).catch(function () {}); return; }
       window.open('https://wa.me/?text=' + encodeURIComponent(text + ' ' + url), '_blank', 'noopener');
     };
@@ -331,7 +336,7 @@
     var box = $('#vqBox', r); if (!box || !window.QuizPlay) return;
     window.QuizPlay.count(bank).then(function (n) {
       if (!n || !document.body.contains(box)) return;
-      box.innerHTML = '<button class="lu-big w" id="vqGo"><i>📺</i><span><b>Video quizzes · ' + n + '</b><small>Watch, listen to Auntie Tobi and tap your answer</small></span></button>';
+      box.innerHTML = '<button class="lu-big w" id="vqGo"><i>📺</i><span><b>Video quizzes · ' + n + '</b><small>' + (SITE ? 'Watch, listen and tap your answer' : 'Watch, listen to Auntie Tobi and tap your answer') + '</small></span></button>';
       $('#vqGo', box).onclick = function () { window.QuizPlay.browse(bank, { bank: bank, name: name, answer: vqAnswer, done: vqDone, practice: function () { go('setup', { mode: 0, n: 10, fb: 'now' }); } }); };
     });
   }
@@ -559,7 +564,7 @@
       L('⏯️', 'You only get <b>one go</b> at each clip — you can’t review or change your answers.', GOV.hp) +
       L('🎯', 'Pass mark: <b>44 out of 75</b>.', GOV.pass) +
       L('💡', '<b>Tip:</b> watch for clues early — a car edging out of a side road, a pedestrian near the kerb, brake lights ahead, a ball near the road. Click when it starts to become a problem, and click again a moment later to be safe.', '') +
-      '<div class="lu-x" style="margin-top:10px">🚧 <b>Hazard perception practice is not available in Auntie Tobi yet.</b> A fair practice test needs real road video clips with checked scoring windows, and we don’t have suitable clips yet — so we won’t give you made-up scores. Use the free official DVSA practice test for now.</div>',
+      '<div class="lu-x" style="margin-top:10px">🚧 <b>Hazard perception practice is not available ' + (SITE ? 'here' : 'in Auntie Tobi') + ' yet.</b> A fair practice test needs real road video clips with checked scoring windows, and we don’t have suitable clips yet — so we won’t give you made-up scores. Use the free official DVSA practice test for now.</div>',
       '<a class="lu-btn" style="display:block;text-align:center;text-decoration:none" href="' + GOV.rev + '" target="_blank" rel="noopener">Official practice and apps ↗</a>');
     gt('drive_hazard');
   }
@@ -576,7 +581,7 @@
 
   function summary() { var d = load(), last = d.mocks[d.mocks.length - 1], pr = raw(PRAC), lv = liveMock(); return { live: !!lv, liveN: lv ? Object.keys(lv.ans || {}).length : 0, prac: pr ? { at: (pr.at || 0) + 1, n: pr.ids.length } : null, best: d.mocks.reduce(function (a, m) { return Math.max(a, m.s); }, 0), mocks: d.mocks.length, last: last ? last.s : null, answered: d.n, weak: Object.keys(d.wrong).length, date: d.date }; }
   function setDate(iso) { var d = load(); d.date = iso || ''; save(d); }
-  window.DriveTest = { sync: function () { return syncIn(); }, resume: function () { open('resume'); }, results: function () { open('hist'); }, open: open, summary: summary, setDate: setDate, sign: function (k) { return signMarkup(k); }, mock: function () { open(); getQ().then(function () { if (liveMock()) resumeMock(); else go('intro'); }); }, DISCLAIMER: DISCLAIMER };
+  window.DriveTest = { sync: function () { return syncIn(); }, resume: function () { open('resume'); }, results: function () { open('hist'); }, open: open, summary: summary, setDate: setDate, sign: function (k) { return signMarkup(k); }, signs: function () { open(); getQ().then(function () { startPrac('signs', 10, 'now'); }); }, mock: function () { open(); getQ().then(function () { if (liveMock()) resumeMock(); else go('intro'); }); }, DISCLAIMER: DISCLAIMER };
 
   // 🔗 auntietobi.co.uk/driving-theory-test (→ /?drive=1), /mock, /signs, /before
   var m = location.search.match(/[?&]drive(?:=([a-z]+))?/i);

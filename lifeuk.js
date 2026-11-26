@@ -25,6 +25,9 @@
     refunds: 'https://www.gov.uk/life-in-the-uk-test/cancellations-refunds-complaints',
   };
   var Q = null, ALL = null, loading = null, S = { v: 'home' };
+  // 🌐 on the standalone test sites (lifeinuk / ukdriving .auntietobi.co.uk) the page sets window.TEST_SITE — neutral wording, no My Plan
+  var SITE = window.TEST_SITE || null;
+
 
   // ───── helpers ─────
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -125,7 +128,7 @@
     getQ().then(syncIn).then(function () { if (S.v === 'resume') resumeAny(); else draw(); }).catch(function () { root().innerHTML = '<div class="lu-card">Couldn’t load the questions — check your connection and try again.<div class="lu-row"><button class="lu-btn" id="luRe">Try again</button></div></div>'; $('#luRe').onclick = function () { open(view); }; });
   }
   function root() { return document.getElementById('luRoot'); }
-  function leave() { stopTimer(); document.body.classList.remove('lu-nochat', 'lu-examon'); if (typeof resetToWelcome === 'function') resetToWelcome(); }
+  function leave() { stopTimer(); document.body.classList.remove('lu-nochat', 'lu-examon'); if (SITE && SITE.home) return SITE.home(); if (typeof resetToWelcome === 'function') resetToWelcome(); }
   function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
   function top() { var r = document.getElementById('messages'); try { if (r) r.scrollTop = 0; window.scrollTo(0, 0); } catch (e) {} }
   function go(v, extra) { S = Object.assign({ v: v }, extra || {}); draw(); top(); }
@@ -220,9 +223,10 @@
       (weak ? '<button class="lu-big y" id="luWeak"><i>💪</i><span><b>Retake my wrong answers · ' + weak + '</b><small>Get them right to clear them</small></span></button>' : '') +
       syncCard(false) + progressCard(d, best, acc) +
       '<button class="lu-big w" id="luBefore"><i>📋</i><span><b>Before your test</b><small>Cost, booking, ID and the day — checked on GOV.UK</small></span></button>' +
+      (SITE ? '<button class="lu-big w" id="tsDate"><i>📅</i><span><b>' + (d.date ? 'Change your test date' : 'Add my test date') + '</b><small>A countdown here, and a reminder in your phone’s calendar</small></span></button>' : '') +
       (window.MyPlan && window.MyPlan.lifeTest ? '<button class="lu-big w" id="luPlan"><i>💚</i><span><b>' + (d.date ? 'Change your test date' : 'Add your test date to My Plan') + '</b><small>Countdown, reminders and a checklist</small></span></button>' : '') +
-      '<button class="lu-big w" id="luShare"><i>📤</i><span><b>Share with a friend</b><small>auntietobi.co.uk/life-in-uk-test</small></span></button>' +
-      '<div class="lu-note">These are practice questions written by Auntie Tobi from the official handbook, <i>Life in the United Kingdom: A Guide for New Residents</i>. They are not the questions used in the official Life in the UK Test. Always check the latest rules on <a href="' + GOV.main + '" target="_blank" rel="noopener">GOV.UK</a>.</div>';
+      '<button class="lu-big w" id="luShare"><i>📤</i><span><b>Share with a friend</b><small>' + (SITE ? SITE.short : 'auntietobi.co.uk/life-in-uk-test') + '</small></span></button>' +
+      '<div class="lu-note">These are practice questions written ' + (SITE ? 'independently' : 'by Auntie Tobi') + ' from the official handbook, <i>Life in the United Kingdom: A Guide for New Residents</i>. They are not the questions used in the official Life in the UK Test. Always check the latest rules on <a href="' + GOV.main + '" target="_blank" rel="noopener">GOV.UK</a>.</div>';
     $('#luBack', r).onclick = leave;
     $('#luMock', r).onclick = function () { if (live && !confirm('Start a new mock exam? Your unfinished one will be lost.')) return; startMock(); };
     if ($('#luResume', r)) $('#luResume', r).onclick = resumeMock;
@@ -232,8 +236,9 @@
     if ($('#luWeak', r)) $('#luWeak', r).onclick = function () { go('setup', { mode: 'weak', n: Math.min(10, weak) <= 5 ? 5 : 10, fb: 'now' }); };
     $('#luBefore', r).onclick = function () { go('before'); };
     if ($('#luPlan', r)) $('#luPlan', r).onclick = function () { window.MyPlan.lifeTest(); };
+    if ($('#tsDate', r)) $('#tsDate', r).onclick = function () { SITE.date(d.date, function (iso) { setDate(iso); draw(); }); };
     $('#luShare', r).onclick = function () {
-      var url = 'https://auntietobi.co.uk/life-in-uk-test', text = 'Practise for the Life in the UK Test free on Auntie Tobi 🇬🇧 — exam-style questions based on the official handbook and 45-minute mock exams:';
+      var url = SITE ? SITE.url : 'https://auntietobi.co.uk/life-in-uk-test', text = SITE ? SITE.shareText : 'Practise for the Life in the UK Test free on Auntie Tobi 🇬🇧 — exam-style questions based on the official handbook and 45-minute mock exams:';
       gt('lifeuk_share');
       if (navigator.share) { navigator.share({ title: 'Life in the UK Test practice', text: text, url: url }).catch(function () {}); return; }
       window.open('https://wa.me/?text=' + encodeURIComponent(text + ' ' + url), '_blank', 'noopener');
@@ -307,7 +312,7 @@
     var box = $('#vqBox', r); if (!box || !window.QuizPlay) return;
     window.QuizPlay.count(bank).then(function (n) {
       if (!n || !document.body.contains(box)) return;
-      box.innerHTML = '<button class="lu-big w" id="vqGo"><i>📺</i><span><b>Video quizzes · ' + n + '</b><small>Watch, listen to Auntie Tobi and tap your answer</small></span></button>';
+      box.innerHTML = '<button class="lu-big w" id="vqGo"><i>📺</i><span><b>Video quizzes · ' + n + '</b><small>' + (SITE ? 'Watch, listen and tap your answer' : 'Watch, listen to Auntie Tobi and tap your answer') + '</small></span></button>';
       $('#vqGo', box).onclick = function () { window.QuizPlay.browse(bank, { bank: bank, name: name, answer: vqAnswer, done: vqDone, practice: function () { go('setup', { mode: 0, n: 10, fb: 'now' }); } }); };
     });
   }
