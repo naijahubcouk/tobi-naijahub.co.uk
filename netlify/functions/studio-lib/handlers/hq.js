@@ -858,7 +858,7 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'chat-cap') { if (!who.isAdmin) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can change the limit.'); await ac.setCap(body.capUsd); }
       return Object.assign(await ac.state(who.email), { isAdmin: who.isAdmin });
     }
-    case 'ideas-week': case 'ideas-make': case 'ideas-swap': case 'ideas-act': case 'ideas-cfg': {
+    case 'ideas-week': case 'ideas-make': case 'ideas-swap': case 'ideas-act': case 'ideas-cfg': case 'ideas-board': case 'ideas-arrange': case 'ideas-bmove': {
       // ✨ Weekly ideas (admin only) — built on her weekly themes and this week's real content; nothing is posted
       if (!has(['ideas'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can use this.');
       await hq.carryOver().catch(() => {});
@@ -868,6 +868,10 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'ideas-swap') return ideas.swap(mon, String(body.day || ''), String(body.id || ''), who.email);
       if (body.action === 'ideas-act') return ideas.act(mon, String(body.day || ''), String(body.id || ''), String(body.what || ''), who.email);
       if (body.action === 'ideas-cfg') { await ideas.saveCfg(body.cfg, who.email); return ideas.week(mon); }
+      // 📋 Board content arranged by weekly topic (the Board itself isn't changed)
+      if (body.action === 'ideas-board') return ideas.boardView(mon);
+      if (body.action === 'ideas-arrange') { await core.rateLimit('hq-ideas', who.email, 80, 60 * 60 * 1000, 'That\u2019s a lot of AI requests this hour — please wait a little.'); return ideas.arrange(mon, who.email, !!body.fresh); }
+      if (body.action === 'ideas-bmove') return ideas.boardMove(mon, String(body.id || '').slice(0, 40), String(body.day || ''));
       return ideas.week(mon);
     }
     case 'hq-today': {

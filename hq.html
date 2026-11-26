@@ -318,7 +318,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
 <script src="/hq-glowup.js?v=20261124a"></script>
 <script src="/hq-sunday.js?v=20261115d"></script>
 <script src="/hq-spot.js?v=20261119c"></script>
-<script src="/hq-ideas.js?v=20261118c"></script>
+<script src="/hq-ideas.js?v=20261126a"></script>
 <script src="/hq-chat.js?v=20261119a"></script>
 <script src="/hq-boost.js"></script>
 <script src="/hq-schoolmail.js?v=20261113"></script>
@@ -430,7 +430,7 @@ window.__hqBoot = fetch('/.netlify/functions/studio-hq', { method: 'POST', crede
   if (window.HQFollow) window.HQFollow.init({ api: api, esc: esc, sheet: sheet, toast: toast });
   if (window.HQSun) window.HQSun.init({ api: api, sheet: sheet, toast: toast, esc: esc });
   if (window.HQSpot) window.HQSpot.init({ api: api, sheet: sheet, toast: toast, esc: esc });
-  if (window.HQIdeas) window.HQIdeas.init({ api: api, sheet: sheet, toast: toast, esc: esc });
+  if (window.HQIdeas) window.HQIdeas.init({ api: api, sheet: sheet, toast: toast, esc: esc, open: function (id) { var c = S.items.filter(function (x) { return x.id === id; })[0]; if (c) editCard(c); else toast('That card isn’t on the Board any more'); } });
   if (window.HQChat) window.HQChat.init({ api: api, sheet: sheet, toast: toast, esc: esc, allowed: function (v) { return allowed(v); } });
   // ⭐ Spotlight → open a business's edit sheet (e.g. to add a carousel picture); `after` runs when it's saved or closed
   window.HQOpenBiz = async function (slug, after) {
