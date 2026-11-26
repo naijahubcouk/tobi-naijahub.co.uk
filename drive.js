@@ -130,7 +130,7 @@
   };
 
 
-  // 🌐 on the standalone test sites (lifeinuk / ukdriving .auntietobi.co.uk) the page sets window.TEST_SITE — neutral wording, no My Plan
+  // 🌐 on the standalone test sites (lifeinuktest / ukdrivingtheorytest .auntietobi.co.uk) the page sets window.TEST_SITE — neutral wording, no My Plan
   var SITE = window.TEST_SITE || null;
   // ───── open / leave ─────
   var obs = null, timer = null;

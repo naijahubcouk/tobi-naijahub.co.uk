@@ -99,7 +99,7 @@
   to = "/index.html"
   status = 200
 
-# 🌐 test-site previews on the main site aren't for search engines (the real sites are lifeinuk / ukdriving .auntietobi.co.uk)
+# 🌐 test-site previews on the main site aren't for search engines (the real sites are lifeinuktest / ukdrivingtheorytest .auntietobi.co.uk)
 [[headers]]
   for = "/test-sites/*"
   [headers.values]

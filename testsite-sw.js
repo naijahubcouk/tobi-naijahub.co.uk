@@ -1,4 +1,4 @@
-/* 🌐 Test sites (lifeinuk / ukdriving .auntietobi.co.uk) — works offline once visited.
+/* 🌐 Test sites (lifeinuktest / ukdrivingtheorytest .auntietobi.co.uk) — works offline once visited.
    Pages and questions: network first, saved copy when offline. Pictures, styles and scripts: saved copy first. */
 const C = 'testsite-v1';
 self.addEventListener('install', e => { self.skipWaiting(); });

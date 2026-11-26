@@ -1,5 +1,5 @@
 /*
- * 🌐 Standalone test sites (Nov 2026): lifeinuk.auntietobi.co.uk and ukdriving.auntietobi.co.uk.
+ * 🌐 Standalone test sites (Nov 2026): lifeinuktest.auntietobi.co.uk and ukdrivingtheorytest.auntietobi.co.uk.
  * The same practice engine as the Auntie Tobi app (lifeuk.js / drive.js / quizplay.js) inside a clean, neutral site.
  * Each page sets window.TEST_SITE = { key: 'lifeuk' | 'drive', url, short, shareText, name, cal } before this file.
  * Pages:  /  (front page)  /practice  /mock  /before  /results  /videos  /signs (driving)  /resume
