@@ -54,6 +54,13 @@
   function niceDate(iso) { if (!iso) return ''; return new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }); }
   function daysTo(iso) { return Math.round((new Date(iso + 'T12:00:00') - new Date(today() + 'T12:00:00')) / 86400000); }
   function topName(c) { return (TOP[c - 1] || [])[1] || ''; }
+
+  // 🗓️ My plan (testplan.js): a personal plan from their test date — today's set, readiness, weak areas. Kept on this device.
+  var PLAN = window.TestPlan ? window.TestPlan.create({ key: 'tobi_drive', unit: 'topic', total: MOCK_N, pass: PASS, areas: TOP.map(function (c) { return [c[0], c[1]]; }),
+    data: function () { return load(); }, setDate: function (iso) { setDate(iso); }, before: function () { go('before'); },
+    startMock: function () { if (liveMock()) resumeMock(); else go('intro'); },
+    startSet: function (ids, label) { var qs = ids.map(byId).filter(Boolean); if (!qs.length) return; go('pq', { kind: 'prac', mode: 'plan', label: label, n: qs.length, fb: 'now', qs: qs.map(function (q) { return { q: q, opts: optsOf(q) }; }), ans: {}, done: {}, at: 0, t0: Date.now() }); },
+    other: window.TEST_SITE ? { text: 'Living in the UK for the long term? Try our free Life in the UK Test practice.', button: 'Life in the UK Test practice →', url: 'https://lifeinuktest.auntietobi.co.uk/' } : { text: 'Applying to settle or for citizenship? Practise the Life in the UK Test here.', button: '🇬🇧 Life in the UK Test →', url: '/?lifeuk=1' } }) : null;
   function getQ() {
     if (Q) return Promise.resolve(Q);
     if (!loading) {
@@ -63,6 +70,7 @@
         var over = (x[1] && x[1].fix) || {};
         ALL = x[0].map(function (q) { var o = over[q.id]; return o ? Object.assign({}, q, o) : q; });
         Q = ALL.filter(function (q) { return !q.st || q.st === 'v'; });
+        if (PLAN) PLAN.bank(Q);
         return Q;
       });
       loading.catch(function () { loading = null; });
@@ -237,6 +245,7 @@
     r.innerHTML = '<button class="lu-back" id="dtBack">← Home</button>' +
       '<div class="lu-top dt-top"><b>🚗 Driving Theory Test</b><span>' + Q.length + ' exam-style practice questions based on The Highway Code, with road sign pictures. Marked straight away — free.</span></div>' +
       '<div class="lu-disc">ℹ️ ' + esc(DISCLAIMER) + '</div>' +
+      (PLAN ? '<div id="tpBox">' + PLAN.card() + '</div>' : '') +
       (d.date && dl >= 0 ? '<div class="lu-card" style="border-color:#F2D58A;background:#FFFBEF"><b style="font-size:16px">📅 Your theory test: ' + esc(niceDate(d.date)) + '</b><div style="font-size:14px;color:#7A5300;margin-top:3px">' + (dl === 0 ? 'It’s today — good luck! Bring your photocard licence.' : dl === 1 ? 'Tomorrow! Have your photocard licence ready.' : dl + ' days to go') + '</div></div>' : '') +
       (live ? '<button class="lu-big y" id="dtResume"><i>⏱</i><span><b>Resume your mock test</b><small>' + mmss(Math.max(0, Math.round((live.end - Date.now()) / 1000))) + ' left · ' + Object.keys(live.ans).length + ' of ' + MOCK_N + ' answered</small></span></button>' : '') +
       syncCard(true) +
@@ -255,7 +264,7 @@
     $('#dtBack', r).onclick = leave;
     $('#dtMock', r).onclick = function () { if (live && !confirm('Start a new mock test? Your unfinished one will be lost.')) return; go('intro'); };
     if ($('#dtResume', r)) $('#dtResume', r).onclick = resumeMock;
-    bindSync(r);
+    bindSync(r); if (PLAN) PLAN.bind($('#tpBox', r), draw);
     $('#dtSigns', r).onclick = function () { go('setup', { mode: 'signs', n: 10, fb: 'now' }); };
     $('#dtPrac', r).onclick = function () { go('setup', { mode: 0, n: 10, fb: 'now' }); };
     vqCard(r, 'drive', 'Driving Theory Test');
@@ -316,7 +325,7 @@
     gt('drive_practise', { label: String(mode), value: qs.length });
     go('pq', { mode: mode, n: n, fb: fb, qs: qs.map(function (q) { return { q: q, opts: optsOf(q) }; }), ans: {}, done: {}, at: 0, t0: Date.now() });
   }
-  function modeName(m) { return Array.isArray(m) ? 'Incorrect questions' : m === 'weak' ? 'My incorrect questions' : m === 'new' ? 'Not yet answered' : m === 'signs' ? 'Road signs' : m ? topName(m) : 'All topics'; }
+  function modeName(m) { return m === 'plan' ? (S.label || 'Today’s practice') : Array.isArray(m) ? 'Incorrect questions' : m === 'weak' ? 'My incorrect questions' : m === 'new' ? 'Not yet answered' : m === 'signs' ? 'Road signs' : m ? topName(m) : 'All topics'; }
   function pracQ(r) {
     var it = S.qs[S.at], q = it.q, pick = S.ans[S.at] || [], shown = S.fb === 'now' && S.done[S.at], last = S.at === S.qs.length - 1;
     var okN = Object.keys(S.done).filter(function (k) { return isRight(S.qs[k].q, S.ans[k], S.qs[k].opts); }).length;
@@ -390,7 +399,7 @@
   }
   function isRight(q, pick, opts) { var want = opts.filter(function (o) { return o.ok; }).map(function (o) { return o.i; }).sort().join(','); return (pick || []).slice().sort().join(',') === want; }
   function need(q) { return q.t === '2' ? 2 : 1; }
-  function mark(d, q, ok) { d.n++; if (ok) d.ok++; d.seen[q.id] = 1; if (ok) { if (d.wrong[q.id]) { d.wrong[q.id]--; if (d.wrong[q.id] <= 0) delete d.wrong[q.id]; } } else d.wrong[q.id] = (d.wrong[q.id] || 0) + 1; }
+  function mark(d, q, ok) { if (PLAN) PLAN.log(q.c ? q : byId(q.id), ok); d.n++; if (ok) d.ok++; d.seen[q.id] = 1; if (ok) { if (d.wrong[q.id]) { d.wrong[q.id]--; if (d.wrong[q.id] <= 0) delete d.wrong[q.id]; } } else d.wrong[q.id] = (d.wrong[q.id] || 0) + 1; }
   function X_toast(t) { try { if (typeof showToast === 'function') return showToast(t); } catch (e) {} var el = document.createElement('div'); el.textContent = t; el.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#0F1E36;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:99999;max-width:90%;text-align:center'; document.body.appendChild(el); setTimeout(function () { el.remove(); }, 2600); }
   function mmss(s) { return Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
   function pickedText(it, pick) { return (pick || []).map(function (i) { var o = it.opts.filter(function (x) { return x.i === i; })[0]; return o ? o.tx : ''; }).join(' and '); }
@@ -531,7 +540,7 @@
     $('#lxRv', r).onclick = function () { var l = $('#lxList'); if (l) l.scrollIntoView({ behavior: 'smooth' }); };
     if ($('#lxWt', r)) $('#lxWt', r).onclick = function () { startPrac(+study[0], 10, 'now'); };
     if ($('#lxRi', r)) $('#lxRi', r).onclick = function () { startPrac(wrong.map(function (w) { return w.q.id; }), wrong.length, 'now'); };
-    $('#lxA', r).onclick = function () { if (mock) go('intro'); else startPrac(S.mode, S.n, S.fb); };
+    $('#lxA', r).onclick = function () { if (mock) go('intro'); else if (S.mode === 'plan' && PLAN) PLAN.today(); else startPrac(S.mode, S.n, S.fb); };
     $('#lxH', r).onclick = function () { go(S.hist ? 'hist' : 'home'); };
   }
 
@@ -581,7 +590,7 @@
 
   function summary() { var d = load(), last = d.mocks[d.mocks.length - 1], pr = raw(PRAC), lv = liveMock(); return { live: !!lv, liveN: lv ? Object.keys(lv.ans || {}).length : 0, prac: pr ? { at: (pr.at || 0) + 1, n: pr.ids.length } : null, best: d.mocks.reduce(function (a, m) { return Math.max(a, m.s); }, 0), mocks: d.mocks.length, last: last ? last.s : null, answered: d.n, weak: Object.keys(d.wrong).length, date: d.date }; }
   function setDate(iso) { var d = load(); d.date = iso || ''; save(d); }
-  window.DriveTest = { sync: function () { return syncIn(); }, resume: function () { open('resume'); }, results: function () { open('hist'); }, open: open, summary: summary, setDate: setDate, sign: function (k) { return signMarkup(k); }, signs: function () { open(); getQ().then(function () { startPrac('signs', 10, 'now'); }); }, mock: function () { open(); getQ().then(function () { if (liveMock()) resumeMock(); else go('intro'); }); }, DISCLAIMER: DISCLAIMER };
+  window.DriveTest = { plan: PLAN, ready: getQ, today: function () { open(); getQ().then(function () { if (PLAN) PLAN.today(); }); }, sync: function () { return syncIn(); }, resume: function () { open('resume'); }, results: function () { open('hist'); }, open: open, summary: summary, setDate: setDate, sign: function (k) { return signMarkup(k); }, signs: function () { open(); getQ().then(function () { startPrac('signs', 10, 'now'); }); }, mock: function () { open(); getQ().then(function () { if (liveMock()) resumeMock(); else go('intro'); }); }, DISCLAIMER: DISCLAIMER };
 
   // 🔗 auntietobi.co.uk/driving-theory-test (→ /?drive=1), /mock, /signs, /before
   var m = location.search.match(/[?&]drive(?:=([a-z]+))?/i);

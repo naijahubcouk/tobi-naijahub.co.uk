@@ -10,7 +10,7 @@
   'use strict';
   var T = window.TEST_SITE; if (!T) return;
   var BASE = (location.pathname.match(/^\/test-sites\/(lifeinuk|ukdriving)/) || [''])[0];
-  var ROUTES = ['practice', 'mock', 'before', 'results', 'videos', 'signs', 'resume'];
+  var ROUTES = ['practice', 'mock', 'before', 'results', 'videos', 'signs', 'resume', 'today'];
   function M() { return T.key === 'drive' ? window.DriveTest : window.LifeUK; }
   function $(s, r) { return (r || document).querySelector(s); }
   function $$(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
@@ -93,10 +93,11 @@
     else if (r === 'before') m.open('before');
     else if (r === 'results') m.results();
     else if (r === 'resume') m.resume();
+    else if (r === 'today' && m.today) m.today();
     else if (r === 'signs' && m.signs) m.signs();
     else if (r === 'videos') { m.open('home'); var n = 0, t = setInterval(function () { var b = $('#vqGo'); if (b) { clearInterval(t); b.click(); } else if (++n > 40) clearInterval(t); }, 150); }
     else m.open('home');
-    document.title = (({ practice: 'Practice', mock: 'Mock test', before: 'Before your test', results: 'My results', videos: 'Video quizzes', signs: 'Road signs', resume: 'Practice' })[r] || 'Practice') + ' · ' + T.name;
+    document.title = (({ practice: 'Practice', mock: 'Mock test', before: 'Before your test', results: 'My results', videos: 'Video quizzes', signs: 'Road signs', resume: 'Practice', today: 'Today’s practice' })[r] || 'Practice') + ' · ' + T.name;
     gt('site_open', { label: r });
   }
   function go(r) { var url = BASE + '/' + (r || ''); if (location.pathname !== url) history.pushState({ r: r }, '', url); show(r); }
@@ -130,11 +131,42 @@
     };
   };
 
+  // ───── 🗓️ My plan on the front page + the dashboard with their own numbers ─────
+  function paintPlan() {
+    var box = $('#tsPlan'), m = M(); if (!box || !m || !m.plan || !m.ready) return;
+    m.ready().then(function () {
+      if ($('#landing').hidden) return;
+      box.innerHTML = m.plan.card('site'); m.plan.bind(box, paintPlan);
+      // from the front page these open the practice screens
+      $$('[data-tp="today"]', box).forEach(function (b) { b.onclick = function () { go('today'); }; });
+      $$('[data-tp="mock"]', box).forEach(function (b) { b.onclick = function () { go('mock'); }; });
+      $$('[data-tp="before"]', box).forEach(function (b) { b.onclick = function () { m.plan.flag('before'); go('before'); }; });
+      paintDash(m.plan.state());
+    }).catch(function () {});
+  }
+  function paintDash(S) {
+    var el = $('.ts-dash'); if (!el || (!S.mocks.length && S.answered < 20)) return;
+    var total = T.key === 'drive' ? 50 : 24, pass = T.key === 'drive' ? 43 : 18, lo = Math.round(total * 0.4), sc = function (v) { return Math.max(4, Math.round((v - lo) / (total - lo) * 100)); };
+    var ms = S.mocks.slice(-6), last = ms[ms.length - 1];
+    var bars = ms.length ? '<div class="ts-chart">' + ms.map(function (x) { return '<span class="' + (x.s >= pass ? 'ok' : '') + '" style="height:' + sc(x.s) + '%"><small>' + x.s + '</small></span>'; }).join('') + '<div class="pass" style="bottom:' + sc(pass) + '%"></div></div><div class="ts-chart-x">' + ms.map(function (x) { return '<span>' + new Date(x.at + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + '</span>'; }).join('') + '</div>'
+      : '<div class="tp-note" style="padding:30px 4px;text-align:center">No mock tests yet.<br><button class="ts-b p" data-go="mock" style="margin-top:12px;padding:10px 16px;font-size:15px">Take your first mock</button></div>';
+    var pct = S.ready, ring = 'background:conic-gradient(var(--green) ' + pct + '%,var(--line2) 0)';
+    var areas = (S.weak.length ? S.weak : S.areas.filter(function (a) { return a.cov != null; }).sort(function (a, b) { return a.cov - b.cov; })).slice(0, 4);
+    var weak = areas.map(function (a) { var p = Math.round((a.acc != null ? a.acc : a.cov) * 100); return '<div class="ts-wk"><span>' + a.name + '</span><b>' + p + '%' + (a.acc == null ? ' seen' : '') + '</b><i><em class="' + (p >= 85 ? 'g' : '') + '" style="width:' + p + '%"></em></i></div>'; }).join('');
+    el.innerHTML = '<div class="hd"><b>Your progress</b><span class="tag" style="color:var(--green);border-color:var(--green)">Yours</span></div><div class="row">' +
+      '<div class="ts-panel"><h4 class="lg">Mock test scores <span><i></i>Pass mark ' + pass + '</span></h4>' + bars + '</div>' +
+      '<div class="ts-panel ts-score"><h4 style="align-self:flex-start">Readiness</h4><div class="ts-ring" style="' + ring + '"><b>' + pct + '<small>%</small></b></div><span class="ts-pill ok">' + S.band + '</span></div></div>' +
+      '<div class="ts-panel ts-weak"><h4>' + (S.weak.length ? 'Areas to work on' : 'How much you’ve covered') + '</h4>' + weak + '</div>' +
+      '<div class="ts-mini"><div><b>' + S.mocks.length + '</b><small>mock tests</small></div><div><b>' + S.answered + '</b><small>questions answered</small></div><div><b>' + (S.left != null && S.left >= 0 ? S.left + (S.left === 1 ? ' day' : ' days') : (S.streak || 0) + '-day') + '</b><small>' + (S.left != null && S.left >= 0 ? 'to your ' + (S.booked ? 'test' : 'goal') : 'streak') + '</small></div></div>';
+    bindGo(el);
+  }
+
   // ───── 👋 welcome back (progress on this device) ─────
   function paintResume() {
+    paintPlan();
     var box = $('#tsResume'), m = M(); if (!box || !m || !m.summary) return;
     var s; try { s = m.summary(); } catch (e) { return; }
-    if (!s || (!s.live && !s.prac && !s.mocks && !s.answered && !s.date)) { box.innerHTML = ''; return; }
+    if (!s || (!s.live && !s.prac)) { box.innerHTML = ''; return; }   // the plan card covers everything else
     var total = T.key === 'drive' ? 50 : 24, line = s.live ? 'You have a mock test in progress' : s.prac ? 'You have a practice set in progress' : s.mocks ? 'Best mock score ' + s.best + '/' + total + ' · ' + s.mocks + ' mock test' + (s.mocks === 1 ? '' : 's') : s.answered ? s.answered + ' practice questions answered' : 'Your test date is saved';
     if (s.mocks && (s.live || s.prac)) line += ' · best score ' + s.best + '/' + total;
     var act = s.live ? ['resume', 'Resume your mock test'] : s.prac ? ['resume', 'Continue practice'] : ['practice', 'Keep practising'];

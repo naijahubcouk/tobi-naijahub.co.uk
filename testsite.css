@@ -270,3 +270,11 @@ button{font-family:inherit;color:inherit}
   .ts-band b{font-size:27px}
 }
 .ts-demo .end b{font-size:25px}.ts-demo .end p{font-size:17px}
+
+/* 🗓️ My plan card on the front page */
+.ts-plan .tp{margin-top:18px;padding:24px 26px;border:1px solid var(--line);border-radius:20px;box-shadow:var(--sh)}
+.ts-plan .tp-h b{font-size:20px}.ts-plan .tp-h small{font-size:15.5px}.ts-plan .tp-chip{font-size:13px;background:var(--greenT);color:var(--green)}
+.ts-plan .tp-ready .l{font-size:16px}.ts-plan .tp-note{font-size:15px}.ts-plan .tp-t{font-size:17px}.ts-plan .tp-t small{font-size:14px}
+.ts-plan .tp-go{max-width:360px;font-size:17px;padding:15px;border-radius:14px}.ts-plan .tp-t button{font-size:15px}
+.ts-plan .tp-weak span{font-size:14px}.ts-plan .tp-link{font-size:15px}
+.ts .tp{border-color:var(--line)}
