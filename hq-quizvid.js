@@ -204,7 +204,7 @@
           '<button class="btn ghost sm" data-swap="' + i + '">🔀 Swap</button><button class="btn ghost sm" data-gen="' + i + '">' + (bg ? '🔄 New picture' : '✨ Make picture') + '</button>' +
           '<button class="btn ghost sm" data-ed="' + i + '">✏️ Edit</button><button class="btn ghost sm" data-cp="' + i + '">📋 Copy prompt</button>' +
           '<label class="btn ghost sm" style="margin:0;cursor:pointer">📷 My photo<input type="file" accept="image/jpeg,image/png,image/webp" data-up="' + i + '" hidden></label></div></div></div>';
-      }).join('') + '</div><div class="row" style="gap:8px;margin-top:10px"><button class="btn ghost" id="qvCpAll">📋 Copy all prompts</button><button class="btn primary" id="qvAll">✨ Make all missing pictures (costs on OpenRouter)</button><span class="muted" id="qvBgMsg" style="font-size:12.5px">💡 Free way: 📋 copy the prompt → make the picture in ChatGPT or Gemini → 📷 My photo. Pictures are saved per question and reused in later videos for free.</span></div></div>' +
+      }).join('') + '</div><div class="row" style="gap:8px;margin-top:10px"><button class="btn ghost" id="qvCpQA">📋 Copy questions &amp; answers</button><button class="btn ghost" id="qvCpAll">📋 Copy all prompts</button><button class="btn primary" id="qvAll">✨ Make all missing pictures (costs on OpenRouter)</button><span class="muted" id="qvBgMsg" style="font-size:12.5px">💡 Free way: 📋 copy the prompt → make the picture in ChatGPT or Gemini → 📷 My photo. Pictures are saved per question and reused in later videos for free.</span></div></div>' +
 
       '<div class="card"><b>🖼️ Cover</b> <span class="muted" style="font-size:13px">— the opening of the video and its Instagram cover. The title sits in the middle so it stays readable in your profile grid.</span>' +
       '<div class="row" style="gap:14px;margin-top:10px;align-items:flex-start;flex-wrap:wrap"><canvas id="qvCov" width="270" height="480" style="width:135px;height:240px;border-radius:10px;background:#0F1E36;flex:none"></canvas><div style="flex:1;min-width:240px">' +
@@ -263,6 +263,7 @@
     $$('[data-ed]').forEach(function (b) { b.onclick = function () { editQ(+b.dataset.ed); }; });
     $$('[data-cp]').forEach(function (b) { b.onclick = function () { copyPrompts([+b.dataset.cp], b); }; });
     $('#qvCpAll').onclick = function () { copyPrompts(QV.qs.map(function (q, i) { return i; }), this); };
+    $('#qvCpQA').onclick = copyQA;
     $$('[data-up]').forEach(function (inp) { inp.onchange = function () { var f = inp.files && inp.files[0]; if (f) upBg(+inp.dataset.up, f); }; });
     $('#qvAll').onclick = makeAllBgs;
     var keep = KEEP = function () { QV.cTitle = $('#qvCT').value; QV.cSub = $('#qvCS').value; QV.h1 = $('#qvH1').value; QV.h2 = $('#qvH2').value; QV.outro = $('#qvOut').value; QV.appT = $('#qvAppT').value; var g = $('#qvIgT').value.trim().replace(/^@*/, ''); QV.ig = g ? '@' + g : ''; };
@@ -333,6 +334,18 @@
     };
   }
   // 📋 the exact prompt HQ would send to the image AI — make the picture elsewhere, then 📷 My photo
+  // 📋 every question with its options, the right answer and the explanation — to check them (e.g. paste into ChatGPT)
+  function copyQA() {
+    var L = 'ABCDEFGH', src = QV.bank === 'drive' ? 'The Highway Code and the official DVSA driving theory guidance' : 'the official handbook “Life in the United Kingdom: A Guide for New Residents” (3rd edition)';
+    var txt = 'QUIZ: ' + bank().name + ' — ' + QV.qs.length + ' questions\n' +
+      'Please check that each “Correct answer” is right according to ' + src + '. Tell me any that are wrong or unclear, and why.\n\n' +
+      QV.qs.map(function (q, i) {
+        return (i + 1) + '. ' + q.q + '\n' + q.opts.map(function (o, k) { return L[k] + ') ' + o; }).join('\n') +
+          '\nCorrect answer: ' + L[q.ans] + ') ' + q.opts[q.ans] + (q.e ? '\nExplanation: ' + q.e : '');
+      }).join('\n\n');
+    var ok = function () { X.toast('📋 Copied ' + QV.qs.length + ' questions with answers'); };
+    try { navigator.clipboard.writeText(txt).then(ok, function () { window.prompt('Copy the questions:', txt); }); } catch (e) { window.prompt('Copy the questions:', txt); }
+  }
   function copyPrompts(idx, btn) {
     var t0 = btn.textContent; btn.disabled = true;
     return X.api('qv-bg-prompts', { bank: QV.bank, qs: idx.map(function (i) { var q = QV.qs[i]; return { q: q.q, a: q.opts[q.ans] }; }) }).then(function (r) {
