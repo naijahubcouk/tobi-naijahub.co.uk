@@ -463,6 +463,7 @@
 
   // ───── ✅ results (mock and practice) ─────
   function result(r) {
+    var AF = S.kind !== 'mock' && S.mode === 'plan' && PLAN ? PLAN.after() : { html: '', next: '' };   // ✂️ today's sessions
     var n = S.items.length, pc = n ? Math.round(S.score / n * 100) : 0, mock = S.kind === 'mock', pass = S.score >= PASS;
     var wrong = S.items.filter(function (x) { return !isRight(x.q, x.pick, x.opts); }), byCh = {};
     wrong.forEach(function (w) { byCh[w.q.c] = (byCh[w.q.c] || 0) + 1; });
@@ -473,8 +474,8 @@
       '<div class="sc">' + S.score + '/' + n + '</div><div class="pc">' + pc + '%</div>' +
       (mock ? '<div class="pf ' + (pass ? 'ok' : 'no') + '">' + (pass ? 'PASS' : 'FAIL') + '</div><div style="font-size:14px;color:#52606D;margin-top:8px">' + (pass ? 'You reached the pass mark of 75% (18 correct).' : 'The pass mark is 75% — 18 correct answers. You needed ' + (PASS - S.score) + ' more.') + '</div>' : '') +
       '<div class="meta"><span>✓ ' + S.score + ' correct</span><span>✗ ' + (n - S.score) + ' incorrect</span>' + (S.used != null ? '<span>⏱ ' + Math.max(1, S.used) + ' min</span>' : '') + '</div></div>' +
-      (study.length ? '<div class="lx-panel"><b style="font-size:16px">📖 Chapters to study</b>' + study.map(function (c) { return '<div class="lu-li"><i>' + CH[c - 1][2] + '</i><span style="flex:1">Chapter ' + c + ': ' + esc(chName(+c)) + '</span><b>' + byCh[c] + ' wrong</b></div>'; }).join('') + '</div>' : '') +
-      '<div class="lx-nav" style="grid-template-columns:1fr 1fr;margin-bottom:12px"><button class="lx-b p" id="lxA">' + (mock ? 'Retry with different questions' : 'Practise again') + '</button><button class="lx-b" id="lxH">Done</button></div>' +
+      AF.html + (study.length ? '<div class="lx-panel"><b style="font-size:16px">📖 Chapters to study</b>' + study.map(function (c) { return '<div class="lu-li"><i>' + CH[c - 1][2] + '</i><span style="flex:1">Chapter ' + c + ': ' + esc(chName(+c)) + '</span><b>' + byCh[c] + ' wrong</b></div>'; }).join('') + '</div>' : '') +
+      '<div class="lx-nav" style="grid-template-columns:1fr 1fr;margin-bottom:12px"><button class="lx-b p" id="lxA">' + (mock ? 'Retry with different questions' : esc(AF.next || 'Practise again')) + '</button><button class="lx-b" id="lxH">Done</button></div>' +
       '<div class="lx-panel"><b style="font-size:16px">Review ' + (mock ? 'all ' + n + ' questions' : 'your answers') + '</b>' +
       '<div class="lx-tabs"><button data-t="all" aria-pressed="' + (S.tab !== 'wrong') + '">All (' + n + ')</button><button data-t="wrong" aria-pressed="' + (S.tab === 'wrong') + '">Incorrect (' + wrong.length + ')</button></div>' +
       (list.length ? list.map(function (x) {

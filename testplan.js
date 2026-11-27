@@ -42,7 +42,11 @@
     '.tp-o{border:1.5px solid #E4E2DA;background:#fff;border-radius:12px;padding:12px 10px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;color:#0B1F33;text-align:center}' +
     '.tp-o small{display:block;font-weight:500;font-size:12.5px;color:#66768A;margin-top:2px}.tp-o[aria-pressed=true]{border-color:var(--green,#057A44);background:#E7F3EE}' +
     '.tp-sheet input[type=date]{width:100%;font:inherit;font-size:17px;padding:12px;border:1.5px solid #E4E2DA;border-radius:12px;margin-top:8px}' +
-    '.tp-sheet .tp-go:disabled{opacity:.45;cursor:default}';
+    '.tp-sheet .tp-go:disabled{opacity:.45;cursor:default}' +
+    '.tp-dots{display:inline-flex;gap:4px;vertical-align:middle;margin-right:6px}.tp-dots em{width:9px;height:9px;border-radius:50%;background:#DDE2E8;display:inline-block}.tp-dots em.on{background:var(--green,#057A44)}' +
+    '.tp-sw{display:flex;gap:4px;background:#F2F1EC;border-radius:12px;padding:4px;margin-top:6px}.tp-sw button{flex:1;border:0;background:none;border-radius:9px;padding:8px 4px;font:inherit;font-size:13px;font-weight:700;color:#5B6B7F;cursor:pointer}' +
+    '.tp-sw button[aria-pressed=true]{background:#fff;color:#0B1F33;box-shadow:0 1px 3px rgba(11,31,51,.12)}.tp-swl{font-size:12.5px;color:#66768A;margin-top:14px;font-weight:600}' +
+    '.tp-after{border:1.5px solid #BFE3CF;background:#F1FAF5;border-radius:16px;padding:14px 16px;margin:0 0 12px;color:#0B1F33;font-size:15px;line-height:1.45}.tp-after b{display:block;font-size:16.5px;margin-bottom:4px}';
   function addCss() { if (document.getElementById('tpCss')) return; var s = document.createElement('style'); s.id = 'tpCss'; s.textContent = CSS; document.head.appendChild(s); }
 
   function create(C) {
@@ -129,8 +133,14 @@
       if (S.stage === 'learn') { var lo = A.filter(function (a) { return a.cov != null; }).sort(function (a, b) { return a.cov - b.cov; })[0]; if (lo && lo.cov < 0.95) return lo; }
       return S.weak[0] || A.filter(function (a) { return a.cov != null; }).sort(function (a, b) { return a.cov - b.cov; })[0] || A[0];
     };
-    P.pick = function () {
+    P.pick = function (fresh) {
       var Q = P.Q || [], S = P.state(), x = rd(), d = C.data() || {}, seen = d.seen || {}, now = Date.now(), N = S.stage === 'eve' ? 10 : S.perDay, used = {}, out = [];
+      // ✂️ today's set is kept for the whole day, so short sessions share out the same mix
+      if (!fresh && x.day && x.day.d === iso() && x.day.ids && x.day.ids.length) {
+        var did = answeredToday(x), byId = {}; Q.forEach(function (q) { byId[q.id] = q; });
+        var left = x.day.ids.filter(function (id) { return !did[id] && (!Q.length || byId[id]); });
+        if (left.length) return { ids: left, focus: P.focus(S), all: x.day.ids.length };
+      }
       var take = function (list, n) { list.forEach(function (q) { if (n > 0 && !used[q.id]) { used[q.id] = 1; out.push(q.id); n--; } }); };
       var f = P.focus(S), due = shuffle(Q.filter(function (q) { return x.due[q.id] && x.due[q.id].at <= now; }));
       var inF = Q.filter(function (q) { return f && q.c === f.id; }), fNew = shuffle(inF.filter(function (q) { return !seen[q.id]; })), fOld = shuffle(inF.filter(function (q) { return seen[q.id]; }));
@@ -138,9 +148,34 @@
       take(S.stage === 'learn' ? fNew.concat(fOld) : (d.wrong ? inF.filter(function (q) { return d.wrong[q.id]; }) : []).concat(fOld, fNew), Math.round(N * 0.6));
       take(shuffle(Q.filter(function (q) { return !seen[q.id]; })), N - out.length);
       take(due, N - out.length); take(shuffle(Q), N - out.length);
-      return { ids: shuffle(out), focus: f };
+      out = shuffle(out);
+      if (!fresh) { x.day = { d: iso(), ids: out }; try { localStorage.setItem(KEY, JSON.stringify(x)); } catch (e) {} }   // not progress: no save
+      return { ids: out, focus: f, all: out.length };
     };
-    P.today = function () { var p = P.pick(); gt('plan_today', { label: C.key, value: p.ids.length }); C.startSet(p.ids, 'Today’s practice' + (p.focus ? ' · ' + p.focus.name : '')); };
+    function answeredToday(x) { var t = iso(), o = {}; x.log.forEach(function (l) { if (iso(new Date(l[2])) === t) o[l[0]] = 1; }); return o; }
+    // ✂️ sessions: all at once (0), or 10 / 5 at a time
+    P.session = function (S) {
+      S = S || P.state(); var N = S.stage === 'eve' ? 10 : S.perDay, ch = (S.prefs && +S.prefs.chunk) || 0, did = Math.min(S.doneToday, N);
+      if (!ch || ch >= N) return { ch: 0, N: N, n: 1, done: did >= N ? 1 : 0, left: did >= N ? 0 : 1, size: N - did, min: Math.max(1, Math.round((N - did) * S.mins / N)) };
+      var n = Math.ceil(N / ch), done = did >= N ? n : Math.floor(did / ch), size = done >= n ? ch : Math.min(ch, N - done * ch);
+      return { ch: ch, N: N, n: n, done: done, left: n - done, size: size, min: Math.max(1, Math.round(size * S.mins / N)) };
+    };
+    P.setChunk = function (v) { var x = rd(); if (!x.prefs) return; x.prefs.chunk = +v || 0; wr(x); gt('plan_chunk', { label: C.key + '|' + (+v || 'all') }); };
+    function dots(se) { var h = '<span class="tp-dots">'; for (var i = 0; i < se.n && i < 12; i++) h += '<em class="' + (i < se.done ? 'on' : '') + '"></em>'; return h + '</span>'; }
+    // after a session: what's left today (for the result screen)
+    P.after = function () {
+      var se = P.session(); if (!se.ch) return { html: '', next: '' };
+      var html = se.left ? '<div class="tp-after"><b>Session ' + se.done + ' of ' + se.n + ' done ✓</b>' + dots(se) + se.left + ' more ' + (se.left === 1 ? 'session' : 'sessions') + ' today — carry on now, or come back later.</div>'
+        : '<div class="tp-after"><b>🎉 All ' + se.n + ' sessions done today!</b>' + dots(se) + 'That’s all ' + se.N + ' of today’s questions. See you tomorrow.</div>';
+      return { html: plain(html), next: se.left ? 'Next session · ' + se.size + ' questions' : 'Practise more' };
+    };
+    P.today = function () {
+      var se = P.session(), extra = se.left === 0, p = P.pick(extra), ids = p.ids, label;
+      if (se.ch) { ids = ids.slice(0, extra ? se.ch : se.size); label = extra ? 'Extra practice' : 'Session ' + (se.done + 1) + ' of ' + se.n; }
+      else label = extra ? 'Extra practice' : 'Today’s practice';
+      gt('plan_today', { label: C.key + '|' + (se.ch || 'all'), value: ids.length });
+      C.startSet(ids, label + (p.focus ? ' · ' + p.focus.name : ''));
+    };
 
     // ───── the "My plan" card ─────
     var STAGE = { learn: ['Learn', 'Cover every ' + C.unit + ' once'], strengthen: ['Strengthen', 'Work on weak areas'], exam: ['Exam practice', 'Mock tests and final revision'],
@@ -152,7 +187,7 @@
       addCss(); var S = P.state(), pr = S.prefs;
       if (!pr) {
         if (rd().flags.skip && where !== 'site') return '';
-        return '<div class="tp"><div class="tp-h"><div><b>🗓️ Get your personal plan</b><small>Answer 3 quick questions and we’ll plan your practice' + (C.data().date ? ' up to your test on ' + nice(C.data().date) : ' around your test date') + ' — what to do each day, and how ready you are.</small></div></div>' +
+        return '<div class="tp"><div class="tp-h"><div><b>🗓️ Get your personal plan</b><small>Answer 4 quick questions and we’ll plan your practice' + (C.data().date ? ' up to your test on ' + nice(C.data().date) : ' around your test date') + ' — what to do each day, and how ready you are.</small></div></div>' +
           '<button class="tp-go" data-tp="setup">Make my plan · 20 seconds</button>' + (where !== 'site' ? '<button class="tp-link" data-tp="skip">Not now</button>' : '') + '</div>';
       }
       if (S.stage === 'after' && !S.passed) {
@@ -162,19 +197,22 @@
       var st = STAGE[S.stage] || STAGE.learn, t = iso(), tasks = [];
       var head = new Date().toLocaleDateString('en-GB', { weekday: 'long' }) + (S.left != null && S.left > 0 ? ' · ' + S.left + ' day' + (S.left === 1 ? '' : 's') + ' to ' + (S.booked ? 'your test' : 'your goal') : S.stage === 'testday' ? ' · test day' : '');
       if (S.stage === 'testday') tasks.push(['before', 'Check what to bring and when to arrive', 'Your original ID — the same one you booked with', !!S.flags['before@' + t]]);
-      else if (S.stage === 'eve') { tasks.push(['today', 'A light 10-question review', 'Nothing new today — just stay sharp', S.doneToday >= 10]); tasks.push(['before', 'Check what to bring and when to arrive', 'Have it ready tonight', !!S.flags['before@' + t]]); }
+      else if (S.stage === 'eve') { var se0 = P.session(S); tasks.push(['today', 'A light 10-question review' + (se0.ch ? ' · ' + se0.n + ' sessions of ' + se0.ch : ''), 'Nothing new today — just stay sharp', S.doneToday >= 10, se0]); tasks.push(['before', 'Check what to bring and when to arrive', 'Have it ready tonight', !!S.flags['before@' + t]]); }
       else {
         var f = P.focus(S);
-        tasks.push(['today', 'Today’s ' + S.perDay + ' questions' + (f ? ' — ' + f.name : ''), (S.dueN ? Math.min(S.dueN, Math.round(S.perDay * 0.2)) + ' wrong answers to retake · ' : '') + 'about ' + S.mins + ' minutes' + (S.missed && S.stage !== 'crash' ? ' · a little longer after a missed day' : ''), S.doneToday >= S.perDay]);
+        var se = P.session(S);
+        tasks.push(['today', 'Today’s ' + S.perDay + ' questions' + (se.ch ? ' · ' + se.n + ' sessions of ' + se.ch : '') + (f ? ' — ' + f.name : ''),
+          (se.ch ? se.done + ' of ' + se.n + ' done · ' : '') + (S.dueN ? Math.min(S.dueN, Math.round(S.perDay * 0.2)) + ' wrong answers to retake · ' : '') + 'about ' + S.mins + ' minutes' + (se.ch ? ' in total' : '') + (S.missed && S.stage !== 'crash' ? ' · a little longer after a missed day' : ''), S.doneToday >= S.perDay, se]);
         if (S.mockDue) tasks.push(['mock', 'Mock test' + (S.mocks.length ? ' #' + (S.mocks.length + (S.mockToday ? 0 : 1)) : ''), C.total + ' questions, timed like the real test', S.mockToday]);
       }
       var rdy = '<div class="tp-ready"><div class="l">Readiness <span>' + S.ready + '% · ' + S.band + '</span></div><div class="tp-bar"><i style="width:' + S.ready + '%"></i></div>' +
         '<div class="tp-note">' + (S.track === 'on' ? '✅ <b>On track</b> for ' + nice(S.date) + '.' : S.track === 'behind' ? '⚠️ <b>A little behind</b> — add 5 minutes a day to catch up.' : '') +
         (S.ready >= 85 && !S.booked ? ' <b>You’re ready to book!</b>' : S.ready >= 80 && !S.passedTwo ? ' Pass 2 mock tests in a row to be fully ready.' : '') + '</div></div>';
       return '<div class="tp"><div class="tp-h"><div><b>🗓️ ' + esc(head) + '</b><small>' + esc(st[1]) + (S.streak > 1 ? ' · 🔥 ' + S.streak + '-day streak' : '') + '</small></div><span class="tp-chip">' + esc(st[0]) + '</span></div>' +
-        rdy + '<div class="tp-tasks">' + tasks.map(function (k, i) { return '<div class="tp-t' + (k[3] ? ' done' : '') + '"><i>' + (k[3] ? '✓' : '') + '</i><span>' + esc(k[1]) + '<small>' + esc(k[2]) + '</small></span>' + (k[3] ? '' : i ? '<button data-tp="' + k[0] + '">Start</button>' : '') + '</div>'; }).join('') + '</div>' +
-        (tasks[0] && !tasks[0][3] ? '<button class="tp-go" data-tp="' + tasks[0][0] + '">' + (tasks[0][0] === 'today' ? 'Start today’s practice' : 'Open the checklist') + '</button>' : tasks.some(function (k) { return !k[3]; }) ? '' : '<div class="tp-note" style="margin-top:10px">🎉 <b>All done for today.</b> Come back tomorrow — or practise more below.</div>') +
+        rdy + '<div class="tp-tasks">' + tasks.map(function (k, i) { return '<div class="tp-t' + (k[3] ? ' done' : '') + '"><i>' + (k[3] ? '✓' : '') + '</i><span>' + esc(k[1]) + '<small>' + (k[4] && k[4].ch && !k[3] ? dots(k[4]) : '') + esc(k[2]) + '</small></span>' + (k[3] ? '' : i ? '<button data-tp="' + k[0] + '">Start</button>' : '') + '</div>'; }).join('') + '</div>' +
+        (tasks[0] && !tasks[0][3] ? '<button class="tp-go" data-tp="' + tasks[0][0] + '">' + (tasks[0][0] === 'today' ? (tasks[0][4] && tasks[0][4].ch ? 'Start session ' + (tasks[0][4].done + 1) + ' · about ' + tasks[0][4].min + ' min' : 'Start today’s practice') : 'Open the checklist') + '</button>' : tasks.some(function (k) { return !k[3]; }) ? '' : '<div class="tp-note" style="margin-top:10px">🎉 <b>All done for today.</b> Come back tomorrow — or practise more below.</div>') +
         (S.weak.length && S.stage !== 'eve' && S.stage !== 'testday' ? '<div class="tp-note" style="margin-top:12px">Areas to work on:</div><div class="tp-weak">' + S.weak.slice(0, 3).map(function (a) { return '<span>' + esc(a.name) + ' · ' + Math.round(a.acc * 100) + '%</span>'; }).join('') + '</div>' : '') +
+        (S.stage !== 'testday' ? '<div class="tp-swl">How I study today</div><div class="tp-sw">' + [[0, 'All at once'], [10, '10 at a time'], [5, '5 at a time']].map(function (c) { return '<button data-tp="chunk:' + c[0] + '" aria-pressed="' + (((pr && +pr.chunk) || 0) === c[0]) + '">' + c[1] + '</button>'; }).join('') + '</div>' : '') +
         '<button class="tp-link" data-tp="setup">⚙️ Change my plan</button></div>';
     };
     P.bind = function (el, redraw) {
@@ -184,6 +222,7 @@
         if (a === 'setup') return P.setup(redraw);
         if (a === 'skip') { var x = rd(); x.flags.skip = 1; wr(x); if (redraw) redraw(); return; }
         if (a === 'today') return P.today();
+        if (a.indexOf('chunk:') === 0) { P.setChunk(a.slice(6)); if (redraw) redraw(); return; }
         if (a === 'mock') return C.startMock();
         if (a === 'before') { P.flag('before'); return C.before(); }
         if (a === 'passed') { var y = rd(); y.passed = iso(); wr(y); gt('plan_passed', { label: C.key }); if (redraw) redraw(); return; }
@@ -194,25 +233,26 @@
 
     // ───── the 3 start questions ─────
     P.setup = function (redraw) {
-      addCss(); var x = rd(), d = C.data() || {}, cur = x.prefs || {}, A = { booked: cur.booked != null ? cur.booked : !!d.date, date: d.date || '', target: cur.target || '1m', level: cur.level || '', mins: cur.mins || 20 };
+      addCss(); var x = rd(), d = C.data() || {}, cur = x.prefs || {}, A = { booked: cur.booked != null ? cur.booked : !!d.date, date: d.date || '', target: cur.target || '1m', level: cur.level || '', mins: cur.mins || 20, chunk: cur.chunk != null ? +cur.chunk : (x.prefs ? 0 : 10) };
       var s = document.createElement('div'); s.className = 'tp-scrim'; document.body.appendChild(s);
       var o = function (k, v, t, sub) { return '<button class="tp-o" data-k="' + k + '" data-v="' + v + '" aria-pressed="' + (String(A[k]) === String(v)) + '">' + t + (sub ? '<small>' + sub + '</small>' : '') + '</button>'; };
       function draw() {
         var min = iso();
-        s.innerHTML = plain('<div class="tp-sheet" role="dialog" aria-label="My plan"><h3>🗓️ Your personal plan</h3><p class="s">Three quick questions. You can change them any time.</p>' +
+        s.innerHTML = plain('<div class="tp-sheet" role="dialog" aria-label="My plan"><h3>🗓️ Your personal plan</h3><p class="s">Four quick questions. You can change them any time.</p>' +
           '<div class="tp-q">1 · Have you booked your test?</div><div class="tp-opts c2">' + o('booked', true, 'Yes, I’ve booked') + o('booked', false, 'Not yet') + '</div>' +
           (A.booked ? '<input type="date" id="tpD" min="' + min + '" value="' + esc(A.date) + '" aria-label="Test date">'
             : '<div class="tp-q" style="margin-top:12px;font-size:14.5px">When would you like to be ready?</div><div class="tp-opts c2">' + o('target', '2w', 'In 2 weeks') + o('target', '1m', 'In a month') + o('target', '2m', 'In 2 months+') + o('target', 'ns', 'Not sure yet') + '</div>') +
           '<div class="tp-q">2 · How far along are you?</div><div class="tp-opts c3">' + o('level', 'start', 'Just starting') + o('level', 'some', 'Studied a bit') + o('level', 'near', 'Nearly ready') + '</div>' +
           '<div class="tp-q">3 · How much time a day?</div><div class="tp-opts c3">' + o('mins', 10, '10 min') + o('mins', 20, '20 min') + o('mins', 30, '30+ min') + '</div>' +
+          '<div class="tp-q">4 · How would you like to study each day?</div><div class="tp-opts c3">' + o('chunk', 0, 'All at once', 'One sitting') + o('chunk', 10, '10 at a time', 'Short sessions') + o('chunk', 5, '5 at a time', 'Quick bites') + '</div>' +
           '<button class="tp-go" id="tpOk"' + (ok() ? '' : ' disabled') + '>Make my plan</button><div class="tp-row" style="margin-top:6px"><button id="tpX" style="border:0">Cancel</button></div></div>');
         [].forEach.call(s.querySelectorAll('.tp-o'), function (b) { b.onclick = function () { var k = b.dataset.k, v = b.dataset.v; A[k] = v === 'true' ? true : v === 'false' ? false : /^\d+$/.test(v) ? +v : v; draw(); }; });
         var di = s.querySelector('#tpD'); if (di) di.oninput = function () { A.date = di.value; s.querySelector('#tpOk').disabled = !ok(); };
         s.querySelector('#tpX').onclick = function () { s.remove(); };
         s.querySelector('#tpOk').onclick = function () {
-          var y = rd(); y.prefs = { booked: !!A.booked, target: A.booked ? '' : A.target, level: A.level, mins: A.mins, at: iso() }; delete y.passed; delete y.flags.skip; wr(y);
+          var y = rd(); y.prefs = { booked: !!A.booked, target: A.booked ? '' : A.target, level: A.level, mins: A.mins, chunk: +A.chunk || 0, at: iso() }; delete y.passed; delete y.flags.skip; wr(y);
           if (A.booked && A.date) C.setDate(A.date); else if (!A.booked && d.date) C.setDate('');
-          gt('plan_made', { label: C.key + '|' + (A.booked ? 'booked' : A.target) + '|' + A.level + '|' + A.mins });
+          gt('plan_made', { label: C.key + '|' + (A.booked ? 'booked' : A.target) + '|' + A.level + '|' + A.mins + '|' + (A.chunk || 'all') });
           s.remove(); if (redraw) redraw();
         };
       }

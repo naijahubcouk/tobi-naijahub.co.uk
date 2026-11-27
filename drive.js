@@ -515,6 +515,7 @@
 
   // ───── ✅ results ─────
   function result(r) {
+    var AF = S.kind !== 'mock' && S.mode === 'plan' && PLAN ? PLAN.after() : { html: '', next: '' };   // ✂️ today's sessions
     var n = S.items.length, pc = n ? Math.round(S.score / n * 100) : 0, mock = S.kind === 'mock', pass = S.score >= PASS;
     var wrong = S.items.filter(function (x) { return !isRight(x.q, x.pick, x.opts); }), byT = {};
     wrong.forEach(function (w) { byT[w.q.c] = (byT[w.q.c] || 0) + 1; });
@@ -526,10 +527,10 @@
       (mock ? '<div class="pf ' + (pass ? 'ok' : 'no') + '">' + (pass ? 'PASS' : 'FAIL') + '</div><div style="font-size:14px;color:#52606D;margin-top:8px">' + (pass ? 'You reached the multiple-choice pass mark of 43.' : 'The multiple-choice pass mark is 43. You needed ' + (PASS - S.score) + ' more.') + '</div>' : '') +
       '<div class="meta"><span>✓ ' + S.score + ' correct</span><span>✗ ' + (n - S.score) + ' incorrect</span>' + (S.used != null ? '<span>⏱ ' + Math.max(1, S.used) + ' min</span>' : '') + '</div>' +
       (mock ? '<div class="lu-x" style="text-align:left;margin-top:12px">This is a multiple-choice result only — not an overall theory test pass. The real test also has 3 video questions and a hazard perception part (pass mark 44 out of 75), which are not included here.</div>' : '') + '</div>' +
-      (study.length ? '<div class="lx-panel"><b style="font-size:16px">📚 Topics to practise</b>' + study.map(function (c) { return '<div class="lu-li"><i>' + TOP[c - 1][2] + '</i><span style="flex:1">' + esc(topName(+c)) + '</span><b>' + byT[c] + ' wrong</b></div>'; }).join('') + '</div>' : '') +
+      AF.html + (study.length ? '<div class="lx-panel"><b style="font-size:16px">📚 Topics to practise</b>' + study.map(function (c) { return '<div class="lu-li"><i>' + TOP[c - 1][2] + '</i><span style="flex:1">' + esc(topName(+c)) + '</span><b>' + byT[c] + ' wrong</b></div>'; }).join('') + '</div>' : '') +
       '<div class="lx-panel" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="lx-b" id="lxRv">Review my answers</button>' +
       (study.length ? '<button class="lx-b" id="lxWt">Practise weak topics</button>' : '') + (wrong.length ? '<button class="lx-b" id="lxRi">Retry incorrect questions</button>' : '') +
-      '<button class="lx-b p" id="lxA">' + (mock ? 'Take another mock test' : 'Practise again') + '</button><button class="lx-b" id="lxH">Done</button></div>' +
+      '<button class="lx-b p" id="lxA">' + (mock ? 'Take another mock test' : esc(AF.next || 'Practise again')) + '</button><button class="lx-b" id="lxH">Done</button></div>' +
       '<div class="lx-panel" id="lxList"><b style="font-size:16px">Review ' + (mock ? 'all ' + n + ' questions' : 'your answers') + '</b>' +
       '<div class="lx-tabs"><button data-t="all" aria-pressed="' + (S.tab !== 'wrong') + '">All (' + n + ')</button><button data-t="wrong" aria-pressed="' + (S.tab === 'wrong') + '">Incorrect (' + wrong.length + ')</button></div>' +
       (list.length ? list.map(function (x) {
