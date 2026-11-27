@@ -362,7 +362,7 @@
       $('#vqGo', box).onclick = function () { window.QuizPlay.browse(bank, { bank: bank, name: name, answer: vqAnswer, done: vqDone, practice: function () { go('setup', { mode: 0, n: 10, fb: 'now' }); } }); };
     });
   }
-  function vqAnswer(id, ok) { if (!byId(id)) return; var d = load(); mark(d, { id: id }, ok); save(d); }
+  function vqAnswer(id, ok) { if (!byId(id)) return; var d = load(); mark(d, { id: id }, ok, 'v'); save(d); }
   function vqDone(n, ok) { var d = load(); d.prac.push({ at: today(), n: n, ok: ok, m: 'video' }); if (d.prac.length > 100) d.prac = d.prac.slice(-100); save(d); var r = root(); if (r && S.v === 'home') draw(); }
   function record(it, pick) { var d = load(), ok = isRight(it.q, pick, it.opts); mark(d, it.q, ok); save(d); return ok; }
   function finishPrac() {
@@ -412,7 +412,7 @@
   }
   function isRight(q, pick, opts) { var want = opts.filter(function (o) { return o.ok; }).map(function (o) { return o.i; }).sort().join(','); return (pick || []).slice().sort().join(',') === want; }
   function need(q) { return q.t === '2' ? 2 : 1; }
-  function mark(d, q, ok) { if (PLAN) PLAN.log(q.c ? q : byId(q.id), ok); d.n++; if (ok) d.ok++; d.seen[q.id] = 1; if (ok) { if (d.wrong[q.id]) { d.wrong[q.id]--; if (d.wrong[q.id] <= 0) delete d.wrong[q.id]; } } else d.wrong[q.id] = (d.wrong[q.id] || 0) + 1; }
+  function mark(d, q, ok, kind) { if (PLAN) PLAN.log(q.c ? q : byId(q.id), ok, kind); d.n++; if (ok) d.ok++; d.seen[q.id] = 1; if (ok) { if (d.wrong[q.id]) { d.wrong[q.id]--; if (d.wrong[q.id] <= 0) delete d.wrong[q.id]; } } else d.wrong[q.id] = (d.wrong[q.id] || 0) + 1; }
   function X_toast(t) { try { if (typeof showToast === 'function') return showToast(t); } catch (e) {} var el = document.createElement('div'); el.textContent = t; el.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#0F1E36;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:99999;max-width:90%;text-align:center'; document.body.appendChild(el); setTimeout(function () { el.remove(); }, 2600); }
   function mmss(s) { return Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
   function pickedText(it, pick) { return (pick || []).map(function (i) { var o = it.opts.filter(function (x) { return x.i === i; })[0]; return o ? o.tx : ''; }).join(' and '); }
@@ -514,7 +514,7 @@
     var d = load(), score = 0, byT = {};
     var items = S.qs.map(function (it, n) {
       var pick = S.ans[n] || [], ok = isRight(it.q, pick, it.opts);
-      mark(d, it.q, ok); if (ok) score++; byT[it.q.c] = byT[it.q.c] || [0, 0]; byT[it.q.c][1]++; if (ok) byT[it.q.c][0]++;
+      mark(d, it.q, ok, 'm'); if (ok) score++; byT[it.q.c] = byT[it.q.c] || [0, 0]; byT[it.q.c][1]++; if (ok) byT[it.q.c][0]++;
       return { q: it.q, opts: it.opts, pick: pick };
     });
     d.mocks.push({ id: Date.now(), at: today(), s: score, t: byT, rv: items.map(function (x) { return [x.q.id, x.opts.map(function (o) { return o.i; }), x.pick]; }) }); if (d.mocks.length > 50) d.mocks = d.mocks.slice(-50); d.mocks.forEach(function (m, i) { if (i < d.mocks.length - 20) delete m.rv; });

@@ -28,7 +28,7 @@
     '.tp-note{font-size:13.5px;color:#5B6B7F;margin-top:6px;line-height:1.45}.tp-note b{color:#0B1F33}' +
     '.tp-tasks{margin:12px 0 4px}.tp-t{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #EEECE6;font-size:15px}.tp-t:first-child{border-top:0}' +
     '.tp-t i{flex:none;width:24px;height:24px;border-radius:50%;border:2px solid #CBD2D9;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:13px;font-weight:800;color:#fff}' +
-    '.tp-t.done i{background:var(--green,#057A44);border-color:var(--green,#057A44)}.tp-t.done span{color:#66768A;text-decoration:line-through}.tp-t span{flex:1;line-height:1.35}.tp-t small{display:block;color:#66768A;font-size:12.5px;text-decoration:none}' +
+    '.tp-t.done i{background:var(--green,#057A44);border-color:var(--green,#057A44)}.tp-t.done span{color:#66768A}.tp-t span{flex:1;line-height:1.35}.tp-t small{display:block;color:#66768A;font-size:12.5px;text-decoration:none}' +
     '.tp-t button{border:1.5px solid #E4E2DA;background:#fff;border-radius:10px;padding:7px 11px;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;color:#0B1F33;flex:none}' +
     '.tp-go{display:block;width:100%;border:0;border-radius:14px;padding:14px;font:inherit;font-size:16px;font-weight:800;cursor:pointer;background:var(--green,#057A44);color:#fff;margin-top:10px}' +
     '.tp-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.tp-row button{flex:1;border:1.5px solid #E4E2DA;background:#fff;border-radius:12px;padding:10px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;color:#0B1F33}' +
@@ -56,9 +56,9 @@
     var P = {};
 
     // ───── what happened ─────
-    P.log = function (q, ok) {
+    P.log = function (q, ok, kind) {   // kind: 'm' mock test, 'v' video quiz, none = practice (only practice fills today's sessions)
       if (!q || q.id == null) return; var x = rd(), now = Date.now();
-      x.log.push([q.id, ok ? 1 : 0, now, q.c]); if (x.log.length > 800) x.log = x.log.slice(-800);
+      x.log.push(kind ? [q.id, ok ? 1 : 0, now, q.c, kind] : [q.id, ok ? 1 : 0, now, q.c]); if (x.log.length > 800) x.log = x.log.slice(-800);
       var d = x.due[q.id];
       if (!ok) x.due[q.id] = { s: 0, at: now + STEPS[0] * DAY - 3 * 36e5 };   // back tomorrow
       else if (d && d.at <= now + 6 * 36e5) { if (d.s + 1 >= STEPS.length) delete x.due[q.id]; else x.due[q.id] = { s: d.s + 1, at: now + STEPS[d.s + 1] * DAY - 3 * 36e5 }; }
@@ -88,8 +88,9 @@
       });
       var recent = x.log.slice(-100), acc = recent.length ? recent.filter(function (l) { return l[1]; }).length / recent.length : 0;
       var mocks = d.mocks || [], last3 = mocks.slice(-3), mAvg = last3.length ? last3.reduce(function (a, m) { return a + m.s; }, 0) / last3.length : null;
-      var mockPart = mAvg == null ? acc * 0.75 : Math.min(1, (mAvg / C.total) / (C.pass / C.total) * 0.85);
-      var ready = Math.round(Math.min(1, cov) * 30 + acc * 35 + mockPart * 35);
+      var conf = Math.min(1, recent.length / 100);   // accuracy only counts fully after 100 answers
+      var mockPart = mAvg == null ? 0 : Math.min(1, mAvg / C.pass * 0.9) * Math.min(1, mocks.length / 3);   // only real mock tests, and 3 of them for full marks
+      var ready = Math.round(Math.min(1, cov) * 35 + acc * conf * 30 + mockPart * 35);
       var passedTwo = mocks.length >= 2 && mocks.slice(-2).every(function (m) { return m.s >= C.pass; });
       if (ready >= 85 && !passedTwo) ready = Math.min(ready, 84);
       var band = ready >= 85 ? 'Ready' : ready >= 70 ? 'Nearly ready' : ready >= 45 ? 'Getting there' : 'Just starting';
@@ -111,7 +112,7 @@
       var mins = (pr && pr.mins) || 20, perDay = { 10: 10, 20: 18, 30: 27 }[mins] || 18;
       var unseen = Math.max(0, bank.n - seenN);
       if (stage === 'learn' && left) { var learnLeft = Math.max(1, Math.round(span * cut[0]) - (span - left)); perDay = Math.max(perDay, Math.ceil(unseen / learnLeft)); }   // enough to see every question in time
-      var days = {}; x.log.forEach(function (l) { var k = iso(new Date(l[2])); days[k] = (days[k] || 0) + 1; });
+      var days = {}, prac = {}; x.log.forEach(function (l) { var k = iso(new Date(l[2])); days[k] = (days[k] || 0) + 1; if (!l[4]) prac[k] = (prac[k] || 0) + 1; });
       var missed = pr && pr.at && pr.at < addD(t, -1) && !days[addD(t, -1)] && stage !== 'eve' && stage !== 'testday';
       if (missed && stage !== 'crash') perDay += 5;
       perDay = Math.min(40, Math.max(5, perDay));
@@ -126,7 +127,7 @@
       var track = '';
       if (goal && left > 0) { var want = Math.round(20 + 70 * Math.min(1, 1 - left / span)); track = ready >= want - 5 ? 'on' : (pr && pr.at && pr.at <= addD(t, -3)) ? 'behind' : ''; }   // no ‘behind’ in the first few days of a new plan
       var weak = areas.filter(function (a) { return a.n >= 5 && a.acc != null; }).sort(function (a, b) { return a.acc - b.acc; });
-      return { prefs: pr, booked: booked, date: goal, left: left, stage: stage, perDay: perDay, doneToday: days[t] || 0, streak: streak, missed: !!missed, mockDue: !!mockDue, mockToday: mockToday,
+      return { prefs: pr, booked: booked, date: goal, left: left, stage: stage, perDay: perDay, doneToday: prac[t] || 0, streak: streak, missed: !!missed, mockDue: !!mockDue, mockToday: mockToday,
         every: every, dueN: dueN, ready: ready, band: band, passedTwo: passedTwo, track: track, cov: cov, acc: acc, areas: areas, weak: weak, mocks: mocks, answered: d.n || 0, mins: mins, flags: x.flags, passed: x.passed || '' };
     };
 
@@ -204,6 +205,7 @@
       else {
         var f = P.focus(S);
         var se = P.session(S);
+        if (S.doneToday >= S.perDay) tasks.push(['today', 'Today’s practice — done', 'All ' + S.perDay + ' questions' + (se.ch ? ' · ' + se.n + ' sessions' : '') + ' · well done!', true]); else
         tasks.push(['today', 'Today’s ' + S.perDay + ' questions' + (se.ch ? ' · ' + se.n + ' sessions of ' + se.ch : '') + (f ? ' — ' + f.name : ''),
           (se.ch ? se.done + ' of ' + se.n + ' done · ' : '') + (S.dueN ? Math.min(S.dueN, Math.round(S.perDay * 0.2)) + ' wrong answers to retake · ' : '') + 'about ' + S.mins + ' minutes' + (se.ch ? ' in total' : '') + (S.missed && S.stage !== 'crash' ? ' · a little longer after a missed day' : ''), S.doneToday >= S.perDay, se]);
         if (S.mockDue) tasks.push(['mock', 'Mock test' + (S.mocks.length ? ' #' + (S.mocks.length + (S.mockToday ? 0 : 1)) : ''), C.total + ' questions, timed like the real test', S.mockToday]);

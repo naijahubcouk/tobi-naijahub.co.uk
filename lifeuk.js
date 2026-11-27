@@ -355,7 +355,7 @@
       $('#vqGo', box).onclick = function () { window.QuizPlay.browse(bank, { bank: bank, name: name, answer: vqAnswer, done: vqDone, practice: function () { go('setup', { mode: 0, n: 10, fb: 'now' }); } }); };
     });
   }
-  function vqAnswer(id, ok) { if (!byId(id)) return; if (PLAN) PLAN.log(byId(id), ok); var d = load(); d.n++; if (ok) d.ok++; d.seen[id] = 1; if (ok) { if (d.wrong[id]) { d.wrong[id]--; if (d.wrong[id] <= 0) delete d.wrong[id]; } } else d.wrong[id] = (d.wrong[id] || 0) + 1; save(d); }
+  function vqAnswer(id, ok) { if (!byId(id)) return; if (PLAN) PLAN.log(byId(id), ok, 'v'); var d = load(); d.n++; if (ok) d.ok++; d.seen[id] = 1; if (ok) { if (d.wrong[id]) { d.wrong[id]--; if (d.wrong[id] <= 0) delete d.wrong[id]; } } else d.wrong[id] = (d.wrong[id] || 0) + 1; save(d); }
   function vqDone(n, ok) { var d = load(); d.prac.push({ at: today(), n: n, ok: ok, m: 'video' }); if (d.prac.length > 100) d.prac = d.prac.slice(-100); save(d); var r = root(); if (r && S.v === 'home') draw(); }
   function record(it, pick) {
     var d = load(), ok = isRight(it.q, pick, it.opts), id = it.q.id;
@@ -476,7 +476,7 @@
     var d = load(), score = 0, byCh = {};
     var items = S.qs.map(function (it, n) {
       var pick = S.ans[n] || [], ok = isRight(it.q, pick, it.opts);
-      if (PLAN) PLAN.log(it.q, ok);
+      if (PLAN) PLAN.log(it.q, ok, 'm');   // mock answers: readiness yes, today's sessions no
       d.n++; d.seen[it.q.id] = 1; byCh[it.q.c] = byCh[it.q.c] || [0, 0]; byCh[it.q.c][1]++;
       if (ok) { score++; d.ok++; byCh[it.q.c][0]++; if (d.wrong[it.q.id]) { d.wrong[it.q.id]--; if (d.wrong[it.q.id] <= 0) delete d.wrong[it.q.id]; } }
       else d.wrong[it.q.id] = (d.wrong[it.q.id] || 0) + 1;
