@@ -232,3 +232,41 @@ button{font-family:inherit;color:inherit}
   .ts-foot{margin-top:72px}.ts-foot .ts-wrap{grid-template-columns:1fr;gap:26px}
   .ts-faq summary{font-size:16px;padding:18px 0}
 }
+
+/* ───── bigger, easier-to-read text (27 Nov 2026) ───── */
+.ts-logo b{font-size:17.5px}.ts-logo small{font-size:13.5px}
+.ts-nav a{font-size:16px}
+.ts-b{font-size:17.5px;padding:15px 24px}
+.ts-kicker{font-size:15px}
+.ts-hero h1{font-size:62px}
+.ts-hero .lead{font-size:21px;max-width:560px}
+.ts-trust{font-size:16px}.ts-indep{font-size:14.5px}
+.ts-demo .lbl,.ts-demo .tm{font-size:14.5px}.ts-demo .chip{font-size:14px}
+.ts-demo .q{font-size:23px}.ts-demo .ins{font-size:15px}
+.ts-op{font-size:17.5px;padding:15px 16px}.ts-ex{font-size:16px}.ts-demo .foot small{font-size:14.5px}
+.ts-stats b{font-size:33px}.ts-stats small{font-size:15.5px}
+.ts-eyeb{font-size:14.5px}
+.ts-sec h2{font-size:44px}.ts-sec .sub{font-size:20px;max-width:660px}
+.ts-f b{font-size:20px}.ts-f>span:not(.ic){font-size:16.5px}.ts-f em{font-size:16px}
+.ts-step b{font-size:19.5px}.ts-step>span:not(.ic){font-size:16.5px}.ts-step em{font-size:15.5px}
+.ts-list li{font-size:17.5px}
+.ts-dash .hd b{font-size:17.5px}.ts-panel h4{font-size:14.5px}.ts-wk span{font-size:15.5px}.ts-wk b{font-size:15px}
+.ts-chart span small,.ts-chart-x{font-size:13px}.ts-mini b{font-size:20px}.ts-mini small{font-size:13.5px}
+.ts-facts b{font-size:33px}.ts-facts span:not(.ic){font-size:17px}.ts-facts small{font-size:16px}.ts-link{font-size:16.5px}
+.ts-faq summary{font-size:19px}.ts-faq p{font-size:17.5px}
+.ts-band b{font-size:33px}.ts-band div span{font-size:18.5px}
+.ts-resume b{font-size:18px}.ts-resume .t span{font-size:16px}
+.ts-foot{font-size:16px}.ts-foot b{font-size:16.5px}.ts-foot .by{font-size:14.5px}
+/* the practice screens */
+.ts .lu{font-size:17px}.ts .lu-big b{font-size:18.5px}.ts .lu-big small{font-size:14.5px}.ts .lu-q,.ts .lx-q{font-size:21px}
+.ts .lx-o,.ts .lu-o{font-size:17.5px}.ts .lu-note,.ts .lu-disc{font-size:14px}.ts .lu-li{font-size:16.5px}
+@media(max-width:640px){
+  .ts-hero h1{font-size:41px}.ts-hero .lead{font-size:18.5px}
+  .ts-demo .q{font-size:21px}.ts-op{font-size:17px}
+  .ts-stats b{font-size:27px}.ts-stats small{font-size:14.5px}
+  .ts-sec h2{font-size:33px}.ts-sec .sub{font-size:18px}
+  .ts-f b{font-size:19px}.ts-step b{font-size:19px}
+  .ts-faq summary{font-size:18px}.ts-faq p{font-size:16.5px}
+  .ts-band b{font-size:27px}
+}
+.ts-demo .end b{font-size:25px}.ts-demo .end p{font-size:17px}
