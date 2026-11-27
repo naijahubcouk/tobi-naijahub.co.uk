@@ -23,7 +23,7 @@
   function $$(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
   function esc(s) { return X.esc(s); }
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-  function state() { if (!QV) QV = { bank: 'lifeuk', n: 10, grp: 0, qs: [], voiceOn: true, voice: '', model: 'flash', readOpts: true, h1: '', h2: '', outro: 'Great job! Share your score in the comments! 👇', appOn: true, igOn: true, ig: '@auntietobi_uk', appT: 'Practice more FREE on Auntie Tobi App', sayApp: true, music: 'upbeat', musicVol: 30, voiceVol: 100, duck: true, bgs: {}, out: null, cTitle: '', cSub: '', cBg: 0 }; return QV; }
+  function state() { if (!QV) QV = { bank: 'lifeuk', n: 10, grp: 0, qs: [], voiceOn: true, voice: '', model: 'flash', readOpts: true, h1: '', h2: '', outro: 'Great job! Share your score in the comments! 👇', appOn: true, igOn: true, ig: '@auntietobi_uk', appT: 'Practise more for FREE! 🔗 Link in bio', sayApp: true, music: 'upbeat', musicVol: 30, voiceVol: 100, duck: true, bgs: {}, out: null, cTitle: '', cSub: '', cBg: 0 }; return QV; }
   function bank() { return BANKS[QV.bank]; }
   function fill(s) { return String(s || '').replace(/\{n\}/g, QV.qs.length || QV.n); }
   function loadBank(k) { if (BANKQ[k]) return Promise.resolve(BANKQ[k]); return fetch(BANKS[k].file).then(function (r) { return r.json(); }).then(function (j) { BANKQ[k] = j.filter(function (q) { var st = k === 'drive' ? q.st : q.s; return (!st || st === 'v') && q.t === 'm' && !q.g && q.o && q.o.length === 4 && q.o.every(function (o) { return o.length <= 46; }) && q.q.length <= 120; }); return BANKQ[k]; }); }
@@ -217,8 +217,8 @@
       '<label>Ending</label><input id="qvOut" value="' + esc(QV.outro) + '">' +
       '<div style="margin-top:10px;padding:10px;border:1px solid #EEE9DD;border-radius:10px"><label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" id="qvIg"' + (QV.igOn ? ' checked' : '') + '> 📸 Show the Instagram handle at the bottom</label>' +
       '<div id="qvIgBox"' + (QV.igOn ? '' : ' hidden') + '><input id="qvIgT" value="' + esc(QV.ig) + '" style="margin-top:8px;max-width:320px"></div></div>' +
-      '<div style="margin-top:10px;padding:10px;border:1px solid #EEE9DD;border-radius:10px"><label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" id="qvApp"' + (QV.appOn ? ' checked' : '') + '> 📱 Add an Auntie Tobi App box at the end</label>' +
-      '<div id="qvAppBox"' + (QV.appOn ? '' : ' hidden') + '><input id="qvAppT" value="' + esc(QV.appT) + '" style="margin-top:8px"><div class="muted" style="font-size:12.5px">Shown in a green box.</div>' +
+      '<div style="margin-top:10px;padding:10px;border:1px solid #EEE9DD;border-radius:10px"><label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" id="qvApp"' + (QV.appOn ? ' checked' : '') + '> 📱 Add a green box at the end</label>' +
+      '<div id="qvAppBox"' + (QV.appOn ? '' : ' hidden') + '><input id="qvAppT" value="' + esc(QV.appT = newApp(QV.appT)) + '" style="margin-top:8px"><div class="muted" style="font-size:12.5px">Shown in a green box.</div>' +
       (ST && ST.ready ? '<label style="display:flex;gap:8px;align-items:center;margin:6px 0 0"><input type="checkbox" id="qvSayApp"' + (QV.sayApp ? ' checked' : '') + '> 🎙️ The voice says it too</label>' : '') + '</div></div>' +
       '<div style="margin-top:10px;padding:10px;border:1px solid #EEE9DD;border-radius:10px">' +
       (ST && ST.ready ? '<label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" id="qvVo"' + (QV.voiceOn ? ' checked' : '') + '> 🎙️ AI voice reads the quiz (ElevenLabs)</label>' +
@@ -380,7 +380,7 @@
       L.push({ k: 'a' + i, t: 'The answer is: ' + q.opts[q.ans] + '.' });
     });
     var bye = QV.outro.replace(/[\u{1F300}-\u{1FAFF}☀-➿👇]/gu, '').trim() || 'Great job! Share your score in the comments!';
-    if (QV.appOn && QV.sayApp && QV.appT.trim()) bye += ' ' + QV.appT.trim().replace(/\bFREE\b/g, 'free').replace(/[.!]?$/, '.');
+    if (QV.appOn && QV.sayApp && QV.appT.trim()) bye += ' ' + QV.appT.trim().replace(/\bFREE\b/g, 'free').replace(/\p{Extended_Pictographic}\uFE0F?/gu, '').replace(/\s+/g, ' ').trim().replace(/[.!]?$/, '.');
     L.push({ k: 'outro', t: bye });
     return L;
   }
@@ -618,10 +618,10 @@
     } else {
       var a3 = ease(lt / 0.5); cx.save(); cx.globalAlpha = a3; cx.font = '800 76px Poppins, Arial, sans-serif';
       var ow = wrapWords(cx, QV.outro.split(/\s+/), 900); ow.forEach(function (ln, li) { shadowText(cx, ln.join(' '), W / 2, 820 + li * 92); });
-      var yy = 820 + ow.length * 92 + 70, at = (QV.appT || '').trim();
+      var yy = 820 + ow.length * 92 + 70, at = newApp(QV.appT || '').trim();
       if (QV.appOn && at) {
         var pop = ease((lt - 0.5) / 0.4), sc = 0.9 + 0.1 * pop; cx.globalAlpha = a3 * Math.max(0, Math.min(1, pop));
-        cx.font = '800 50px Poppins, Arial, sans-serif'; var al = wrapWords(cx, at.replace(/Auntie Tobi/g, 'Auntie\u00A0Tobi').split(/ +/), 780), bh2 = 70 + al.length * 62 + 4;   // no link under the text
+        cx.font = '800 50px Poppins, Arial, sans-serif'; var al = wrapWords(cx, at.replace(/Auntie Tobi/g, 'Auntie\u00A0Tobi').replace(/(🔗\s*)?Link in bio/gi, function (m) { return m.replace(/\s/g, '\u00A0'); }).split(/ +/), 780), bh2 = 70 + al.length * 62 + 4;   // no link under the text
         cx.save(); cx.translate(W / 2, yy + bh2 / 2); cx.scale(sc, sc); cx.translate(-W / 2, -(yy + bh2 / 2));
         rr(cx, W / 2 - 440, yy, 880, bh2, 30); cx.fillStyle = 'rgba(5,122,68,0.95)'; cx.fill(); cx.lineWidth = 4; cx.strokeStyle = 'rgba(255,255,255,0.9)'; cx.stroke();
         cx.fillStyle = '#fff'; al.forEach(function (ln, li) { cx.fillText(ln.join(' '), W / 2, yy + 78 + li * 62); });
@@ -695,9 +695,11 @@
       .then(function () { o.kept = true; var e = $('#qvKeep'); if (e) e.innerHTML = '✅ Kept in <b>📂 My quizzes → ✅ Finished</b> — play or download it any time.'; })
       .catch(function (e) { var x = $('#qvKeep'); if (x) x.innerHTML = '⚠️ Couldn’t keep it in HQ (' + esc(e.message) + ') — download it now. <button class="btn link" id="qvKeepR">Try again</button>'; var b = $('#qvKeepR'); if (b) b.onclick = keepFinished; });
   }
+  // the old ending text (and saved defaults with it) → the new one, without the app name
+  function newApp(t) { return /^Practice more FREE on Auntie Tobi App$/i.test(String(t || '').trim()) ? 'Practise more for FREE! 🔗 Link in bio' : t; }
   function caption() {
     var b = bank(), tag = QV.bank === 'drive' ? '#DrivingTheoryTest #TheoryTest #UKDriving #LearnerDriver #HighwayCode' : '#LifeInTheUKTest #LifeInTheUK #BritishCitizenship #ILR #UKCitizenship';
-    return QV.h1 + ' 🇬🇧\n' + QV.h2 + '\n\nPause the video on each question and write your score in the comments 👇\n\nPractise free with ' + (QV.bank === 'drive' ? '400 Highway Code questions and road signs' : '500+ questions from the official handbook') + ' on Auntie Tobi: ' + b.link + '\n\n' + tag + ' #NigeriansInUK #NaijaInUK #AuntieTobi';
+    return QV.h1 + ' 🇬🇧\n' + QV.h2 + '\n\nPause the video on each question and write your score in the comments 👇\n\nPractise more for FREE! 🔗 Link in bio\n\n' + tag + ' #NigeriansInUK #NaijaInUK #AuntieTobi';
   }
   function showOut() {
     var o = QV.out, box = $('#qvOutBox'); if (!o || !box) return;
