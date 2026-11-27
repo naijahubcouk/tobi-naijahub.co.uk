@@ -120,7 +120,24 @@
     '.lu-pick{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1.5px solid #ECE8DE;background:#fff;border-radius:14px;padding:11px 12px;margin-bottom:8px;cursor:pointer;font-family:inherit;color:#0F1E36}.lu-pick[aria-pressed=true]{border-color:#1FA463;background:#EEF9F3}.lu-pick i{font-style:normal;font-size:20px}.lu-pick b{display:block;font-size:15px}.lu-pick small{display:block;font-size:12.5px;color:#6B7280;margin-top:2px}' +
     '.lu-prog{display:flex;align-items:flex-end;gap:5px;height:70px;margin:10px 0 4px;border-bottom:1px dashed #D5D9DE;position:relative}.lu-prog span{flex:1;max-width:34px;border-radius:5px 5px 0 0;background:#C9D2DC;position:relative}.lu-prog span.ok{background:#1FA463}.lu-prog em{position:absolute;left:0;right:0;border-top:1.5px dashed #B42318;font-style:normal}.lu-prog em b{position:absolute;right:0;top:-16px;font-size:10.5px;color:#B42318}' +
     '.lu-disc{font-size:12.5px;color:#52606D;line-height:1.5;background:#F1F3F5;border-radius:12px;padding:10px 12px;margin:10px 0}';
-  function addCss() { if (document.getElementById('luCss')) return; var st = document.createElement('style'); st.id = 'luCss'; st.textContent = CSS; document.head.appendChild(st); }
+  // 🔠 in the Auntie Tobi app: bigger, bolder text for the tests (easier to read on a phone). The test sites have their own sizes.
+  var BIG = 'body:not(.ts) .lu,body:not(.ts) .tp{-webkit-font-smoothing:antialiased}' +
+    'body:not(.ts) .lx-q,body:not(.ts) .lu-q{font-size:22px;font-weight:800;line-height:1.4}' +
+    'body:not(.ts) .lx-o,body:not(.ts) .lu-o{font-size:18px;font-weight:600;line-height:1.4;padding:15px 14px}' +
+    'body:not(.ts) .lx-ins{font-size:16px;font-weight:700}body:not(.ts) .lx-num,body:not(.ts) .lu-qh{font-size:15.5px;font-weight:800}' +
+    'body:not(.ts) .lx-bar b{font-size:16.5px;font-weight:800}body:not(.ts) .lx-time{font-size:17px}body:not(.ts) .lx-b,body:not(.ts) .lu-btn{font-size:17px;font-weight:800}' +
+    'body:not(.ts) .lu-fb,body:not(.ts) .lx-fb{font-size:17px;line-height:1.55;font-weight:500}body:not(.ts) .lu-fb b,body:not(.ts) .lx-fb b{font-weight:800}body:not(.ts) .lu-fb small{font-size:15px}body:not(.ts) .lu-x{font-size:15.5px;font-weight:600}' +
+    'body:not(.ts) .lx-rv{font-size:16.5px;line-height:1.55;font-weight:500}body:not(.ts) .lx-rv b{font-weight:800}body:not(.ts) .lx-rv .c{font-size:14px}body:not(.ts) .lu-wr,body:not(.ts) .lu-li{font-size:16.5px;font-weight:500}' +
+    'body:not(.ts) .lx-res .pc{font-size:19px;font-weight:700}body:not(.ts) .lx-res .meta{font-size:16px;font-weight:700}body:not(.ts) .lx-tabs button{font-size:15.5px}body:not(.ts) .lx-links{font-size:15.5px;font-weight:700}' +
+    'body:not(.ts) .lu-top b{font-size:24px;font-weight:800}body:not(.ts) .lu-top span{font-size:16px;font-weight:500}body:not(.ts) .lu-back{font-size:16.5px}' +
+    'body:not(.ts) .lu-big b{font-size:19px;font-weight:800}body:not(.ts) .lu-big small{font-size:15px;font-weight:500}body:not(.ts) .lu-ch b,body:not(.ts) .lu-pick b{font-size:17px;font-weight:800}body:not(.ts) .lu-ch small,body:not(.ts) .lu-pick small{font-size:14.5px}' +
+    'body:not(.ts) .lu-seg button{font-size:17px}body:not(.ts) .lu-h{font-size:13.5px}body:not(.ts) .lu-stat b{font-size:22px}body:not(.ts) .lu-stat small{font-size:13.5px}body:not(.ts) .lu-tag{font-size:13.5px}' +
+    'body:not(.ts) .lu-note,body:not(.ts) .lu-disc{font-size:14.5px;font-weight:500}body:not(.ts) .lx-cell{font-size:17px}body:not(.ts) .lx-key{font-size:14.5px}' +
+    'body:not(.ts) .tp-h b{font-size:19.5px;font-weight:800}body:not(.ts) .tp-h small{font-size:15px;font-weight:500}body:not(.ts) .tp-ready .l{font-size:16px}body:not(.ts) .tp-note{font-size:15px;font-weight:500}' +
+    'body:not(.ts) .tp-t{font-size:17px;font-weight:700}body:not(.ts) .tp-t small{font-size:14.5px;font-weight:500}body:not(.ts) .tp-go{font-size:18px}body:not(.ts) .tp-sw button{font-size:15px}body:not(.ts) .tp-swl{font-size:14px}body:not(.ts) .tp-link{font-size:15px}' +
+    'body:not(.ts) .tp-weak span{font-size:14px}body:not(.ts) .tp-after{font-size:16.5px}body:not(.ts) .tp-after b{font-size:18.5px}' +
+    'body:not(.ts) .tp-sheet .tp-q{font-size:17.5px}body:not(.ts) .tp-o{font-size:16.5px}body:not(.ts) .tp-o small{font-size:13.5px}body:not(.ts) .tp-sheet p.s{font-size:16px}';
+  function addCss() { if (document.getElementById('luCss')) return; var st = document.createElement('style'); st.id = 'luCss'; st.textContent = CSS + BIG; document.head.appendChild(st); }
 
   // ───── open / leave ─────
   var obs = null, timer = null;
