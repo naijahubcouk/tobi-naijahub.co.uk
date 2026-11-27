@@ -364,7 +364,7 @@
   }
   function vqAnswer(id, ok) { if (!byId(id)) return; var d = load(); mark(d, { id: id }, ok, 'v'); save(d); }
   function vqDone(n, ok) { var d = load(); d.prac.push({ at: today(), n: n, ok: ok, m: 'video' }); if (d.prac.length > 100) d.prac = d.prac.slice(-100); save(d); var r = root(); if (r && S.v === 'home') draw(); }
-  function record(it, pick) { var d = load(), ok = isRight(it.q, pick, it.opts); mark(d, it.q, ok); save(d); return ok; }
+  function record(it, pick) { var d = load(), ok = isRight(it.q, pick, it.opts); mark(d, it.q, ok, S.mode === 'plan' ? 'p' : ''); save(d); return ok; }   // 'p' = an answer in today's plan sessions
   function finishPrac() {
     clearPrac();
     var idx = S.qs.map(function (x, i) { return i; }).filter(function (i) { return S.fb === 'end' ? true : S.done[i]; });

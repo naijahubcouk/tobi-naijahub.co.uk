@@ -359,7 +359,7 @@
   function vqDone(n, ok) { var d = load(); d.prac.push({ at: today(), n: n, ok: ok, m: 'video' }); if (d.prac.length > 100) d.prac = d.prac.slice(-100); save(d); var r = root(); if (r && S.v === 'home') draw(); }
   function record(it, pick) {
     var d = load(), ok = isRight(it.q, pick, it.opts), id = it.q.id;
-    if (PLAN) PLAN.log(it.q, ok);
+    if (PLAN) PLAN.log(it.q, ok, S.mode === 'plan' ? 'p' : '');   // 'p' = an answer in today's plan sessions
     d.n++; if (ok) d.ok++; d.seen[id] = 1;
     if (ok) { if (d.wrong[id]) { d.wrong[id]--; if (d.wrong[id] <= 0) delete d.wrong[id]; } } else d.wrong[id] = (d.wrong[id] || 0) + 1;
     save(d); return ok;

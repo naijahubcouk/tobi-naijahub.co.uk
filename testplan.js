@@ -56,14 +56,14 @@
     var P = {};
 
     // ───── what happened ─────
-    P.log = function (q, ok, kind) {   // kind: 'm' mock test, 'v' video quiz, none = practice (only practice fills today's sessions)
+    P.log = function (q, ok, kind) {   // kind: 'p' today's plan session, 'm' mock test, 'v' video quiz, none = other practice. Only 'p' fills today's sessions.
       if (!q || q.id == null) return; var x = rd(), now = Date.now();
       x.log.push(kind ? [q.id, ok ? 1 : 0, now, q.c, kind] : [q.id, ok ? 1 : 0, now, q.c]); if (x.log.length > 800) x.log = x.log.slice(-800);
       var d = x.due[q.id];
       if (!ok) x.due[q.id] = { s: 0, at: now + STEPS[0] * DAY - 3 * 36e5 };   // back tomorrow
       else if (d && d.at <= now + 6 * 36e5) { if (d.s + 1 >= STEPS.length) delete x.due[q.id]; else x.due[q.id] = { s: d.s + 1, at: now + STEPS[d.s + 1] * DAY - 3 * 36e5 }; }
       wr(x);
-      if (C.dayDone && x.prefs && !x.flags['day@' + iso()]) { var se = P.session(); if (se.left === 0) { var y = rd(); y.flags['day@' + iso()] = 1; wr(y); try { C.dayDone(); } catch (e) {} } }
+      if (C.dayDone && x.prefs && kind === 'p' && !x.flags['pday@' + iso()]) { var se = P.session(); if (se.left === 0) { var y = rd(); y.flags['pday@' + iso()] = 1; wr(y); try { C.dayDone(); } catch (e) {} } }
     };
     P.bank = function (Q) {   // question counts per chapter/topic, for coverage when the questions aren't loaded
       if (!Q || !Q.length) return; P.Q = Q; var x = rd(), per = {};
@@ -112,7 +112,7 @@
       var mins = (pr && pr.mins) || 20, perDay = { 10: 10, 20: 18, 30: 27 }[mins] || 18;
       var unseen = Math.max(0, bank.n - seenN);
       if (stage === 'learn' && left) { var learnLeft = Math.max(1, Math.round(span * cut[0]) - (span - left)); perDay = Math.max(perDay, Math.ceil(unseen / learnLeft)); }   // enough to see every question in time
-      var days = {}, prac = {}; x.log.forEach(function (l) { var k = iso(new Date(l[2])); days[k] = (days[k] || 0) + 1; if (!l[4]) prac[k] = (prac[k] || 0) + 1; });
+      var days = {}, prac = {}; x.log.forEach(function (l) { var k = iso(new Date(l[2])); days[k] = (days[k] || 0) + 1; if (l[4] === 'p') prac[k] = (prac[k] || 0) + 1; });
       var missed = pr && pr.at && pr.at < addD(t, -1) && !days[addD(t, -1)] && stage !== 'eve' && stage !== 'testday';
       if (missed && stage !== 'crash') perDay += 5;
       perDay = Math.min(40, Math.max(5, perDay));
@@ -216,7 +216,7 @@
       return '<div class="tp"><div class="tp-h"><div><b>🗓️ ' + esc(head) + '</b><small>' + esc(st[1]) + (S.streak > 1 ? ' · 🔥 ' + S.streak + '-day streak' : '') + '</small></div><span class="tp-chip">' + esc(st[0]) + '</span></div>' +
         rdy + '<div class="tp-tasks">' + tasks.map(function (k, i) { return '<div class="tp-t' + (k[3] ? ' done' : '') + '"><i>' + (k[3] ? '✓' : '') + '</i><span>' + esc(k[1]) + '<small>' + (k[4] && k[4].ch && !k[3] ? dots(k[4]) : '') + esc(k[2]) + '</small></span>' + (k[3] ? '' : i ? '<button data-tp="' + k[0] + '">Start</button>' : '') + '</div>'; }).join('') + '</div>' +
         (tasks[0] && !tasks[0][3] ? '<button class="tp-go" data-tp="' + tasks[0][0] + '">' + (tasks[0][0] === 'today' ? (tasks[0][4] && tasks[0][4].ch ? 'Start session ' + (tasks[0][4].done + 1) + ' · about ' + tasks[0][4].min + ' min' : 'Start today’s practice') : 'Open the checklist') + '</button>' : tasks.some(function (k) { return !k[3]; }) ? '' : '<div class="tp-note" style="margin-top:10px">🎉 <b>All done for today.</b> Come back tomorrow — or practise more below.</div>') +
-        (S.weak.length && S.stage !== 'eve' && S.stage !== 'testday' ? '<div class="tp-note" style="margin-top:12px">Areas to work on:</div><div class="tp-weak">' + S.weak.slice(0, 3).map(function (a) { return '<span>' + esc(a.name) + ' · ' + Math.round(a.acc * 100) + '%</span>'; }).join('') + '</div>' : '') +
+        (S.weak.length && S.stage !== 'eve' && S.stage !== 'testday' ? '<div class="tp-note" style="margin-top:12px">Areas to work on <span style="font-weight:500">— how many you got right in each, lowest first:</span></div><div class="tp-weak">' + S.weak.slice(0, 3).map(function (a) { return '<span>' + esc(a.name) + ' · ' + Math.round(a.acc * 100) + '% right</span>'; }).join('') + '</div>' : '') +
         (S.stage !== 'testday' ? '<div class="tp-swl">How I study today</div><div class="tp-sw">' + [[0, 'All at once'], [10, '10 at a time'], [5, '5 at a time']].map(function (c) { return '<button data-tp="chunk:' + c[0] + '" aria-pressed="' + (((pr && +pr.chunk) || 0) === c[0]) + '">' + c[1] + '</button>'; }).join('') + '</div>' : '') +
         '<button class="tp-link" data-tp="setup">⚙️ Change my plan</button>' + (C.myPlan ? '<button class="tp-link" data-tp="myplan" style="margin-left:16px">💚 Open in My Plan</button>' : '') + '</div>';
     };
