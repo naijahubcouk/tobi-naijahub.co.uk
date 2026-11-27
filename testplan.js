@@ -63,12 +63,15 @@
       if (!ok) x.due[q.id] = { s: 0, at: now + STEPS[0] * DAY - 3 * 36e5 };   // back tomorrow
       else if (d && d.at <= now + 6 * 36e5) { if (d.s + 1 >= STEPS.length) delete x.due[q.id]; else x.due[q.id] = { s: d.s + 1, at: now + STEPS[d.s + 1] * DAY - 3 * 36e5 }; }
       wr(x);
+      if (C.dayDone && x.prefs && !x.flags['day@' + iso()]) { var se = P.session(); if (se.left === 0) { var y = rd(); y.flags['day@' + iso()] = 1; wr(y); try { C.dayDone(); } catch (e) {} } }
     };
     P.bank = function (Q) {   // question counts per chapter/topic, for coverage when the questions aren't loaded
       if (!Q || !Q.length) return; P.Q = Q; var x = rd(), per = {};
       Q.forEach(function (q) { per[q.c] = (per[q.c] || 0) + 1; }); var nb = { n: Q.length, per: per }; if (JSON.stringify(nb) === JSON.stringify(x.bank)) return; x.bank = nb; try { localStorage.setItem(KEY, JSON.stringify(x)); } catch (e) {}   // not progress: no save
     };
     P.prefs = function () { return rd().prefs || null; };
+    P.info = function () { var S = P.state(), pr = S.prefs || {}; return { booked: !!S.booked, date: S.booked ? S.date : '', goal: S.date || '', chunk: +pr.chunk || 0, mins: S.mins, perDay: S.perDay }; };
+    function told() { if (C.onPlan && P.prefs()) try { C.onPlan(P.info()); } catch (e) {} }
     P.flag = function (k) { var x = rd(); x.flags[k + '@' + iso()] = 1; wr(x); };
 
     // ───── the numbers ─────
@@ -160,7 +163,7 @@
       var n = Math.ceil(N / ch), done = did >= N ? n : Math.floor(did / ch), size = done >= n ? ch : Math.min(ch, N - done * ch);
       return { ch: ch, N: N, n: n, done: done, left: n - done, size: size, min: Math.max(1, Math.round(size * S.mins / N)) };
     };
-    P.setChunk = function (v) { var x = rd(); if (!x.prefs) return; x.prefs.chunk = +v || 0; wr(x); gt('plan_chunk', { label: C.key + '|' + (+v || 'all') }); };
+    P.setChunk = function (v) { var x = rd(); if (!x.prefs) return; x.prefs.chunk = +v || 0; wr(x); told(); gt('plan_chunk', { label: C.key + '|' + (+v || 'all') }); };
     function dots(se) { var h = '<span class="tp-dots">'; for (var i = 0; i < se.n && i < 12; i++) h += '<em class="' + (i < se.done ? 'on' : '') + '"></em>'; return h + '</span>'; }
     // after a session: what's left today (for the result screen)
     P.after = function () {
@@ -213,7 +216,7 @@
         (tasks[0] && !tasks[0][3] ? '<button class="tp-go" data-tp="' + tasks[0][0] + '">' + (tasks[0][0] === 'today' ? (tasks[0][4] && tasks[0][4].ch ? 'Start session ' + (tasks[0][4].done + 1) + ' · about ' + tasks[0][4].min + ' min' : 'Start today’s practice') : 'Open the checklist') + '</button>' : tasks.some(function (k) { return !k[3]; }) ? '' : '<div class="tp-note" style="margin-top:10px">🎉 <b>All done for today.</b> Come back tomorrow — or practise more below.</div>') +
         (S.weak.length && S.stage !== 'eve' && S.stage !== 'testday' ? '<div class="tp-note" style="margin-top:12px">Areas to work on:</div><div class="tp-weak">' + S.weak.slice(0, 3).map(function (a) { return '<span>' + esc(a.name) + ' · ' + Math.round(a.acc * 100) + '%</span>'; }).join('') + '</div>' : '') +
         (S.stage !== 'testday' ? '<div class="tp-swl">How I study today</div><div class="tp-sw">' + [[0, 'All at once'], [10, '10 at a time'], [5, '5 at a time']].map(function (c) { return '<button data-tp="chunk:' + c[0] + '" aria-pressed="' + (((pr && +pr.chunk) || 0) === c[0]) + '">' + c[1] + '</button>'; }).join('') + '</div>' : '') +
-        '<button class="tp-link" data-tp="setup">⚙️ Change my plan</button></div>';
+        '<button class="tp-link" data-tp="setup">⚙️ Change my plan</button>' + (C.myPlan ? '<button class="tp-link" data-tp="myplan" style="margin-left:16px">💚 Open in My Plan</button>' : '') + '</div>';
     };
     P.bind = function (el, redraw) {
       if (!el) return;
@@ -222,10 +225,11 @@
         if (a === 'setup') return P.setup(redraw);
         if (a === 'skip') { var x = rd(); x.flags.skip = 1; wr(x); if (redraw) redraw(); return; }
         if (a === 'today') return P.today();
+        if (a === 'myplan' && C.myPlan) return C.myPlan(P.info());
         if (a.indexOf('chunk:') === 0) { P.setChunk(a.slice(6)); if (redraw) redraw(); return; }
         if (a === 'mock') return C.startMock();
         if (a === 'before') { P.flag('before'); return C.before(); }
-        if (a === 'passed') { var y = rd(); y.passed = iso(); wr(y); gt('plan_passed', { label: C.key }); if (redraw) redraw(); return; }
+        if (a === 'passed') { var y = rd(); y.passed = iso(); wr(y); if (C.onPlan) try { C.onPlan({ passed: true }); } catch (e) {} gt('plan_passed', { label: C.key }); if (redraw) redraw(); return; }
         if (a === 'again') { C.setDate(''); var z = rd(); if (z.prefs) { z.prefs.booked = false; z.prefs.at = iso(); } wr(z); return P.setup(redraw); }
         if (a === 'other' && C.other) { location.href = C.other.url; }
       }; });
@@ -253,7 +257,7 @@
           var y = rd(); y.prefs = { booked: !!A.booked, target: A.booked ? '' : A.target, level: A.level, mins: A.mins, chunk: +A.chunk || 0, at: iso() }; delete y.passed; delete y.flags.skip; wr(y);
           if (A.booked && A.date) C.setDate(A.date); else if (!A.booked && d.date) C.setDate('');
           gt('plan_made', { label: C.key + '|' + (A.booked ? 'booked' : A.target) + '|' + A.level + '|' + A.mins + '|' + (A.chunk || 'all') });
-          s.remove(); if (redraw) redraw();
+          told(); s.remove(); if (redraw) redraw();
         };
       }
       function ok() { return A.level && (!A.booked || /^\d{4}-\d{2}-\d{2}$/.test(A.date)); }

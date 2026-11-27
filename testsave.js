@@ -6,7 +6,7 @@
  */
 (function () {
   'use strict';
-  if (!window.TEST_SITE || window.TestSync) return;
+  if (!window.TEST_SITE || window.TestSync || (/[?&]inapp=1/.test(location.search) && window.parent !== window)) return;   // in the Auntie Tobi app, My Plan saves progress
   var API = '/.netlify/functions/learn-api', ME = 'tobi_lrn', TEST = function () { return window.TEST_SITE.key === 'drive' ? 'drive' : 'lituk'; };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   function rd() { try { return JSON.parse(localStorage.getItem(ME) || 'null'); } catch (e) { return null; } }

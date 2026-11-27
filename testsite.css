@@ -282,3 +282,5 @@ button{font-family:inherit;color:inherit}
 .ts-nav a[data-tsv-menu]{display:none}
 @media(max-width:900px){.ts-nav a[data-tsv-menu]{display:block}}
 .ts-plan .tp-sw button{font-size:15px;padding:10px 6px}.ts-plan .tp-swl{font-size:14px}.ts-plan .tp-t small .tp-dots em{width:10px;height:10px}
+/* 💚 inside the Auntie Tobi app (welcome page in a frame): no site header or footer */
+.ts-inapp{min-height:0!important}.ts-inapp .ts-h,.ts-inapp .ts-foot{display:none!important}

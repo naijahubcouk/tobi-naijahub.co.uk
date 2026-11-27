@@ -48,6 +48,9 @@
   // 🗓️ My plan (testplan.js): a personal plan from their test date — today's set, readiness, weak areas. Kept on this device.
   var PLAN = window.TestPlan ? window.TestPlan.create({ key: 'tobi_lituk', touch: function () { touch(); }, unit: 'chapter', total: MOCK_N, pass: PASS, areas: CH.map(function (c) { return [c[0], c[1]]; }),
     data: function () { return load(); }, setDate: function (iso) { setDate(iso); }, before: function () { go('before'); },
+    onPlan: function (info) { if (!SITE && window.MyPlan && window.MyPlan.testPlan) window.MyPlan.testPlan('lituk', info); },   // 💚 into the app's My Plan
+    dayDone: function () { if (!SITE && window.MyPlan && window.MyPlan.testDone) window.MyPlan.testDone('lituk'); },
+    myPlan: !window.TEST_SITE && window.MyPlan && window.MyPlan.testPlan ? function (info) { window.MyPlan.testPlan('lituk', info, true); window.MyPlan.open(); } : null,
     startMock: function () { if (liveMock()) resumeMock(); else startMock(); },
     startSet: function (ids, label) { var qs = ids.map(byId).filter(Boolean); if (!qs.length) return; go('pq', { kind: 'prac', mode: 'plan', label: label, n: qs.length, fb: 'now', qs: qs.map(function (q) { return { q: q, opts: optsOf(q) }; }), ans: {}, done: {}, at: 0, t0: Date.now() }); },
     other: window.TEST_SITE ? { text: 'Learning to drive too? Try our free driving theory practice.', button: 'UK driving theory practice →', url: 'https://ukdrivingtheorytest.auntietobi.co.uk/' } : { text: 'Learning to drive too? Practise the Driving Theory Test here.', button: '🚗 Driving Theory Test →', url: '/?drive=1' } }) : null;
@@ -133,7 +136,8 @@
     gt('lifeuk_open');
     S = { v: view || 'home' };
     root().innerHTML = '<div class="lu-card" style="text-align:center;color:#6B7280">Loading questions…</div>';
-    getQ().then(syncIn).then(function () { if (S.v === 'resume') resumeAny(); else draw(); }).catch(function () { root().innerHTML = '<div class="lu-card">Couldn’t load the questions — check your connection and try again.<div class="lu-row"><button class="lu-btn" id="luRe">Try again</button></div></div>'; $('#luRe').onclick = function () { open(view); }; });
+    var first = (!view || view === 'home') && !SITE && window.TestWelcome && window.TestWelcome.need(KEY);
+    getQ().then(syncIn).then(function () { if (first && S.v === 'home') S.v = 'welcome'; if (S.v === 'resume') resumeAny(); else draw(); }).catch(function () { root().innerHTML = '<div class="lu-card">Couldn’t load the questions — check your connection and try again.<div class="lu-row"><button class="lu-btn" id="luRe">Try again</button></div></div>'; $('#luRe').onclick = function () { open(view); }; });
   }
   function root() { return document.getElementById('luRoot'); }
   function leave() { stopTimer(); document.body.classList.remove('lu-nochat', 'lu-examon'); if (SITE && SITE.home) return SITE.home(); if (typeof resetToWelcome === 'function') resetToWelcome(); }
@@ -143,7 +147,7 @@
   function draw() {
     stopTimer(); var r = root(); if (!r) return;
     document.body.classList.toggle('lu-examon', /^(mock|review|result|pq|pend)$/.test(S.v));
-    ({ hist: hist, home: home, setup: setup, mock: mockQ, review: review, result: result, pq: pracQ, before: before })[S.v](r);
+    ({ welcome: welcome, hist: hist, home: home, setup: setup, mock: mockQ, review: review, result: result, pq: pracQ, before: before })[S.v](r);
   }
 
 
@@ -219,12 +223,18 @@
   }
 
   // ───── 🏠 home ─────
+  // 💚 the test website's front page, inside the app (first visit, or "About this test")
+  function welcome(r) {
+    if (!window.TestWelcome) return home(r);
+    window.TestWelcome.show(r, { key: KEY, site: 'lifeinuk', m: window.LifeUK, back: leave, home: function () { go('home'); }, plan: function () { go('home'); if (PLAN) PLAN.setup(draw); } });
+  }
   function home(r) {
     var d = load(), best = d.mocks.reduce(function (a, m) { return Math.max(a, m.s); }, 0), weak = Object.keys(d.wrong).filter(function (id) { return Q.some(function (q) { return q.id === +id; }); }).length;
     var dl = d.date ? daysTo(d.date) : null, live = liveMock();
     var acc = d.n ? Math.round(d.ok / d.n * 100) : 0;
     r.innerHTML = '<button class="lu-back" id="luBack">← Home</button>' +
       '<div class="lu-top"><b>🇬🇧 Life in the UK Test</b><span>' + Q.length + ' exam-style practice questions based on the official handbook. Marked straight away — free.</span></div>' +
+      (!SITE && window.TestWelcome ? '<button class="lu-about" id="luAbout" style="display:block;border:0;background:none;color:#057A44;font:inherit;font-weight:700;font-size:14px;padding:2px 0 8px;cursor:pointer">ℹ️ About this test — how it works</button>' : '') +
       '<div class="lu-disc">ℹ️ ' + esc(DISCLAIMER) + '</div>' +
       (PLAN ? '<div id="tpBox">' + PLAN.card() + '</div>' : '') +
       (d.date && dl >= 0 ? '<div class="lu-card" style="border-color:#F2D58A;background:#FFFBEF"><b style="font-size:16px">📅 Your test: ' + esc(niceDate(d.date)) + '</b><div style="font-size:14px;color:#7A5300;margin-top:3px">' + (dl === 0 ? 'It’s today — good luck! Bring your original ID.' : dl === 1 ? 'Tomorrow! Bring the same original ID you booked with.' : dl + ' days to go') + '</div></div>' : '') +
@@ -236,10 +246,10 @@
       syncCard(false) + progressCard(d, best, acc) +
       '<button class="lu-big w" id="luBefore"><i>📋</i><span><b>Before your test</b><small>Cost, booking, ID and the day — checked on GOV.UK</small></span></button>' +
       (SITE ? '<button class="lu-big w" id="tsDate"><i>📅</i><span><b>' + (d.date ? 'Change your test date' : 'Add my test date') + '</b><small>A countdown here, and a reminder in your phone’s calendar</small></span></button>' : '') +
-      (window.MyPlan && window.MyPlan.lifeTest ? '<button class="lu-big w" id="luPlan"><i>💚</i><span><b>' + (d.date ? 'Change your test date' : 'Add your test date to My Plan') + '</b><small>Countdown, reminders and a checklist</small></span></button>' : '') +
       '<button class="lu-big w" id="luShare"><i>📤</i><span><b>Share with a friend</b><small>' + (SITE ? SITE.short : 'auntietobi.co.uk/life-in-uk-test') + '</small></span></button>' +
       '<div class="lu-note">These are practice questions written ' + (SITE ? 'independently' : 'by Auntie Tobi') + ' from the official handbook, <i>Life in the United Kingdom: A Guide for New Residents</i>. They are not the questions used in the official Life in the UK Test. Always check the latest rules on <a href="' + GOV.main + '" target="_blank" rel="noopener">GOV.UK</a>.</div>';
     $('#luBack', r).onclick = leave;
+    if ($('#luAbout', r)) $('#luAbout', r).onclick = function () { go('welcome'); };
     $('#luMock', r).onclick = function () { if (live && !confirm('Start a new mock exam? Your unfinished one will be lost.')) return; startMock(); };
     if ($('#luResume', r)) $('#luResume', r).onclick = resumeMock;
     bindSync(r); if (PLAN) PLAN.bind($('#tpBox', r), draw);

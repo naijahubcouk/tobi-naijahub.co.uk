@@ -58,6 +58,9 @@
   // 🗓️ My plan (testplan.js): a personal plan from their test date — today's set, readiness, weak areas. Kept on this device.
   var PLAN = window.TestPlan ? window.TestPlan.create({ key: 'tobi_drive', touch: function () { touch(); }, unit: 'topic', total: MOCK_N, pass: PASS, areas: TOP.map(function (c) { return [c[0], c[1]]; }),
     data: function () { return load(); }, setDate: function (iso) { setDate(iso); }, before: function () { go('before'); },
+    onPlan: function (info) { if (!SITE && window.MyPlan && window.MyPlan.testPlan) window.MyPlan.testPlan('drive', info); },   // 💚 into the app's My Plan
+    dayDone: function () { if (!SITE && window.MyPlan && window.MyPlan.testDone) window.MyPlan.testDone('drive'); },
+    myPlan: !window.TEST_SITE && window.MyPlan && window.MyPlan.testPlan ? function (info) { window.MyPlan.testPlan('drive', info, true); window.MyPlan.open(); } : null,
     startMock: function () { if (liveMock()) resumeMock(); else go('intro'); },
     startSet: function (ids, label) { var qs = ids.map(byId).filter(Boolean); if (!qs.length) return; go('pq', { kind: 'prac', mode: 'plan', label: label, n: qs.length, fb: 'now', qs: qs.map(function (q) { return { q: q, opts: optsOf(q) }; }), ans: {}, done: {}, at: 0, t0: Date.now() }); },
     other: window.TEST_SITE ? { text: 'Living in the UK for the long term? Try our free Life in the UK Test practice.', button: 'Life in the UK Test practice →', url: 'https://lifeinuktest.auntietobi.co.uk/' } : { text: 'Applying to settle or for citizenship? Practise the Life in the UK Test here.', button: '🇬🇧 Life in the UK Test →', url: '/?lifeuk=1' } }) : null;
@@ -153,7 +156,8 @@
     if (!obs && window.MutationObserver) { obs = new MutationObserver(function () { if (!document.getElementById('dtRoot')) { obs.disconnect(); obs = null; stopTimer(); if (!document.getElementById('luRoot')) document.body.classList.remove('lu-nochat', 'lu-examon'); } }); obs.observe(msgs, { childList: true }); }
     gt('drive_open'); S = { v: view || 'home' };
     root().innerHTML = '<div class="lu-card" style="text-align:center;color:#6B7280">Loading questions…</div>';
-    getQ().then(syncIn).then(function () { if (S.v === 'resume') resumeAny(); else draw(); }).catch(function () { root().innerHTML = '<div class="lu-card">Couldn’t load the questions — check your connection and try again.<div class="lu-row"><button class="lu-btn" id="dtRe">Try again</button></div></div>'; $('#dtRe').onclick = function () { open(view); }; });
+    var first = (!view || view === 'home') && !SITE && window.TestWelcome && window.TestWelcome.need(KEY);
+    getQ().then(syncIn).then(function () { if (first && S.v === 'home') S.v = 'welcome'; if (S.v === 'resume') resumeAny(); else draw(); }).catch(function () { root().innerHTML = '<div class="lu-card">Couldn’t load the questions — check your connection and try again.<div class="lu-row"><button class="lu-btn" id="dtRe">Try again</button></div></div>'; $('#dtRe').onclick = function () { open(view); }; });
   }
   function addCss() {
     if (document.getElementById('dtCss')) return; var st = document.createElement('style'); st.id = 'dtCss';
@@ -166,7 +170,7 @@
   function leave() { stopTimer(); document.body.classList.remove('lu-nochat', 'lu-examon'); if (SITE && SITE.home) return SITE.home(); if (typeof resetToWelcome === 'function') resetToWelcome(); }
   function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
   function top() { var r = document.getElementById('messages'); try { if (r) r.scrollTop = 0; window.scrollTo(0, 0); } catch (e) {} }
-  function draw() { stopTimer(); var r = root(); if (!r) return; document.body.classList.toggle('lu-examon', /^(intro|mock|review|result|pq)$/.test(S.v)); ({ hist: hist, home: home, setup: setup, pq: pracQ, intro: intro, mock: mockQ, review: mockReview, result: result, before: before, hazard: hazard, licence: licence })[S.v](r); }
+  function draw() { stopTimer(); var r = root(); if (!r) return; document.body.classList.toggle('lu-examon', /^(intro|mock|review|result|pq)$/.test(S.v)); ({ welcome: welcome, hist: hist, home: home, setup: setup, pq: pracQ, intro: intro, mock: mockQ, review: mockReview, result: result, before: before, hazard: hazard, licence: licence })[S.v](r); }
   function go(v, extra) { S = Object.assign({ v: v }, extra || {}); draw(); top(); }
 
 
@@ -242,11 +246,17 @@
   }
 
   // ───── 🏠 home ─────
+  // 💚 the test website's front page, inside the app (first visit, or "About this test")
+  function welcome(r) {
+    if (!window.TestWelcome) return home(r);
+    window.TestWelcome.show(r, { key: KEY, site: 'ukdriving', m: window.DriveTest, back: leave, home: function () { go('home'); }, plan: function () { go('home'); if (PLAN) PLAN.setup(draw); } });
+  }
   function home(r) {
     var d = load(), best = d.mocks.reduce(function (a, m) { return Math.max(a, m.s); }, 0), weak = Q.filter(function (q) { return d.wrong[q.id]; }).length, last = d.mocks[d.mocks.length - 1];
     var dl = d.date ? daysTo(d.date) : null, nSigns = Q.filter(function (q) { return q.g; }).length, live = liveMock(), acc = d.n ? Math.round(d.ok / d.n * 100) : 0;
     r.innerHTML = '<button class="lu-back" id="dtBack">← Home</button>' +
       '<div class="lu-top dt-top"><b>🚗 Driving Theory Test</b><span>' + Q.length + ' exam-style practice questions based on The Highway Code, with road sign pictures. Marked straight away — free.</span></div>' +
+      (!SITE && window.TestWelcome ? '<button class="lu-about" id="luAbout" style="display:block;border:0;background:none;color:#057A44;font:inherit;font-weight:700;font-size:14px;padding:2px 0 8px;cursor:pointer">ℹ️ About this test — how it works</button>' : '') +
       '<div class="lu-disc">ℹ️ ' + esc(DISCLAIMER) + '</div>' +
       (PLAN ? '<div id="tpBox">' + PLAN.card() + '</div>' : '') +
       (d.date && dl >= 0 ? '<div class="lu-card" style="border-color:#F2D58A;background:#FFFBEF"><b style="font-size:16px">📅 Your theory test: ' + esc(niceDate(d.date)) + '</b><div style="font-size:14px;color:#7A5300;margin-top:3px">' + (dl === 0 ? 'It’s today — good luck! Bring your photocard licence.' : dl === 1 ? 'Tomorrow! Have your photocard licence ready.' : dl + ' days to go') + '</div></div>' : '') +
@@ -261,10 +271,10 @@
       '<button class="lu-big w" id="dtBefore"><i>📋</i><span><b>Before your test</b><small>Cost, what to bring, pass marks — checked on GOV.UK</small></span></button>' +
       (SITE ? '' : '<button class="lu-big w" id="dtLic"><i>🇳🇬</i><span><b>Driving here on a Nigerian licence</b><small>How long you can use it and what to do next</small></span></button>') +
       (SITE ? '<button class="lu-big w" id="tsDate"><i>📅</i><span><b>' + (d.date ? 'Change your test date' : 'Add my theory test date') + '</b><small>A countdown here, and a reminder in your phone’s calendar</small></span></button>' : '') +
-      (window.MyPlan && window.MyPlan.driveTest ? '<button class="lu-big w" id="dtPlan"><i>💚</i><span><b>' + (d.date ? 'Change your test date' : 'Add your theory test to My Plan') + '</b><small>Countdown, reminders and a checklist</small></span></button>' : '') +
       '<button class="lu-big w" id="dtShare"><i>📤</i><span><b>Share with a friend</b><small>' + (SITE ? SITE.short : 'auntietobi.co.uk/driving-theory-test') + '</small></span></button>' +
       '<div class="lu-note">Practice questions written independently' + (SITE ? '' : ' by Auntie Tobi') + ' from <a href="' + GOV.hc + '" target="_blank" rel="noopener">The Highway Code</a>, <i>Know your traffic signs</i> and NHS first-aid guidance. They are not official DVSA questions. Road sign images: Crown copyright, Department for Transport, used under the Open Government Licence. Always check the latest rules on GOV.UK.</div>';
     $('#dtBack', r).onclick = leave;
+    if ($('#luAbout', r)) $('#luAbout', r).onclick = function () { go('welcome'); };
     $('#dtMock', r).onclick = function () { if (live && !confirm('Start a new mock test? Your unfinished one will be lost.')) return; go('intro'); };
     if ($('#dtResume', r)) $('#dtResume', r).onclick = resumeMock;
     bindSync(r); if (PLAN) PLAN.bind($('#tpBox', r), draw);

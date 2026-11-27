@@ -15,6 +15,9 @@
   function $(s, r) { return (r || document).querySelector(s); }
   function $$(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
   function gt(e, p) { try { if (typeof gtag === 'function') gtag('event', e, Object.assign({ event_category: 'test_site', site: T.key }, p || {})); } catch (x) {} }
+  // 💚 inside the Auntie Tobi app: this page is the test's welcome page (in a frame). The app does the practice, the plan and My Plan.
+  var INAPP = /[?&]inapp=1/.test(location.search) && window.parent !== window;
+  function toApp(msg) { try { window.parent.postMessage(Object.assign({ tsApp: 1 }, msg), location.origin); } catch (e) {} }
   function route() { var p = location.pathname.slice(BASE.length).replace(/^\/+|\/+$/g, ''); return ROUTES.indexOf(p) >= 0 ? p : ''; }
 
 
@@ -100,7 +103,8 @@
     document.title = (({ practice: 'Practice', mock: 'Mock test', before: 'Before your test', results: 'My results', videos: 'Video quizzes', signs: 'Road signs', resume: 'Practice', today: 'Today’s practice' })[r] || 'Practice') + ' · ' + T.name;
     gt('site_open', { label: r });
   }
-  function go(r) { var url = BASE + '/' + (r || ''); if (location.pathname !== url) history.pushState({ r: r }, '', url); show(r); }
+  function go(r) { if (INAPP) return toApp({ go: r || '' });
+    var url = BASE + '/' + (r || ''); if (location.pathname !== url) history.pushState({ r: r }, '', url); show(r); }
   T.home = function () { go(''); };
   window.addEventListener('popstate', function () { show(route()); });
 
@@ -144,6 +148,7 @@
       $$('[data-tp="today"]', box).forEach(function (b) { b.onclick = function () { go('today'); }; });
       $$('[data-tp="mock"]', box).forEach(function (b) { b.onclick = function () { go('mock'); }; });
       $$('[data-tp="before"]', box).forEach(function (b) { b.onclick = function () { m.plan.flag('before'); go('before'); }; });
+      if (INAPP) $$('[data-tp="setup"]', box).forEach(function (b) { b.onclick = function () { toApp({ plan: 1 }); }; });
       paintDash(S);
     }).catch(function () {});
   }
@@ -179,6 +184,11 @@
 
   function bindGo(scope) { $$('[data-go]', scope).forEach(function (b) { b.onclick = function (e) { e.preventDefault(); go(b.dataset.go); }; }); }
   function start() {
+    if (INAPP) {
+      document.body.classList.add('ts-inapp');
+      var tell = function () { toApp({ h: Math.ceil(document.documentElement.scrollHeight) }); };
+      tell(); if (window.ResizeObserver) new ResizeObserver(tell).observe(document.body); else setInterval(tell, 1000);
+    }
     bindGo(document); demo();
     var mb = $('#tsMenu'); if (mb) mb.onclick = function () { $('#tsNav').classList.toggle('open'); };
     if (BASE) $$('a[href="/privacy"]').forEach(function (a) { a.setAttribute('href', '/test-sites/privacy'); });

@@ -360,12 +360,13 @@
   }
   // 🎨 colour stripe by type (Look B): gold = bills & renewals, red = overdue, green = everything else
   var PAYRX = /\b(pay|paid|bill|bills|tax|rent|mortgage|council|licen[cs]e|renew|insurance|mot|subscription|direct debit|fee|fees|loan|invoice)\b/i;
-  function kindOf(i) { if (i.cel) return 'cel'; if (i.d && i.d < today() && !i.done) return 'late'; if (i.lk || PAYRX.test(i.t || '')) return 'pay'; return 'task'; }
+  var TESTLK = /^(lituk|drvth)$/;   // test dates & practice aren't bills
+  function kindOf(i) { if (i.cel) return 'cel'; if (i.d && i.d < today() && !i.done) return 'late'; if ((i.lk && !TESTLK.test(i.lk)) || PAYRX.test(i.t || '')) return 'pay'; return 'task'; }
   // 💙 design G: a small round picture for each row, guessed from the words
   var ICONS = [[/school|pick ?up|drop ?off|nursery/i, '🚸'], [/\b(gp|doctor|dentist|hospital|clinic|nhs|surgery|appointment|optician|pharmacy)\b/i, '🩺'], [/\b(call|phone|ring)\b/i, '📞'], [/\b(course|class|lesson|exam|study|training)\b/i, '📚'],
     [/\b(shop|buy|groceries|market)\b/i, '🛒'], [/\b(parcel|post|return|amazon|delivery)\b/i, '📦'], [/\b(car|mot|driving|petrol)\b/i, '🚗'], [/\b(passport|visa|evisa|brp|licen[cs]e)\b/i, '🗂️'], [/\b(church|mosque|prayer)\b/i, '🙏'],
     [/\b(gym|run|walk|workout)\b/i, '💪'], [/\b(clean|laundry|wash)\b/i, '🧺'], [/\b(cook|food|jollof|party)\b/i, '🍲']];
-  function rowIcon(i) { if (i.d && i.d < today() && !i.done) return '⚠️'; if (i.lk || PAYRX.test(i.t || '')) return '💷'; for (var k = 0; k < ICONS.length; k++) if (ICONS[k][0].test(i.t || '')) return ICONS[k][1]; return '📌'; }
+  function rowIcon(i) { if (i.d && i.d < today() && !i.done) return '⚠️'; if (i.lk && TESTLK.test(i.lk)) return i.rep === 'd' ? '📚' : '📝'; if (i.lk || PAYRX.test(i.t || '')) return '💷'; for (var k = 0; k < ICONS.length; k++) if (ICONS[k][0].test(i.t || '')) return ICONS[k][1]; return '📌'; }
   function bindRows(root) {
     root.querySelectorAll('[data-tick]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); tick(b.dataset.tick); }; });
     root.querySelectorAll('[data-open]').forEach(function (r) { r.onclick = function () { edit(r.dataset.open); }; });
@@ -519,7 +520,7 @@
     // 💙 design G: a navy summary card like the birthday card — today's progress, 3 gold numbers, quick buttons
     var isTask = function (i) { return !i.cel; };
     var doneToday = live().filter(function (i) { return !i.cel && ((i.done && i.doneAt === t) || (i.rep && i.last === t && !i.done)); });
-    var base = function (i) { return i.cel ? 'cel' : (i.lk || PAYRX.test(i.t || '')) ? 'pay' : 'task'; };
+    var base = function (i) { return i.cel ? 'cel' : ((i.lk && !TESTLK.test(i.lk)) || PAYRX.test(i.t || '')) ? 'pay' : 'task'; };
     var F = 'all';
     var nowHM = ('0' + dN.getHours()).slice(-2) + ':' + ('0' + dN.getMinutes()).slice(-2);
     var pool = g.over.concat(g.today).filter(function (i) { return !i.done && isTask(i); });
@@ -600,6 +601,7 @@
   function edit(id) {
     var it = P.items.filter(function (x) { return x.id === id; })[0]; if (!it) return;
     if (it.cel) return celSheet(it);
+    if (it.src === 'tplan' && it.rep === 'd') { var TM = it.lk === 'drvth' ? window.DriveTest : window.LifeUK; if (TM && TM.today) return TM.today(); }   // 📚 straight into the next session
     var life = LIFE.filter(function (l) { return l.k === it.lk; })[0];
     var s = sheet('<h3>✏️ Edit</h3>' +
       '<label>What</label><input id="eT" maxlength="140" value="' + esc(it.t) + '">' +
@@ -1450,7 +1452,38 @@
     root.querySelectorAll('[data-tst]').forEach(function (b) { b.onclick = function () { var x = b.dataset.tst.split(':'), T = x[0] === 'lu' ? window.LifeUK : window.DriveTest; if (!T) return; gt('plan_tests', { t: x[0], a: x[1] }); if (x[1] === 'resume') T.resume(); else if (x[1] === 'results') T.results(); else T.open(); }; });
   }
 
-  window.MyPlan = { driveTest: function () { drOne(LIFE.filter(function (x) { return x.k === 'drvth'; })[0]); }, lifeTest: function () { luOne(LIFE.filter(function (x) { return x.k === 'lituk'; })[0]); }, open: open, openSunday: openSunday, newsSheet: newsSheet, saveEvent: saveEvent, celSheet: celSheet, fill: fill, mountToday: function (id, h, s) { var el = document.getElementById(id); if (!el) return; el.setAttribute('data-myplan-today', '1'); if (h) el.setAttribute('data-h', h); if (s) el.setAttribute('data-s', s); fill(); }, parse: parse, add: add, _state: function () { return P; } };
+  // 🗓️ a test's personal plan (Life in the UK / Driving theory) → My Plan: the test date + reminders (or "Book your test"),
+  //    and a daily practice item that opens the next session and ticks itself when the day's practice is done. src 'tplan' = made by the plan.
+  function testPlan(k, info, quiet) {
+    var lk = k === 'drive' ? 'drvth' : 'lituk', L = LIFE.filter(function (l) { return l.k === lk; })[0], t = today(), dr = lk === 'drvth';
+    var name = dr ? 'Driving theory test' : 'Life in the UK test', e = dr ? '🚗' : '🇬🇧', mine = function (x) { return x.lk === lk && !x.del; };
+    // what the plan made before (not the daily one) goes; the old separate daily reminder is replaced
+    P.items.forEach(function (x) { if (mine(x) && !x.done && ((x.src === 'tplan' && x.rep !== 'd') || (x.rep === 'd' && x.src !== 'tplan'))) { x.del = true; change(x); } });
+    var daily = P.items.filter(function (x) { return mine(x) && x.src === 'tplan' && x.rep === 'd'; })[0];
+    if (info.passed) { if (daily) { daily.del = true; change(daily); } refresh(); return; }
+    if (info.booked && info.date >= t) {
+      var have = P.items.some(function (x) { return mine(x) && x.d === info.date && x.src !== 'tplan'; });   // they added it themselves already
+      if (!have) {
+        add({ t: e + ' ' + name + ' — ' + fromIso(info.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }), d: info.date, lk: lk, src: 'tplan', ck: L.ck.map(function (c) { return { t: c, x: false }; }), note: L.note }, true);
+        [[28, 'in 4 weeks — take a mock test'], [7, dr ? 'in 1 week — practise hazard perception' : 'in 1 week — check your ID and booking'], [1, dr ? 'tomorrow — have your photocard licence ready' : 'tomorrow — have your original ID ready']].forEach(function (r) {
+          var w = addDays(info.date, -r[0]); if (w >= t) add({ t: e + ' ' + (dr ? 'Theory test ' : name + ' ') + r[1], d: w, lk: lk, src: 'tplan' }, true);
+        });
+      }
+    } else if (!info.booked && !P.items.some(function (x) { return mine(x) && /Book your/.test(x.t || ''); })) {
+      add({ t: e + ' Book your ' + name, d: info.goal && addDays(info.goal, -14) > t ? addDays(info.goal, -14) : t, lk: lk, src: 'tplan', note: L.link ? 'Book: ' + L.link[1] : '',
+        ck: dr ? [{ t: 'Get a provisional driving licence first', x: false }, { t: 'Book on GOV.UK — £23', x: false }] : [{ t: 'Book on the official GOV.UK booking service — £50', x: false }, { t: 'Use the exact name on your ID', x: false }] }, true);
+    }
+    var title = '📚 ' + (dr ? 'Driving theory' : 'Life in the UK') + ' practice · ' + (info.chunk ? info.chunk + ' at a time' : 'all at once');
+    if (daily) { if (daily.t !== title) { daily.t = title; change(daily); } }
+    else add({ t: title, d: t, rep: 'd', lk: lk, src: 'tplan', note: 'Tap to start your next session. It ticks itself when today’s practice is done.' }, true);
+    refresh(); if (!quiet) toast('💚 Added to My Plan');
+  }
+  function testDone(k) {
+    var lk = k === 'drive' ? 'drvth' : 'lituk', it = P.items.filter(function (x) { return x.lk === lk && x.src === 'tplan' && x.rep === 'd' && !x.del; })[0];
+    if (!it || it.d > today()) return;
+    it.last = today(); it.d = next(Object.assign({}, it, { d: today() })); change(it); refresh();
+  }
+  window.MyPlan = { testPlan: testPlan, testDone: testDone, driveTest: function () { drOne(LIFE.filter(function (x) { return x.k === 'drvth'; })[0]); }, lifeTest: function () { luOne(LIFE.filter(function (x) { return x.k === 'lituk'; })[0]); }, open: open, openSunday: openSunday, newsSheet: newsSheet, saveEvent: saveEvent, celSheet: celSheet, fill: fill, mountToday: function (id, h, s) { var el = document.getElementById(id); if (!el) return; el.setAttribute('data-myplan-today', '1'); if (h) el.setAttribute('data-h', h); if (s) el.setAttribute('data-s', s); fill(); }, parse: parse, add: add, _state: function () { return P; } };
   function start() { addCss(); addPill(); hookNews(); hookChat(); fill(); boot(); var cq = (location.search.match(/[?&]cel=([^&]*)/) || [])[1];
     if (cq) { var cp = decodeURIComponent(cq).split('|'); view.tab = 'cel'; setTimeout(function () { open(); celSheet(null, { n: cp[0] || '', k: cp[1] === 'anniversary' ? 'wedding' : 'birthday', r: cp[2] || 'friend', y: 0, lead: [3] }); }, 900); }
     else if (/[?&]plan=cel\b/.test(location.search)) { view.tab = 'cel'; setTimeout(open, 900); }
