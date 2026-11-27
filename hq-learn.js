@@ -1,7 +1,7 @@
 /*
  * 🎓 HQ → Test learners (admin only): people who saved their progress on the free practice-test sites
- *   (lifeinuktest / ukdrivingtheorytest .auntietobi.co.uk). Counts, and the emails of people who ticked
- *   "Send me study tips" — nothing is ever sent from here.
+ *   (lifeinuktest / ukdrivingtheorytest .auntietobi.co.uk). Counts only — study tips are switched off for now
+ *   (the tips list + Download button come back when tips do).
  */
 (function () {
   'use strict';
@@ -28,15 +28,11 @@
     var max = Math.max(1, Math.max.apply(null, R.days.map(function (d) { return d.n; })));
     main.innerHTML = '<div class="wrap"><p class="muted" style="margin:0 0 14px">People who saved their progress on the free practice-test sites (it’s optional — most people practise without it). Their answers stay private; only counts are shown.</p>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">' +
-      tile(R.total, 'saved their progress', '👥') + tile(R.active7, 'practised this week', '🔥') + tile(R.tips, 'want study tips', '📬') + '</div>' +
+      tile(R.total, 'saved their progress', '👥') + tile(R.active7, 'practised this week', '🔥') + '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-bottom:14px">' + test('lituk', '🇬🇧') + test('drive', '🚗') + '</div>' +
       '<div class="card" style="padding:16px;margin-bottom:14px"><b>New in the last 14 days</b><div style="display:flex;align-items:flex-end;gap:6px;height:110px;margin-top:12px">' +
       R.days.map(function (d) { return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end" title="' + nice(d.d) + ': ' + d.n + '"><span style="font-size:11px;color:#4B5563">' + (d.n || '') + '</span><div style="width:100%;max-width:26px;border-radius:6px 6px 0 0;background:' + (d.n ? '#057A44' : '#E5E7EB') + ';height:' + Math.max(3, Math.round(d.n / max * 80)) + 'px"></div><span style="font-size:10px;color:#9CA3AF">' + new Date(d.d + 'T12:00:00').getDate() + '</span></div>'; }).join('') + '</div></div>' +
-      '<div class="card" style="padding:16px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><b>📬 Want study tips (' + R.list.length + ')</b>' + (R.list.length ? '<button class="btn" id="lrCsv">⬇️ Download list</button>' : '') + '</div>' +
-      '<p class="muted" style="font-size:13px;margin:6px 0 0">Only people who ticked “Send me study tips and news”. Nothing is sent from here.</p>' +
-      (R.list.length ? '<div style="overflow:auto;margin-top:8px"><table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left;color:#6B7280;font-size:12.5px"><th style="padding:6px 8px">Email</th><th style="padding:6px 8px">Test</th><th style="padding:6px 8px">Saved</th><th style="padding:6px 8px">Last used</th></tr>' +
-        R.list.slice(0, 200).map(function (u) { return '<tr style="border-top:1px solid var(--line)"><td style="padding:7px 8px;word-break:break-all">' + X.esc(u.email) + '</td><td style="padding:7px 8px">' + (u.tests.map(function (k) { return NAME[k] + (u.passed.indexOf(k) >= 0 ? ' 🎉' : ''); }).join(', ') || '—') + '</td><td style="padding:7px 8px;white-space:nowrap">' + nice(u.at) + '</td><td style="padding:7px 8px;white-space:nowrap">' + nice(u.last) + '</td></tr>'; }).join('') + '</table></div>'
-        : '<p class="muted" style="margin:10px 0 0">Nobody yet.</p>') + '</div></div>';
+      '</div>';
     var b = document.getElementById('lrCsv'); if (b) b.onclick = csv;
   }
   window.HQLearn = { init: function (o) { X = o; }, view: view };

@@ -105,10 +105,10 @@ async function start(ctx) {
   let sendIt = true;
   await cas(`lrn/otp/${core.enc(email)}`, cur => {
     if (cur && !b.again && now - cur.sentAt < 45e3 && cur.exp > now) { sendIt = false; return undefined; }   // double tap
-    return { hash: core.hmac(`lrn:${email}:${code}`), exp: now + CODE_MS, attempts: 0, sentAt: now, tips: !!b.tips };
+    return { hash: core.hmac(`lrn:${email}:${code}`), exp: now + CODE_MS, attempts: 0, sentAt: now, tips: false };   // study tips: switched off for now
   });
   if (!sendIt) return { sent: true };
-  await setJson(`lrn/link/${core.sha256(link)}`, { email, exp: now + CODE_MS, tips: !!b.tips });
+  await setJson(`lrn/link/${core.sha256(link)}`, { email, exp: now + CODE_MS });
   const back = backTo(ctx, k, b.where), url = back + (back.includes('?') ? '&' : '?') + 'save=' + link;
   const ok = await send(email, `${code} is your code to save your progress`,
     `${NAME[k]}\n\nYour code to save your progress: ${code}\n\nOr open this link on the phone or computer you're practising on:\n${url}\n\nThe code and link work for 15 minutes. Didn't ask for this? Ignore this email.`, mailHtml(k, code, url));

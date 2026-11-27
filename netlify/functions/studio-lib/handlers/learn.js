@@ -4,7 +4,7 @@ const core = require('../core');
 const lr = require('../learners');
 
 const A = {
-  start: lr.start, verify: lr.verify, link: lr.link, me: lr.me, signout: lr.signout, tips: lr.tips, delete: lr.deleteAll,
+  start: lr.start, verify: lr.verify, link: lr.link, me: lr.me, signout: lr.signout, delete: lr.deleteAll,
   'tests-get': lr.testsGet, 'tests-save': lr.testsSave,
 };
 exports.handler = core.handler(async (ctx) => {

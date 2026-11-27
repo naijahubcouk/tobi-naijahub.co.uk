@@ -92,7 +92,7 @@
   }
   function form(where) {
     return '<div class="tsv-f"><input type="email" autocomplete="email" inputmode="email" placeholder="Your email" aria-label="Your email" data-tsv-e><button class="tsv-b" data-tsv="send">Save</button></div>' +
-      '<label class="tsv-ck"><input type="checkbox" data-tsv-t> <span>Send me study tips and news (optional)</span></label><div class="tsv-err" data-tsv-x hidden></div>' +
+      '<div class="tsv-err" data-tsv-x hidden></div>' +
       (where === 'box' ? '<button class="tsv-l" data-tsv="get">I’ve saved before — get my progress</button><button class="tsv-l m" data-tsv="later">Not now</button>' : '');
   }
   function bind(el, redraw) {
@@ -109,12 +109,12 @@
   }
   // send the email (code + link)
   function ask(el, again, next) {
-    var inp = el.querySelector('[data-tsv-e]'), err = el.querySelector('[data-tsv-x]'), btn = el.querySelector('[data-tsv="send"]'), tk = el.querySelector('[data-tsv-t]');
+    var inp = el.querySelector('[data-tsv-e]'), err = el.querySelector('[data-tsv-x]'), btn = el.querySelector('[data-tsv="send"]');
     var email = inp ? inp.value.trim() : (el._email || '');
     var show = function (t) { if (err) { err.hidden = !t; err.textContent = t || ''; } };
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { show('Please type your email address.'); if (inp) inp.focus(); return; }
     show(''); if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
-    api('start', { email: email, tips: !!(tk && tk.checked), test: TEST(), where: 'site', again: !!again })
+    api('start', { email: email, test: TEST(), where: 'site', again: !!again })
       .then(function () { gt('progress_code', { label: TEST() }); if (btn) { btn.disabled = false; btn.textContent = 'Save'; } next(email); })
       .catch(function (e) { show(e.message); if (btn) { btn.disabled = false; btn.textContent = 'Save'; } });
   }
@@ -139,7 +139,6 @@
         '<div class="tsv-row"><button class="tsv-b g" data-back>Use a different email</button></div>';
     } else {
       html = '<h3>Your saved progress</h3><p style="color:#5B6B7F;font-size:15px;margin:6px 0 0;line-height:1.5">Saved to <b style="color:#0B1F33">' + esc(me.email) + '</b>. Practise on any phone or computer — get your progress there with the same email.</p>' +
-        '<label class="tsv-ck" style="margin-top:16px"><input type="checkbox" data-tip' + (me.tips ? ' checked' : '') + '> <span>Send me study tips and news</span></label>' +
         '<div class="tsv-row"><button class="tsv-b g" data-out>Sign out on this device</button><button class="tsv-b r" data-del>Delete saved progress</button></div><div class="tsv-err" data-tsv-x hidden></div>' +
         '<div class="tsv-row" style="margin-top:8px"><button class="tsv-b" data-x>Done</button></div>';
     }
@@ -162,7 +161,6 @@
       sh.querySelector('[data-back]').onclick = function () { open('save'); };
       sh.querySelector('[data-again]').onclick = function () { sh._email = email; api('start', { email: email, test: TEST(), where: 'site', again: true }).then(function () { err(''); toast('Sent again — check your inbox.'); }).catch(function (x) { err(x.message); }); };
     } else {
-      sh.querySelector('[data-tip]').onchange = function () { var on = this.checked; api('tips', { on: on }).then(function () { var m = rd(); if (m) { m.tips = on; wr(m); } toast(on ? 'You’ll get study tips by email.' : 'No more study tips.'); }).catch(function (x) { err(x.message); }); };
       sh.querySelector('[data-out]').onclick = function () { flush(); api('signout').catch(function () {}).then(function () { wr(null); s.remove(); toast('Signed out on this device. Your progress stays saved.'); if (window.TestSave.redraw) window.TestSave.redraw(); }); };
       var d = sh.querySelector('[data-del]');
       d.onclick = function () {
