@@ -622,6 +622,11 @@ exports.handler = handler(async (ctx) => {
       if (body.action === 'fl-target') return fl.target(body.kind, body.n, body.by);
       return fl.get();
     }
+    case 'learn-stats': {
+      // 🎓 practice-test learners who saved their progress (admin only)
+      if (!has(['lrn'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');
+      return require('../learners').stats();
+    }
     case 'myplan-stats': {
       // 💚 My Plan sign-ups — counts only, never anyone's plan (admin only)
       if (!has(['mplan'])) throw new HttpError(403, 'forbidden', 'Only Auntie Tobi can see this.');

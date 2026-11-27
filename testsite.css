@@ -278,3 +278,6 @@ button{font-family:inherit;color:inherit}
 .ts-plan .tp-go{max-width:360px;font-size:17px;padding:15px;border-radius:14px}.ts-plan .tp-t button{font-size:15px}
 .ts-plan .tp-weak span{font-size:14px}.ts-plan .tp-link{font-size:15px}
 .ts .tp{border-color:var(--line)}
+/* 🎓 "Save my progress" sits in the phone menu; on wider screens it's on the front page under the plan */
+.ts-nav a[data-tsv-menu]{display:none}
+@media(max-width:900px){.ts-nav a[data-tsv-menu]{display:block}}

@@ -204,6 +204,7 @@ function mergeTest(a, b) {   // a = saved, b = incoming; the newer one wins, but
   const ms = {}; [].concat(od.mocks || [], out.d.mocks || []).forEach(m => { if (m && typeof m === 'object') ms[key(m)] = Object.assign(ms[key(m)] || {}, m); });
   out.d.mocks = Object.values(ms).sort((x, y) => (x.id || 0) - (y.id || 0) || String(x.at).localeCompare(String(y.at))).slice(-60);
   out.d.seen = Object.assign({}, od.seen || {}, out.d.seen || {});
+  if (newer.p || older.p) out.p = require('./learners').mergePlan(newer.p, older.p);   // 🗓️ the personal plan
   return out;
 }
 async function testsGet(ctx) {

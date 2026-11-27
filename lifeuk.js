@@ -46,7 +46,7 @@
   function byId(id) { for (var i = 0; i < ALL.length; i++) if (ALL[i].id === id) return ALL[i]; return null; }
 
   // 🗓️ My plan (testplan.js): a personal plan from their test date — today's set, readiness, weak areas. Kept on this device.
-  var PLAN = window.TestPlan ? window.TestPlan.create({ key: 'tobi_lituk', unit: 'chapter', total: MOCK_N, pass: PASS, areas: CH.map(function (c) { return [c[0], c[1]]; }),
+  var PLAN = window.TestPlan ? window.TestPlan.create({ key: 'tobi_lituk', touch: function () { touch(); }, unit: 'chapter', total: MOCK_N, pass: PASS, areas: CH.map(function (c) { return [c[0], c[1]]; }),
     data: function () { return load(); }, setDate: function (iso) { setDate(iso); }, before: function () { go('before'); },
     startMock: function () { if (liveMock()) resumeMock(); else startMock(); },
     startSet: function (ids, label) { var qs = ids.map(byId).filter(Boolean); if (!qs.length) return; go('pq', { kind: 'prac', mode: 'plan', label: label, n: qs.length, fb: 'now', qs: qs.map(function (q) { return { q: q, opts: optsOf(q) }; }), ans: {}, done: {}, at: 0, t0: Date.now() }); },
@@ -151,7 +151,7 @@
   var PRAC = KEY + '_prac', UP = KEY + '_up';
   function raw(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
   function rawSet(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
-  function docNow() { return { up: +(raw(UP) || 0), d: load(), live: raw(LIVE), prac: raw(PRAC) }; }
+  function docNow() { return { up: +(raw(UP) || 0), d: load(), live: raw(LIVE), prac: raw(PRAC), p: raw(KEY + '_plan') }; }
   function touch() { rawSet(UP, Date.now()); if (window.TestSync) window.TestSync.push(SYNC, docNow); }
   function mergeDoc(a, b) {   // newer wins; results and "seen" are added together
     if (!a) return b; if (!b) return a;
@@ -160,6 +160,7 @@
     [].concat(od.mocks || [], out.d.mocks || []).forEach(function (m) { if (m) ms[key(m)] = Object.assign(ms[key(m)] || {}, m); });
     out.d.mocks = Object.keys(ms).map(function (k) { return ms[k]; }).sort(function (x, y) { return (x.id || 0) - (y.id || 0); }).slice(-60);
     out.d.seen = Object.assign({}, od.seen || {}, out.d.seen || {});
+    if ((nw.p || ol.p) && window.TestPlan) out.p = window.TestPlan.merge(nw.p, ol.p);   // 🗓️ the personal plan
     return out;
   }
   function syncIn() {
@@ -169,7 +170,7 @@
       var loc = docNow(), m = mergeDoc(srv, loc);
       if (!m) return;
       try { localStorage.setItem(KEY, JSON.stringify(m.d || {})); } catch (e) {}
-      rawSet(LIVE, m.live || null); rawSet(PRAC, m.prac || null); rawSet(UP, m.up || 0);
+      rawSet(LIVE, m.live || null); rawSet(PRAC, m.prac || null); if (m.p) rawSet(KEY + '_plan', m.p); rawSet(UP, m.up || 0);
       if (!srv || (loc.up || 0) > (srv.up || 0) || (m.d.mocks || []).length > ((srv.d || {}).mocks || []).length) TS.push(SYNC, docNow);
     }).catch(function () {});
   }
@@ -192,7 +193,7 @@
         var ok = m.s >= PASS;
         return '<button class="lu-ch" data-h="' + n + '" style="margin:0 0 8px"' + (m.rv ? '' : ' disabled') + '><i>' + (ok ? '✅' : '❌') + '</i><span style="flex:1"><b>' + m.s + '/' + MOCK_N + ' · ' + Math.round(m.s / MOCK_N * 100) + '% · ' + (ok ? 'PASS' : 'FAIL') + '</b><small>' + esc(niceDate(m.at)) + (m.rv ? ' · tap to review' : '') + '</small></span></button>';
       }).join('') + '</div>' : '<div class="lu-card" style="text-align:center;color:#6B7280">No mock tests yet.</div>') +
-      '<div class="lu-note">' + (window.TestSync && window.TestSync.signedIn() ? '💚 Saved to your My Plan account — you’ll see these on any phone you sign in on.' : '💾 Saved on this phone. Sign in to My Plan to keep them on any phone.') + '</div>';
+      '<div class="lu-note">' + (window.TestSync && window.TestSync.signedIn() ? (SITE ? 'Saved to your email — you’ll see these on any device.' : '💚 Saved to your My Plan account — you’ll see these on any phone you sign in on.') : (SITE ? 'Saved on this device. Save your progress to keep them on any device.' : '💾 Saved on this phone. Sign in to My Plan to keep them on any phone.')) + '</div>';
     $('#hB', r).onclick = function () { go('home'); };
     $$('[data-h]', r).forEach(function (b) { b.onclick = function () {
       var m = ms[+b.dataset.h]; if (!m || !m.rv) return;
@@ -204,7 +205,9 @@
     var TS = window.TestSync, d = load(), pr = raw(PRAC), out = '';
     if (top) return pr ?  '<button class="lu-big y" id="tsPrac"><i>▶️</i><span><b>Continue your practice</b><small>Question ' + ((pr.at || 0) + 1) + ' of ' + pr.ids.length + ' · ' + Object.keys(pr.ans || {}).length + ' answered</small></span></button>' : '';
     if (d.mocks.length) out += '<button class="lu-big w" id="tsHist"><i>📈</i><span><b>My results</b><small>' + d.mocks.length + ' mock ' + (d.mocks.length === 1 ? 'test' : 'tests') + ' · tap one to see every answer</small></span></button>';
-    if (TS) out += TS.signedIn() ? '<div class="lu-note" style="margin-top:0">💚 Your progress is saved to your My Plan account. <a href="#" id="tsPlan" style="color:#057A44;font-weight:700">Open My Plan</a></div>'
+    if (TS && SITE) out += TS.signedIn() ? '<div class="lu-note" style="margin-top:0">Your progress is saved to ' + esc(TS.email()) + '. <a href="#" id="tsPlan" style="color:#057A44;font-weight:700">Manage</a></div>'
+      : '<div class="lu-card" style="border-color:#BFE3CF;background:#F1FAF5"><b style="font-size:15px">Keep your progress on any device</b><div style="font-size:13.5px;color:#4B5563;margin-top:3px">It’s saved on this device for now. Add your email (no password) to keep it if you change phone or browser.</div><div class="lu-row"><button class="lu-btn" id="tsIn">Save my progress</button></div></div>';
+    else if (TS) out += TS.signedIn() ? '<div class="lu-note" style="margin-top:0">💚 Your progress is saved to your My Plan account. <a href="#" id="tsPlan" style="color:#057A44;font-weight:700">Open My Plan</a></div>'
       : '<div class="lu-card" style="border-color:#BFE3CF;background:#F1FAF5"><b style="font-size:15px">💾 Keep your progress on any phone</b><div style="font-size:13.5px;color:#4B5563;margin-top:3px">Your progress is saved on this phone. Sign in to My Plan (free, no password) to keep it everywhere and pick up where you left off.</div><div class="lu-row"><button class="lu-btn" id="tsIn">💚 Sign in to My Plan</button></div></div>';
     return out;
   }

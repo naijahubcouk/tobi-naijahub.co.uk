@@ -134,14 +134,17 @@
   // ───── 🗓️ My plan on the front page + the dashboard with their own numbers ─────
   function paintPlan() {
     var box = $('#tsPlan'), m = M(); if (!box || !m || !m.plan || !m.ready) return;
-    m.ready().then(function () {
+    var first = window.TestSync && window.TestSync.signedIn() && !paintPlan.synced && m.sync;   // saved progress: bring it in once per visit
+    if (first) paintPlan.synced = 1;
+    (first ? m.sync() : Promise.resolve()).then(function () { return m.ready(); }).then(function () {
       if ($('#landing').hidden) return;
-      box.innerHTML = m.plan.card('site'); m.plan.bind(box, paintPlan);
+      var S = m.plan.state(), SV = window.TestSave;
+      box.innerHTML = m.plan.card('site') + (SV ? SV.box(S) : ''); m.plan.bind(box, paintPlan); if (SV) { SV.redraw = paintPlan; SV.bind(box, paintPlan); }
       // from the front page these open the practice screens
       $$('[data-tp="today"]', box).forEach(function (b) { b.onclick = function () { go('today'); }; });
       $$('[data-tp="mock"]', box).forEach(function (b) { b.onclick = function () { go('mock'); }; });
       $$('[data-tp="before"]', box).forEach(function (b) { b.onclick = function () { m.plan.flag('before'); go('before'); }; });
-      paintDash(m.plan.state());
+      paintDash(S);
     }).catch(function () {});
   }
   function paintDash(S) {

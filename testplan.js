@@ -48,7 +48,7 @@
   function create(C) {
     var KEY = C.key + '_plan';
     function rd() { try { var x = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; x.log = x.log || []; x.due = x.due || {}; x.flags = x.flags || {}; return x; } catch (e) { return { log: [], due: {}, flags: {} }; } }
-    function wr(x) { try { localStorage.setItem(KEY, JSON.stringify(x)); } catch (e) {} }
+    function wr(x) { try { localStorage.setItem(KEY, JSON.stringify(x)); } catch (e) {} if (C.touch) C.touch(); }   // touch = save it to their email too, if they've saved their progress
     var P = {};
 
     // ───── what happened ─────
@@ -62,7 +62,7 @@
     };
     P.bank = function (Q) {   // question counts per chapter/topic, for coverage when the questions aren't loaded
       if (!Q || !Q.length) return; P.Q = Q; var x = rd(), per = {};
-      Q.forEach(function (q) { per[q.c] = (per[q.c] || 0) + 1; }); x.bank = { n: Q.length, per: per }; wr(x);
+      Q.forEach(function (q) { per[q.c] = (per[q.c] || 0) + 1; }); var nb = { n: Q.length, per: per }; if (JSON.stringify(nb) === JSON.stringify(x.bank)) return; x.bank = nb; try { localStorage.setItem(KEY, JSON.stringify(x)); } catch (e) {}   // not progress: no save
     };
     P.prefs = function () { return rd().prefs || null; };
     P.flag = function (k) { var x = rd(); x.flags[k + '@' + iso()] = 1; wr(x); };
@@ -222,5 +222,16 @@
     };
     return P;
   }
-  window.TestPlan = { create: create };
+  // two copies of a plan (this device + saved): the newer one wins, history is added together (same rules as studio-lib/learners.js)
+  function merge(nw, ol) {
+    if (!nw) return ol || null; if (!ol) return nw;
+    var out = JSON.parse(JSON.stringify(nw)), seen = {};
+    out.log = [].concat(ol.log || [], nw.log || []).filter(function (l) { return l && l.length >= 3; })
+      .filter(function (l) { var k = l[0] + '|' + l[2]; if (seen[k]) return false; seen[k] = 1; return true; }).sort(function (a, b) { return a[2] - b[2]; }).slice(-800);
+    out.due = Object.assign({}, ol.due || {}, nw.due || {}); out.flags = Object.assign({}, ol.flags || {}, nw.flags || {});
+    if (!out.prefs || (ol.prefs && String(ol.prefs.at || '') > String(out.prefs.at || ''))) out.prefs = ol.prefs || out.prefs;
+    if (!out.passed && ol.passed) out.passed = ol.passed; if (!out.bank && ol.bank) out.bank = ol.bank;
+    return out;
+  }
+  window.TestPlan = { create: create, merge: merge };
 })();
