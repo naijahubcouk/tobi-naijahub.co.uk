@@ -17,6 +17,66 @@
   function gt(e, p) { try { if (typeof gtag === 'function') gtag('event', e, Object.assign({ event_category: 'test_site', site: T.key }, p || {})); } catch (x) {} }
   function route() { var p = location.pathname.slice(BASE.length).replace(/^\/+|\/+$/g, ''); return ROUTES.indexOf(p) >= 0 ? p : ''; }
 
+
+  // ───── outline icons (one consistent set, drawn with lines like Lucide) ─────
+  var P = {
+    target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+    book: '<path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6.5a2.5 2.5 0 0 0 0 5H19"/><path d="M8 7h7"/>',
+    retry: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
+    play: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9 5 3-5 3z"/>',
+    chart: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>',
+    clipboard: '<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="m9 13 2 2 4-4"/>',
+    sign: '<path d="M8.5 2.5h7l5 5v7l-5 5h-7l-5-5v-7z"/><path d="M8 12h8"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>', x: '<path d="M18 6 6 18M6 6l12 12"/>',
+    checkc: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+    shield: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>',
+    phone: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18h2"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    award: '<circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/>',
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>', ext: '<path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>',
+    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>', plus: '<path d="M12 5v14M5 12h14"/>',
+    layers: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>', trend: '<path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14"/><path d="M12 17.5h.01"/>',
+    pound: '<path d="M17 20H7c1.5-1 2-2.5 2-4.5V9a4 4 0 0 1 7.5-2"/><path d="M6 13h8"/>',
+    file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
+    car: '<path d="M5 17h14v-4l-2-5H7l-2 5z"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/><path d="M5 13h14"/>',
+    video: '<rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="m16 10 5-3v10l-5-3"/>',
+    hand: '<path d="M12 21a7 7 0 0 1-7-7V9a1.5 1.5 0 0 1 3 0v3"/><path d="M8 11V5a1.5 1.5 0 0 1 3 0v6"/><path d="M11 10V4a1.5 1.5 0 0 1 3 0v6"/><path d="M14 10V6a1.5 1.5 0 0 1 3 0v8a7 7 0 0 1-5 7"/>',
+  };
+  function icon(n) { return '<span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (P[n] || '') + '</svg></span>'; }
+  T.icon = icon;
+  function paintIcons(scope) { $$('[data-i]', scope).forEach(function (el) { el.outerHTML = icon(el.dataset.i); }); }
+  paintIcons(document);
+
+  // ───── the try-it question in the hero (real questions from the bank) ─────
+  function demo() {
+    var box = $('#tsDemo'), Q = T.sample || []; if (!box || !Q.length) return;
+    var at = 0, total = T.key === 'drive' ? 50 : 24, right = 0;
+    function draw() {
+      if (at >= Q.length) {
+        box.innerHTML = '<div class="end"><div class="ring">' + icon('award') + '</div><b>' + right + ' out of ' + Q.length + ' right</b><p>Ready for the real thing? A full mock test is ' + total + ' questions, timed like the actual test.</p>' +
+          '<div class="ts-btns" style="justify-content:center;margin-top:0"><button class="ts-b p" data-go="mock">Start a mock test ' + icon('arrow') + '</button><button class="ts-b g" id="dmAgain">Try again</button></div></div>';
+        bindGo(box); $('#dmAgain', box).onclick = function () { at = 0; right = 0; draw(); }; return;
+      }
+      var q = Q[at], opts = q.o.map(function (t, i) { return { t: t, ok: i === 0 }; }).sort(function () { return Math.random() - 0.5; });
+      box.innerHTML = '<div class="top"><span class="lbl">Question ' + (at + 1) + ' of ' + Q.length + ' · try it now</span><span class="tm">' + icon('clock') + (T.key === 'drive' ? '56:' : '44:') + (40 - at * 7) + '</span></div>' +
+        '<div class="bar"><i style="width:' + Math.round((at + 1) / Q.length * 100) + '%"></i></div><span class="chip">' + q.tag + '</span><div class="q">' + q.q + '</div><div class="ins">Select one answer</div>' +
+        opts.map(function (o, i) { return '<button class="ts-op" data-k="' + i + '"><span class="k">' + 'ABCD'[i] + '</span><span>' + o.t + '</span></button>'; }).join('') +
+        '<div id="dmEx"></div><div class="foot"><small>Marked instantly, with an explanation</small><span id="dmNext"></span></div>';
+      $$('.ts-op', box).forEach(function (b) { b.onclick = function () {
+        var k = +b.dataset.k, ok = opts[k].ok; if (ok) right++;
+        $$('.ts-op', box).forEach(function (x, i) { x.disabled = true; if (opts[i].ok) { x.classList.add('ok'); x.querySelector('.k').innerHTML = icon('check'); } else if (i === k) { x.classList.add('no'); x.querySelector('.k').innerHTML = icon('x'); } });
+        $('#dmEx', box).innerHTML = '<div class="ts-ex">' + icon(ok ? 'checkc' : 'help') + '<div><b>' + (ok ? 'Correct. ' : 'Not quite. ') + '</b>' + q.e + '</div></div>';
+        $('#dmNext', box).innerHTML = '<button class="ts-b n" style="padding:11px 18px;font-size:15px">' + (at + 1 < Q.length ? 'Next question' : 'See result') + icon('arrow') + '</button>';
+        $('#dmNext button', box).onclick = function () { at++; draw(); };
+        gt('site_demo_answer', { value: ok ? 1 : 0 });
+      }; });
+    }
+    draw();
+  }
+
   // ───── moving between the front page and the practice screens ─────
   function show(r) {
     var land = $('#landing'), app = $('#app'), msgs = $('#messages');
@@ -54,7 +114,7 @@
   T.date = function (cur, done) {
     var today = new Date().toISOString().slice(0, 10);
     var s = document.createElement('div'); s.className = 'ts-scrim';
-    s.innerHTML = '<div class="ts-sheet" role="dialog" aria-label="Your test date"><h3>📅 Your test date</h3><p>See a countdown when you practise, and add a reminder to your phone’s calendar.</p>' +
+    s.innerHTML = '<div class="ts-sheet" role="dialog" aria-label="Your test date"><h3>' + icon('calendar') + 'Your test date</h3><p>See a countdown when you practise, and add a reminder to your phone’s calendar.</p>' +
       '<input type="date" id="tsD" min="' + today + '" value="' + (cur || '') + '"><div class="row"><button class="ts-b p" id="tsDS">Save</button>' + (cur ? '<button class="ts-b g" id="tsDR">Remove date</button>' : '') + '<button class="ts-b g" id="tsDX">Cancel</button></div><div id="tsDC"></div></div>';
     document.body.appendChild(s);
     var close = function () { s.remove(); };
@@ -64,7 +124,7 @@
     $('#tsDS', s).onclick = function () {
       var v = $('#tsD', s).value; if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) { $('#tsD', s).focus(); return; }
       done(v); gt('site_date');
-      $('#tsDC', s).innerHTML = '<div class="row"><a class="ts-b p" download="' + T.key + '-test.ics" href="data:text/calendar;charset=utf-8,' + encodeURIComponent(ics(v)) + '">➕ Add to my calendar</a><button class="ts-b g" id="tsDK">Done</button></div>';
+      $('#tsDC', s).innerHTML = '<div class="row"><a class="ts-b p" download="' + T.key + '-test.ics" href="data:text/calendar;charset=utf-8,' + encodeURIComponent(ics(v)) + '">' + icon('plus') + 'Add to my calendar</a><button class="ts-b g" id="tsDK">Done</button></div>';
       $('#tsDS', s).parentNode.style.display = 'none'; $('#tsDK', s).onclick = close;
       $('#tsDC a', s).addEventListener('click', function () { gt('site_calendar'); setTimeout(close, 400); });
     };
@@ -77,14 +137,14 @@
     if (!s || (!s.live && !s.prac && !s.mocks && !s.answered && !s.date)) { box.innerHTML = ''; return; }
     var total = T.key === 'drive' ? 50 : 24, line = s.live ? 'You have a mock test in progress' : s.prac ? 'You have a practice set in progress' : s.mocks ? 'Best mock score ' + s.best + '/' + total + ' · ' + s.mocks + ' mock test' + (s.mocks === 1 ? '' : 's') : s.answered ? s.answered + ' practice questions answered' : 'Your test date is saved';
     if (s.mocks && (s.live || s.prac)) line += ' · best score ' + s.best + '/' + total;
-    var act = s.live ? ['resume', '⏱ Resume your mock test'] : s.prac ? ['resume', '▶️ Continue practice'] : ['practice', 'Keep practising →'];
-    box.innerHTML = '<div class="ts-resume"><div class="t"><b>👋 Welcome back</b><span>' + line + (s.date ? (/saved$/.test(line) ? ': ' : ' · test on ') + new Date(s.date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }) : '') + '</span></div><button class="ts-b p" data-go="' + act[0] + '">' + act[1] + '</button>' + (s.mocks ? '<button class="ts-b g" data-go="results">📈 My results</button>' : '') + '</div>';
+    var act = s.live ? ['resume', 'Resume your mock test'] : s.prac ? ['resume', 'Continue practice'] : ['practice', 'Keep practising'];
+    box.innerHTML = '<div class="ts-resume"><div class="t"><b>Welcome back</b><span>' + line + (s.date ? (/saved$/.test(line) ? ': ' : ' · test on ') + new Date(s.date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }) : '') + '</span></div><button class="ts-b p" data-go="' + act[0] + '">' + act[1] + icon('arrow') + '</button>' + (s.mocks ? '<button class="ts-b g" data-go="results">' + icon('chart') + 'My results</button>' : '') + '</div>';
     bindGo(box);
   }
 
   function bindGo(scope) { $$('[data-go]', scope).forEach(function (b) { b.onclick = function (e) { e.preventDefault(); go(b.dataset.go); }; }); }
   function start() {
-    bindGo(document);
+    bindGo(document); demo();
     var mb = $('#tsMenu'); if (mb) mb.onclick = function () { $('#tsNav').classList.toggle('open'); };
     if (BASE) $$('a[href="/privacy"]').forEach(function (a) { a.setAttribute('href', '/test-sites/privacy'); });
     $$('a[href="/"]').forEach(function (a) { a.setAttribute('href', BASE + '/'); a.onclick = function (e) { e.preventDefault(); go(''); }; });
