@@ -218,7 +218,7 @@
       '<div style="margin-top:10px;padding:10px;border:1px solid #EEE9DD;border-radius:10px"><label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" id="qvIg"' + (QV.igOn ? ' checked' : '') + '> 📸 Show the Instagram handle at the bottom</label>' +
       '<div id="qvIgBox"' + (QV.igOn ? '' : ' hidden') + '><input id="qvIgT" value="' + esc(QV.ig) + '" style="margin-top:8px;max-width:320px"></div></div>' +
       '<div style="margin-top:10px;padding:10px;border:1px solid #EEE9DD;border-radius:10px"><label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" id="qvApp"' + (QV.appOn ? ' checked' : '') + '> 📱 Add an Auntie Tobi App box at the end</label>' +
-      '<div id="qvAppBox"' + (QV.appOn ? '' : ' hidden') + '><input id="qvAppT" value="' + esc(QV.appT) + '" style="margin-top:8px"><div class="muted" style="font-size:12.5px">Shown in a green box with <b>' + esc(b.link) + '</b> under it.</div>' +
+      '<div id="qvAppBox"' + (QV.appOn ? '' : ' hidden') + '><input id="qvAppT" value="' + esc(QV.appT) + '" style="margin-top:8px"><div class="muted" style="font-size:12.5px">Shown in a green box.</div>' +
       (ST && ST.ready ? '<label style="display:flex;gap:8px;align-items:center;margin:6px 0 0"><input type="checkbox" id="qvSayApp"' + (QV.sayApp ? ' checked' : '') + '> 🎙️ The voice says it too</label>' : '') + '</div></div>' +
       '<div style="margin-top:10px;padding:10px;border:1px solid #EEE9DD;border-radius:10px">' +
       (ST && ST.ready ? '<label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" id="qvVo"' + (QV.voiceOn ? ' checked' : '') + '> 🎙️ AI voice reads the quiz (ElevenLabs)</label>' +
@@ -621,11 +621,10 @@
       var yy = 820 + ow.length * 92 + 70, at = (QV.appT || '').trim();
       if (QV.appOn && at) {
         var pop = ease((lt - 0.5) / 0.4), sc = 0.9 + 0.1 * pop; cx.globalAlpha = a3 * Math.max(0, Math.min(1, pop));
-        cx.font = '800 50px Poppins, Arial, sans-serif'; var al = wrapWords(cx, at.replace(/Auntie Tobi/g, 'Auntie\u00A0Tobi').split(/ +/), 780), bh2 = 70 + al.length * 62 + 66;
+        cx.font = '800 50px Poppins, Arial, sans-serif'; var al = wrapWords(cx, at.replace(/Auntie Tobi/g, 'Auntie\u00A0Tobi').split(/ +/), 780), bh2 = 70 + al.length * 62 + 4;   // no link under the text
         cx.save(); cx.translate(W / 2, yy + bh2 / 2); cx.scale(sc, sc); cx.translate(-W / 2, -(yy + bh2 / 2));
         rr(cx, W / 2 - 440, yy, 880, bh2, 30); cx.fillStyle = 'rgba(5,122,68,0.95)'; cx.fill(); cx.lineWidth = 4; cx.strokeStyle = 'rgba(255,255,255,0.9)'; cx.stroke();
         cx.fillStyle = '#fff'; al.forEach(function (ln, li) { cx.fillText(ln.join(' '), W / 2, yy + 78 + li * 62); });
-        var lk = '📱 ' + bank().link, lf = 44; cx.font = '800 ' + lf + 'px Poppins, Arial, sans-serif'; while (cx.measureText(lk).width > 800 && lf > 26) { lf -= 2; cx.font = '800 ' + lf + 'px Poppins, Arial, sans-serif'; } cx.fillStyle = '#FFE08A'; cx.fillText(lk, W / 2, yy + 70 + al.length * 62 + 30);   // long links shrink to stay inside the box cx.restore();
       }
       cx.restore();
     }
