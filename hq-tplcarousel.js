@@ -760,7 +760,7 @@
     var mood = sl.kind === 'cover' ? 'Looking straight at the camera with a confident, warm smile, arms folded — an expert about to share important advice.'
       : sl.kind === 'end' ? 'Smiling warmly at the camera, friendly and encouraging, as if inviting people to save and share.'
       : 'Her facial expression, hand gesture and body language clearly show the feeling of this message: "' + msg + '"' + (sub ? ' (' + sub.slice(0, 160) + ')' : '') + '. Keep it natural and believable, as if she is explaining this to parents.';
-    return 'Photorealistic portrait photograph, 4:5 portrait (1080×1350). The SAME woman as in every other slide: ' + F.who + '. ' + mood +
+    return 'Photorealistic portrait photograph, 4:5 portrait (1080×1350). The SAME woman as in every other slide: ' + (F.who || PHOTO.who) + '. ' + mood +
       ' Plain soft grey studio background with gentle even lighting. Her face and shoulders are in the top half of the picture; keep the bottom 45% simple (just her jacket and the background) because text boxes will go there. No text, no logos, no watermark.';
   }
   function phPrompts(car) {

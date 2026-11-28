@@ -37,6 +37,11 @@ function cleanSlide(x) {
     brush: ['on', 'off'].includes(x.brush) ? x.brush : '',
     num: ['on', 'off'].includes(x.num) ? x.num : '',
     ...(['top', 'middle', 'bottom'].includes(x.vpos) ? { vpos: x.vpos } : {}),
+    // 📸 Photo + text boxes: this slide's box colours, gap and see-through
+    ...(/^#[0-9a-f]{6}$/i.test(String(x.pbox || '')) ? { pbox: x.pbox } : {}),
+    ...(/^#[0-9a-f]{6}$/i.test(String(x.psub || '')) ? { psub: x.psub } : {}),
+    ...(['0', '1', '2', '3'].includes(String(x.pgap)) && x.pgap !== '' && x.pgap != null ? { pgap: String(x.pgap) } : {}),
+    ...(x.pfade !== '' && x.pfade != null && Number.isFinite(Number(x.pfade)) ? { pfade: String(Math.max(0, Math.min(0.9, Number(x.pfade)))) } : {}),
     ...(['auto', 'left', 'center', 'right'].includes(x.hpos) ? { hpos: x.hpos } : {}),
     ...(NPOS.includes(x.npos) ? { npos: x.npos } : {}),
     ...(cleanPic(x.pic) ? { pic: cleanPic(x.pic) } : {}),
@@ -93,6 +98,12 @@ function cleanLook(l) {
       sky: hex(F.sky, '#9DB8C8'), ground: hex(F.ground, '#B9A27E'), ink: hex(F.ink, '#FFFFFF'), hl: hex(F.hl, '#FFE27A'), alt: hex(F.alt, '#BFEAF2'),
       size: num(F.size, 0.2, 1.2, 0.62), feet: num(F.feet, 0.4, 1.3, 0.97), speed: num(F.speed, 1.5, 12, 4), still: F.still === null ? null : num(F.still, -0.5, 1.5, 0.55), flip: F.flip === true, shadow: F.shadow !== false,
       hFont: ['poppins', 'londrina', 'marker', 'archivo', 'anton', 'playfair'].includes(F.hFont) ? F.hFont : 'poppins', sFont: ['caveat', 'kaushan', 'vibes', 'dmsans', 'playfair'].includes(F.sFont) ? F.sFont : 'caveat' } };
+  }
+  if (l && typeof l === 'object' && l.kind === 'photo') {   // 📸 Photo + text boxes
+    const F = l.photo && typeof l.photo === 'object' ? l.photo : {}, hex = (v, d) => /^#[0-9a-f]{6}$/i.test(String(v || '')) ? v : d, num = (v, lo, hi, d) => { const x = Number(v); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : d; };
+    return { kind: 'photo', id: 'photo', name: 'Photo + text boxes', photo: { bg: /^i[a-z0-9]{6,30}$/.test(String(F.bg || '')) ? F.bg : '', z: num(F.z, 1, 2.5, 1), fx: num(F.fx, 0, 1, 0.5), fy: num(F.fy, 0, 1, 0.25),
+      box: hex(F.box, '#FFFFFF'), sub: hex(F.sub, '#E1251B'), ypos: num(F.ypos, 0.35, 0.97, 0.9), bang: F.bang !== false, gap: Math.round(num(F.gap, 0, 3, 0)),
+      fade: num(F.fade, 0, 0.9, 0), fadeCol: hex(F.fadeCol, '#FFFFFF'), who: cleanText(F.who, 300) } };
   }
   if (l && typeof l === 'object' && l.kind === 'ftl') {   // 🧵 Follow the line
     const F = l.ftl && typeof l.ftl === 'object' ? l.ftl : {}, hex = (v, d) => /^#[0-9a-f]{6}$/i.test(String(v || '')) ? v : d, num = (v, lo, hi, d) => { const x = Number(v); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : d; };
