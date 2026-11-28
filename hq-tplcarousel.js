@@ -750,7 +750,23 @@
 
   // ── 📸 Photo + text boxes: one person photo on every slide; words sit in "sticker" boxes (the cover: a title box + a coloured subtitle box) ──
   function isPhoto(car) { return !!(car.look && car.look.kind === 'photo'); }
-  var PHOTO = { bg: '', z: 1, fx: 0.5, fy: 0.25, box: '#FFFFFF', sub: '#E1251B', ypos: 0.9, bang: true };
+  var PHOTO = { bg: '', z: 1, fx: 0.5, fy: 0.25, box: '#FFFFFF', sub: '#E1251B', ypos: 0.9, bang: true, gap: 0,
+    who: 'a confident Nigerian woman in her 30s with a tall golden-blonde afro puff, wearing a navy blazer over a light blue shirt and small stud earrings' };
+  var PGAP = [['0', 'None'], ['1', 'Small'], ['2', 'Medium'], ['3', 'Large']], PGAPX = [0, 22, 48, 85];
+  function phGap(car, sl) { var g = sl && sl.pgap !== undefined && sl.pgap !== '' ? +sl.pgap : +phOf(car).gap; return PGAPX[clamp(g || 0, 0, 3)]; }
+  // 📋 a photo prompt for each slide: the same person every time, her expression fitting that slide's message
+  function phPrompt(car, i) {
+    var F = phOf(car), sl = car.slides[i] || {}, msg = String(sl.heading || '').replace(/\*\*/g, '').replace(/^\d+[.)]\s*/, '').trim(), sub = String(sl.body || '').replace(/\*\*/g, '').trim();
+    var mood = sl.kind === 'cover' ? 'Looking straight at the camera with a confident, warm smile, arms folded — an expert about to share important advice.'
+      : sl.kind === 'end' ? 'Smiling warmly at the camera, friendly and encouraging, as if inviting people to save and share.'
+      : 'Her facial expression, hand gesture and body language clearly show the feeling of this message: "' + msg + '"' + (sub ? ' (' + sub.slice(0, 160) + ')' : '') + '. Keep it natural and believable, as if she is explaining this to parents.';
+    return 'Photorealistic portrait photograph, 4:5 portrait (1080×1350). The SAME woman as in every other slide: ' + F.who + '. ' + mood +
+      ' Plain soft grey studio background with gentle even lighting. Her face and shoulders are in the top half of the picture; keep the bottom 45% simple (just her jacket and the background) because text boxes will go there. No text, no logos, no watermark.';
+  }
+  function phPrompts(car) {
+    return 'Make one picture per slide. Use the SAME woman in every picture — after the first one, upload it and say "same woman, same outfit, same hair".\n\n' +
+      car.slides.map(function (x, k) { return 'Slide ' + (k + 1) + ' — ' + (String(x.heading || '').replace(/\*\*/g, '').trim().replace(/[.:!]+$/, '') || KINDS[x.kind] || '') + ':\n' + phPrompt(car, k); }).join('\n\n');
+  }
   var PCOL = [['#FFFFFF', 'White'], ['#057A44', 'Auntie Tobi green'], ['#E1251B', 'Red'], ['#FFB81C', 'Gold'], ['#0F1E36', 'Navy'], ['#111111', 'Black']];
   function phOf(car) { return Object.assign({}, PHOTO, (car.look && car.look.photo) || {}); }
   function phInk(bg) { return hexLum(bg) > 0.6 ? '#111111' : /^#E1251B$/i.test(bg) ? '#FFE9EA' : '#FFFFFF'; }
@@ -788,23 +804,23 @@
     var F = phOf(car), sl = car.slides[i] || { kind: 'tip', heading: '', body: '' }, e = eff(car, sl), shrunk = false;
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
     phBg(ctx, car, sl);
-    var box = sl.pbox || F.box, sub = sl.psub || F.sub, bottom = H * clamp(Number(sl.py || F.ypos) || 0.9, 0.35, 0.97), maxW = W - 220, z, a, b, tot;
+    var gp = phGap(car, sl), box = sl.pbox || F.box, sub = sl.psub || F.sub, bottom = H * clamp(Number(sl.py || F.ypos) || 0.9, 0.35, 0.97), maxW = W - 220, z, a, b, tot;
     if (sl.kind === 'cover') {
       var title = String(sl.heading || '').replace(/\*\*/g, '').trim(); if (F.bang && title && !/(‼️|!!)\s*$/.test(title)) title += ' ‼️';
       for (z = 82; z >= 34; z -= 2) {
         var hz = z * e.hs, bz = z * 1.05 * e.bs; ctx.font = phFont(hz); a = phWrap(ctx, title, maxW); ctx.font = phFont(bz); b = phWrap(ctx, sl.body, maxW);
-        tot = a.length * hz * 1.16 + hz * 0.56 + (b.length ? b.length * bz * 1.16 + bz * 0.56 - 8 : 0); if (tot <= H * 0.5) break; shrunk = true;
+        tot = a.length * hz * 1.16 + hz * 0.56 + (b.length ? b.length * bz * 1.16 + bz * 0.56 + (gp ? gp : -8) : 0); if (tot <= H * 0.5) break; shrunk = true;
       }
       var y = bottom - tot, th = phBlock(ctx, a, y, hz, box, phInk(box), 1.16, false);
-      if (b.length) phBlock(ctx, b, y + th - 8, bz, sub, phInk(sub), 1.16, true);
+      if (b.length) phBlock(ctx, b, y + th + (gp ? gp : -8), bz, sub, phInk(sub), 1.16, true);
     } else {
       var hd = String(sl.heading || '').replace(/\*\*/g, '').trim();
       if (sl.kind === 'tip' && (sl.num ? sl.num === 'on' : car.numbers !== false) && hd && !/^\d+[.)]/.test(hd)) hd = tipNumber(car, i) + '. ' + hd;
       for (z = 60; z >= 28; z -= 2) {
         var hz2 = z * e.hs, bz2 = z * e.bs; ctx.font = phFont(hz2); a = phWrap(ctx, hd, maxW); ctx.font = phFont(bz2); b = phWrap(ctx, sl.body, maxW);
-        tot = a.length * hz2 * 1.22 + b.length * bz2 * 1.22; if (tot <= H * 0.5) break; shrunk = true;
+        tot = a.length * hz2 * 1.22 + b.length * bz2 * 1.22 + (a.length && b.length ? gp : 0); if (tot <= H * 0.5) break; shrunk = true;
       }
-      var y2 = bottom - tot, ink = phInk(box); y2 += phStickers(ctx, a, y2, hz2, box, ink, 1.22); phStickers(ctx, b, y2, bz2, box, ink, 1.22);
+      var y2 = bottom - tot, ink = phInk(box); y2 += phStickers(ctx, a, y2, hz2, box, ink, 1.22) + (a.length && b.length ? gp : 0); phStickers(ctx, b, y2, bz2, box, ink, 1.22);
     }
     if (car.handle === true) { ctx.font = '600 26px "DM Sans", Arial'; ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 8; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.fillText('@auntietobi_uk', W / 2, H - 30); ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; }
     ctx.restore();
@@ -1169,6 +1185,7 @@
           (sl.kind === 'tip' ? '<div class="f2"><div><label>Number</label><select data-f="num"><option value="">Same as carousel</option><option value="on"' + (sl.num === 'on' ? ' selected' : '') + '>Show</option><option value="off"' + (sl.num === 'off' ? ' selected' : '') + '>Hide</option></select></div>' +
             (isPurple(car) ? '<div><label>Number circle sits</label><select data-f="npos"><option value="">Same as carousel</option>' + NPOS.map(function (o) { return '<option value="' + o[0] + '"' + (sl.npos === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' : '<div></div>') + '</div>' : '') +
           (isPhoto(car) ? '<div class="f2"><div><label>' + (sl.kind === 'cover' ? 'Title box colour' : 'Box colour') + '</label><select data-f="pbox"><option value="">Same as carousel</option>' + PCOL.map(function (c) { return '<option value="' + c[0] + '"' + (sl.pbox === c[0] ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select></div>' +
+            '</div><div class="f2"><div><label>Gap between heading and message</label><select data-f="pgap"><option value="">Same as carousel</option>' + PGAP.map(function (g) { return '<option value="' + g[0] + '"' + (sl.pgap === g[0] ? ' selected' : '') + '>' + g[1] + '</option>'; }).join('') + '</select></div><div><label>Photo prompt</label><button class="btn ghost sm" data-phpr style="width:100%">📋 Copy this slide’s prompt</button></div>' +
             (sl.kind === 'cover' ? '<div><label>Subtitle box colour</label><select data-f="psub"><option value="">Same as carousel</option>' + PCOL.map(function (c) { return '<option value="' + c[0] + '"' + (sl.psub === c[0] ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select></div>' : '<div></div>') + '</div>' : '') +
           (isWalk(car) ? '<label class="chk" style="margin-top:6px"><input type="checkbox" data-nowalk' + (sl.nowalk ? ' checked' : '') + '> 🚶 No walker on this slide</label>' : '') +
           (isFtl(car) && sl.kind !== 'ftlt' ? '<div class="f2"><div><label>Heading letters</label><select data-f="caps"><option value="">Same as carousel</option><option value="up"' + (sl.caps === 'up' ? ' selected' : '') + '>ABC All capitals</option><option value="as"' + (sl.caps === 'as' ? ' selected' : '') + '>Abc As I type it</option><option value="title"' + (sl.caps === 'title' ? ' selected' : '') + '>Abc Def Each Word</option></select></div><div></div></div>' : '') +
@@ -1626,11 +1643,14 @@
       var rng = function (k, l, mn, mx, val) { return '<div><div class="lbl">' + l + '</div><input type="range" data-prng="' + k + '" min="' + mn + '" max="' + mx + '" step="1" value="' + val + '"></div>'; };
       return '<details class="lsec" open style="margin-top:8px"><summary>📸 Photo</summary><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><label class="btn ghost sm" style="margin:0;cursor:pointer">📷 ' + (F.bg ? 'Change' : 'Upload') + ' the photo<input type="file" accept="image/*" id="phUp" hidden></label>' + (F.bg ? '<button class="btn ghost sm" id="phX">✕ Remove photo</button>' : '') + '</div>' +
           (F.bg ? '<div class="f2" style="margin-top:6px">' + rng('z', 'Zoom', 100, 250, Math.round(F.z * 100)) + rng('fy', 'Move up / down', 0, 100, Math.round(F.fy * 100)) + '</div><div class="f2">' + rng('fx', 'Move left / right', 0, 100, Math.round(F.fx * 100)) + '<div></div></div>' : '') +
-          '<div class="muted" style="font-size:12.5px;margin-top:6px">The same photo goes on every slide. For a different photo on one slide, open 🖼️ Picture on that slide.</div></details>' +
+          '<div class="muted" style="font-size:12.5px;margin-top:6px">The same photo goes on every slide. For a different photo on one slide, open 🖼️ Picture on that slide.</div>' +
+          '<div style="margin-top:10px"><div class="lbl">✨ Photo prompts — the same person on every slide</div><textarea id="phWho" rows="2" style="margin-top:4px" placeholder="Describe the person">' + X.esc(F.who) + '</textarea>' +
+          '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><button class="btn primary sm" id="phPr">📋 Copy all photo prompts (' + car.slides.length + ')</button></div>' +
+          '<div class="muted" style="font-size:12.5px;margin-top:4px">One prompt per slide, written from that slide’s message — paste into ChatGPT, Gemini or Dzine. Each slide also has its own 📋 Copy prompt.</div></div></details>' +
         '<details class="lsec" open><summary>🎨 Boxes</summary>' + cols('box', 'Text boxes (cover title and every point)') + cols('sub', 'Cover subtitle box') +
           '<div class="muted" style="font-size:12.5px;margin-top:6px">The writing turns black or white by itself so it’s always easy to read. Each slide can have its own colours in ⚙️ Slide options.</div>' +
           '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:8px"><label class="chk"><input type="checkbox" data-pchk="bang"' + (F.bang ? ' checked' : '') + '> ‼️ after the cover title</label><label class="chk"><input type="checkbox" id="teN"' + (car.numbers !== false ? ' checked' : '') + '> Number the points (1. 2. 3.)</label><label class="chk"><input type="checkbox" id="teH"' + (car.handle === true ? ' checked' : '') + '> Show @auntietobi_uk</label></div>' +
-          '<div class="f2" style="margin-top:6px">' + rng('ypos', 'Words up / down', 40, 97, Math.round(F.ypos * 100)) + '<div></div></div>' +
+          '<div class="f2" style="margin-top:6px">' + rng('ypos', 'Words up / down', 40, 97, Math.round(F.ypos * 100)) + '<div><div class="lbl">Gap between heading and message</div><div class="chipbar" style="margin-top:4px">' + PGAP.map(function (g) { return '<button class="chip" data-pgap="' + g[0] + '" aria-pressed="' + (String(+F.gap || 0) === g[0]) + '">' + g[1] + '</button>'; }).join('') + '</div></div></div>' +
           '<div class="f2"><div><div class="lbl">Heading size <span id="teHsV"></span></div><input type="range" id="teHs" min="60" max="140" step="5"></div><div><div class="lbl">Body text size <span id="teBsV"></span></div><input type="range" id="teBs" min="60" max="140" step="5"></div></div></details>';
     }
     function bindPhoto(q, qa) {
@@ -1639,6 +1659,9 @@
       qa('[data-pcolx]').forEach(function (x) { x.oninput = function () { F[x.dataset.pcolx] = x.value.toUpperCase(); re(); }; x.onchange = function () { re(true); }; });
       qa('[data-pchk]').forEach(function (x) { x.onchange = function () { F[x.dataset.pchk] = x.checked; re(); }; });
       qa('[data-prng]').forEach(function (x) { x.oninput = function () { F[x.dataset.prng] = Number(x.value) / 100; re(); }; });
+      qa('[data-pgap]').forEach(function (b) { b.onclick = function () { F.gap = +b.dataset.pgap; re(true); }; });
+      q('#phWho').oninput = function () { F.who = this.value.trim() || PHOTO.who; car.look.photo = F; mark(); };
+      q('#phPr').onclick = function () { copyText(phPrompts(car), 'Copied ' + car.slides.length + ' photo prompts'); };
       q('#phUp').onchange = function () { var f = this.files && this.files[0]; if (!f) return; q('#teLookMsg').textContent = 'Adding the photo…'; shrinkPic(f, 2000).then(function (d) { return X.api('img', { dataUrl: d }); }).then(function (r) { F.bg = r.id; F.z = 1; F.fx = 0.5; F.fy = 0.25; picImg(r.id); re(true); paintThumbs(); setTimeout(function () { paint(); paintThumbs(); }, 600); }).catch(function (e) { X.toast(e.message || 'Couldn’t add the photo'); q('#teLookMsg').textContent = ''; }); };
       if (q('#phX')) q('#phX').onclick = function () { F.bg = ''; re(true); paintThumbs(); };
     }
@@ -1772,6 +1795,7 @@
             mark(); paint(); paintThumbs();
           });
         });
+        if (el.querySelector('[data-phpr]')) el.querySelector('[data-phpr]').onclick = function (e) { e.preventDefault(); copyText(phPrompt(car, i), 'Photo prompt for slide ' + (i + 1) + ' copied'); };
         if (el.querySelector('[data-nowalk]')) el.querySelector('[data-nowalk]').onchange = function () { car.slides[i].nowalk = this.checked; mark(); paint(); paintThumbs(); };
         if (el.querySelector('[data-emoup]')) el.querySelector('[data-emoup]').onchange = function () { var f = this.files && this.files[0]; if (!f) return; pngShrink(f, 500).then(function (d) { return X.api('img', { dataUrl: d }); }).then(function (r) { car.slides[i].emoImg = r.id; mark(); paintSlides(); setSel(i); paintThumbs(); }).catch(function (e) { X.toast(e.message || 'Couldn’t add that picture'); }); };
         if (el.querySelector('[data-emodel]')) el.querySelector('[data-emodel]').onclick = function () { delete car.slides[i].emoImg; mark(); paintSlides(); setSel(i); paintThumbs(); };
