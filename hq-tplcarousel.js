@@ -998,7 +998,10 @@
     for (var i = 0; i < car.slides.length; i++) out.push(new File([await pngOf(car, i)], base + '-slide-' + pad(i + 1) + '.png', { type: 'image/png' }));
     return out;
   }
-  function phoneShare(files) { try { return !!(navigator.canShare && window.matchMedia('(pointer: coarse)').matches && navigator.canShare({ files: files })); } catch (e) { return false; } }
+  // iPhone/iPad: the share sheet has "Save Images". Android (e.g. Samsung) only offers Copy/apps there, so save straight to the phone instead.
+  function isIOS() { return /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+  function phoneShare(files) { try { return !!(isIOS() && navigator.canShare && navigator.canShare({ files: files })); } catch (e) { return false; } }
+  function savedMsg(n, what) { return /Android/i.test(navigator.userAgent) ? '✅ ' + n + ' ' + what + ' saved to your phone — find them in Gallery (Downloads album) or My Files → Downloads. If only one arrived, tap “Allow” when Chrome asks about multiple downloads, then press again.' : '✅ ' + n + ' ' + what + ' saved to Downloads. If only one arrived, click “Allow” when the browser asks about multiple downloads, then press again.'; }
   async function downloadEach(files) { for (var i = 0; i < files.length; i++) { download(files[i], files[i].name); await new Promise(function (ok) { setTimeout(ok, 450); }); } }
   async function exportZip(car) {
     await fontsReady(); var zip = new JSZip();
@@ -1865,7 +1868,7 @@
         await fontsReady(); await loadPics(car); var files = [], base = slug(car.title);
         for (var i = 0; i < car.slides.length; i++) { b.textContent = '🎬 Making slide ' + (i + 1) + ' of ' + car.slides.length + '…'; var bl = await wkSlideVideo(car, i); files.push(new File([bl], base + '-slide-' + pad(i + 1) + '.mp4', { type: 'video/mp4' })); }
         if (phoneShare(files)) { try { await navigator.share({ files: files }); m.textContent = '✅ Tap “Save” to keep them, then post them together as one carousel.'; } catch (e) { if (e && e.name === 'NotAllowedError') { b.disabled = false; b.textContent = '📲 Tap to save ' + files.length + ' videos'; b.onclick = function () { navigator.share({ files: files }).catch(function () { downloadEach(files); }); }; return; } if (e && e.name !== 'AbortError') await downloadEach(files); } }
-        else { await downloadEach(files); m.textContent = '✅ ' + files.length + ' videos saved — post them together as one Instagram carousel.'; }
+        else { await downloadEach(files); m.textContent = savedMsg(files.length, 'videos') + ' Post them together as one Instagram carousel.'; }
       } catch (x) { X.toast(x.message || 'Couldn’t make the videos'); }
       b.disabled = false; b.textContent = lab;
     };
@@ -1879,7 +1882,7 @@
         if (phoneShare(files)) {
           try { await navigator.share({ files: files }); m.textContent = '✅ Tap “Save Images” to put them in Photos.'; }
           catch (e) { if (e && e.name === 'NotAllowedError') { ready = files; b.disabled = false; b.textContent = '📲 Tap to save ' + files.length + ' pictures'; return; } if (e && e.name !== 'AbortError') await downloadEach(files); }
-        } else { await downloadEach(files); m.textContent = '✅ ' + files.length + ' pictures saved to Downloads. If only one arrived, click “Allow” when the browser asks about multiple downloads, then press again.'; }
+        } else { await downloadEach(files); m.textContent = savedMsg(files.length, 'pictures'); }
       } catch (x) { X.toast('Couldn’t make the pictures — please try again'); }
       b.disabled = false; b.textContent = lab;
     };
