@@ -11,7 +11,7 @@
   'use strict';
   var W = 1080, H = 1920, FPS = 30, X = null;
   var BANKS = {
-    lifeuk: { name: 'Life in the UK Test', file: '/lifeuk-q.json?v=20261127a', link: 'auntietobi.co.uk/life-in-uk-test', h1: 'QUIZ: Life in the UK Test', h2: 'Can you get {n}/{n}?', cover: 'Life in the UK Test Quiz', say: 'Life in the UK test quiz. Can you get {n} out of {n}?',
+    lifeuk: { name: 'Life in the UK Test', file: '/lifeuk-q.json?v=20261128a', link: 'auntietobi.co.uk/life-in-uk-test', h1: 'QUIZ: Life in the UK Test', h2: 'Can you get {n}/{n}?', cover: 'Life in the UK Test Quiz', say: 'Life in the UK test quiz. Can you get {n} out of {n}?',
       groups: [[0, 'All chapters, mixed'], [1, '1. Values and principles'], [2, '2. What is the UK?'], [3, '3. History'], [4, '4. Modern society'], [5, '5. Government and law']] },
     drive: { name: 'Driving Theory Test', file: '/drive-q.json?v=20261127a', link: 'auntietobi.co.uk/driving-theory-test', h1: 'QUIZ: UK Driving Theory', h2: 'Can you get {n}/{n}?', cover: 'UK Driving Theory Quiz', say: 'UK driving theory test quiz. Can you get {n} out of {n}?',
       groups: [[0, 'All topics, mixed'], [1, 'Alertness'], [2, 'Attitude'], [3, 'Safety and your vehicle'], [4, 'Safety margins'], [5, 'Hazard awareness'], [6, 'Vulnerable road users'], [7, 'Other types of vehicle'], [8, 'Vehicle handling'], [9, 'Motorway rules'], [10, 'Rules of the road'], [12, 'Essential documents'], [13, 'Incidents and emergencies'], [14, 'Vehicle loading']] },
