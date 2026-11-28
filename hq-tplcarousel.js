@@ -191,7 +191,8 @@
     var wkw = isWalk(car) && wkOf(car).walker && WKF[wkOf(car).walker] ? [WKF[wkOf(car).walker].p.catch(function () {})] : [];
     var stick = car.slides.filter(function (sl) { return sl.emoImg; }).map(function (sl) { return new Promise(function (ok) { if (picImg(sl.emoImg)) return ok(); var p = PIC[sl.emoImg]; p.im.addEventListener('load', ok, { once: true }); p.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); }); });
     var wbg = isWalk(car) && wkOf(car).bg ? [new Promise(function (ok) { if (picImg(wkOf(car).bg)) return ok(); var p = PIC[wkOf(car).bg]; p.im.addEventListener('load', ok, { once: true }); p.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); })] : [];
-    return Promise.all([bgp].concat(stick).concat(wkw).concat(wbg).concat(car.slides.map(function (sl) { return new Promise(function (ok) { if (!sl.pic || !sl.pic.img) return ok(); var im = picImg(sl.pic.img); if (im) return ok(); var p = PIC[sl.pic.img]; p.im.addEventListener('load', ok, { once: true }); p.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); }); }))); }
+    var phb = isPhoto(car) && phOf(car).bg ? [new Promise(function (ok) { if (picImg(phOf(car).bg)) return ok(); var p = PIC[phOf(car).bg]; p.im.addEventListener('load', ok, { once: true }); p.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); })] : [];
+    return Promise.all([bgp].concat(stick).concat(wkw).concat(wbg).concat(phb).concat(car.slides.map(function (sl) { return new Promise(function (ok) { if (!sl.pic || !sl.pic.img) return ok(); var im = picImg(sl.pic.img); if (im) return ok(); var p = PIC[sl.pic.img]; p.im.addEventListener('load', ok, { once: true }); p.im.addEventListener('error', ok, { once: true }); setTimeout(ok, 15000); }); }))); }
   function picDraw(ctx, pic, x, y, w, h, radius) {
     var im = picImg(pic.img); if (!im) return;
     var z = clamp(Number(pic.z) || 1, 1, 2.5), s = Math.max(w / im.naturalWidth, h / im.naturalHeight) * z, dw = im.naturalWidth * s, dh = im.naturalHeight * s;
@@ -218,6 +219,7 @@
     { id: 'purple', name: '💜 Bold Purple Pro', purple: true },
     { id: 'ftl', name: '🧵 Follow the line', ftl: true },
     { id: 'walk', name: '🚶 Walk-through', walk: true },
+    { id: 'photo', name: '📸 Photo + text boxes', photo: true },
     { id: 'green', name: 'Auntie Tobi Green', spec: baseSpec({ bg: { type: 'gradient', c1: '#057A44', c2: '#03532E' }, ink: '#FFFFFF', sub: '#E6F4EC', accent: '#FFB81C', hl: '#FFB81C', hlInk: '#0F1E36', font: { head: 'poppins' }, hlStyle: 'bar', shapes: 'circles' }) },
     { id: 'yellow', name: 'Bold Yellow', spec: baseSpec({ bg: { c1: '#FFC928' }, ink: '#111111', sub: '#2B2B2B', accent: '#111111', hl: '#FFFFFF', hlInk: '#111111', font: { head: 'archivo', caps: true }, hlStyle: 'bar', frame: { on: true, color: '#111111', width: 8, inset: 30, radius: 18 }, numbers: 'pill', shapes: 'dots' }) },
     { id: 'cream', name: 'Soft Cream', spec: baseSpec({ bg: { c1: '#F7F1E6' }, ink: '#2B2118', sub: '#5C4F42', accent: '#C2652A', hl: '#C2652A', font: { head: 'playfair', body: 'dmsans' }, hlStyle: 'color', align: 'center', shapes: 'blob', numbers: 'big' }) },
@@ -745,6 +747,88 @@
     return new Blob([mux.target.buffer], { type: 'video/mp4' });
   }
   // 👉 the Swipe sign — one setting for every look: cover only / every slide but the last / off
+
+  // ── 📸 Photo + text boxes: one person photo on every slide; words sit in "sticker" boxes (the cover: a title box + a coloured subtitle box) ──
+  function isPhoto(car) { return !!(car.look && car.look.kind === 'photo'); }
+  var PHOTO = { bg: '', z: 1, fx: 0.5, fy: 0.25, box: '#FFFFFF', sub: '#E1251B', ypos: 0.9, bang: true };
+  var PCOL = [['#FFFFFF', 'White'], ['#057A44', 'Auntie Tobi green'], ['#E1251B', 'Red'], ['#FFB81C', 'Gold'], ['#0F1E36', 'Navy'], ['#111111', 'Black']];
+  function phOf(car) { return Object.assign({}, PHOTO, (car.look && car.look.photo) || {}); }
+  function phInk(bg) { return hexLum(bg) > 0.6 ? '#111111' : /^#E1251B$/i.test(bg) ? '#FFE9EA' : '#FFFFFF'; }
+  function phFont(z) { return '700 ' + Math.round(z) + 'px Poppins, "Inter Tight", Inter, Arial, sans-serif'; }
+  function phWrap(ctx, text, maxW) {
+    var out = []; String(text || '').replace(/\*\*/g, '').split('\n').forEach(function (p) {
+      var cur = ''; p.split(/\s+/).filter(Boolean).forEach(function (w) { var t = cur ? cur + ' ' + w : w; if (cur && ctx.measureText(t).width > maxW) { out.push(cur); cur = w; } else cur = t; });
+      if (cur) out.push(cur);
+    });
+    return out;
+  }
+  function phBg(ctx, car, sl) {
+    var F = phOf(car), bp = boxPic(sl);
+    if (bp) { picDraw(ctx, bp, 0, 0, W, H, 0); return; }   // this slide has its own photo
+    if (F.bg && picImg(F.bg)) { picDraw(ctx, { img: F.bg, z: F.z, fx: F.fx, fy: F.fy }, 0, 0, W, H, 0); return; }
+    var g = ctx.createRadialGradient(W / 2, H * 0.32, 60, W / 2, H * 0.5, H * 0.85); g.addColorStop(0, '#A3A6AA'); g.addColorStop(1, '#575A5E'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.font = '600 38px Poppins, Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('📷 Add your photo in 🎨 Look', W / 2, H * 0.3);
+  }
+  // one rounded box behind each line (like Instagram's text background)
+  function phStickers(ctx, lines, y, z, bg, ink, lh) {
+    ctx.font = phFont(z); var h = z * lh, padX = z * 0.42, r = z * 0.3;
+    ctx.fillStyle = bg; lines.forEach(function (t, k) { var w = Math.min(W - 40, ctx.measureText(t).width + padX * 2); rrect(ctx, (W - w) / 2, y + k * h, w, h + 1, r); ctx.fill(); });
+    ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; lines.forEach(function (t, k) { ctx.fillText(t, W / 2, y + k * h + h / 2 + z * 0.05); });
+    return lines.length * h;
+  }
+  // one solid box round all the lines (the cover)
+  function phBlock(ctx, lines, y, z, bg, ink, lh, fullW) {
+    ctx.font = phFont(z); var h = z * lh, padY = z * 0.28, mw = 0; lines.forEach(function (t) { mw = Math.max(mw, ctx.measureText(t).width); });
+    var bw = fullW ? W - 90 : Math.min(W - 90, mw + z * 1.1), bh = lines.length * h + padY * 2;
+    ctx.fillStyle = bg; rrect(ctx, (W - bw) / 2, y, bw, bh, 24); ctx.fill();
+    ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; lines.forEach(function (t, k) { ctx.fillText(t, W / 2, y + padY + k * h + h / 2 + z * 0.05); });
+    return bh;
+  }
+  function drawPhoto(ctx, car, i) {
+    var F = phOf(car), sl = car.slides[i] || { kind: 'tip', heading: '', body: '' }, e = eff(car, sl), shrunk = false;
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    phBg(ctx, car, sl);
+    var box = sl.pbox || F.box, sub = sl.psub || F.sub, bottom = H * clamp(Number(sl.py || F.ypos) || 0.9, 0.35, 0.97), maxW = W - 220, z, a, b, tot;
+    if (sl.kind === 'cover') {
+      var title = String(sl.heading || '').replace(/\*\*/g, '').trim(); if (F.bang && title && !/(‼️|!!)\s*$/.test(title)) title += ' ‼️';
+      for (z = 82; z >= 34; z -= 2) {
+        var hz = z * e.hs, bz = z * 1.05 * e.bs; ctx.font = phFont(hz); a = phWrap(ctx, title, maxW); ctx.font = phFont(bz); b = phWrap(ctx, sl.body, maxW);
+        tot = a.length * hz * 1.16 + hz * 0.56 + (b.length ? b.length * bz * 1.16 + bz * 0.56 - 8 : 0); if (tot <= H * 0.5) break; shrunk = true;
+      }
+      var y = bottom - tot, th = phBlock(ctx, a, y, hz, box, phInk(box), 1.16, false);
+      if (b.length) phBlock(ctx, b, y + th - 8, bz, sub, phInk(sub), 1.16, true);
+    } else {
+      var hd = String(sl.heading || '').replace(/\*\*/g, '').trim();
+      if (sl.kind === 'tip' && (sl.num ? sl.num === 'on' : car.numbers !== false) && hd && !/^\d+[.)]/.test(hd)) hd = tipNumber(car, i) + '. ' + hd;
+      for (z = 60; z >= 28; z -= 2) {
+        var hz2 = z * e.hs, bz2 = z * e.bs; ctx.font = phFont(hz2); a = phWrap(ctx, hd, maxW); ctx.font = phFont(bz2); b = phWrap(ctx, sl.body, maxW);
+        tot = a.length * hz2 * 1.22 + b.length * bz2 * 1.22; if (tot <= H * 0.5) break; shrunk = true;
+      }
+      var y2 = bottom - tot, ink = phInk(box); y2 += phStickers(ctx, a, y2, hz2, box, ink, 1.22); phStickers(ctx, b, y2, bz2, box, ink, 1.22);
+    }
+    if (car.handle === true) { ctx.font = '600 26px "DM Sans", Arial'; ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 8; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.fillText('@auntietobi_uk', W / 2, H - 30); ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; }
+    ctx.restore();
+    return { over: false, shrunk: shrunk && z < 34 };
+  }
+  // pasted from ChatGPT: the lines before "1." are the cover (title, then subtitle); each number is a slide (heading + the lines under it)
+  function photoPaste(text, addEnd) {
+    var lines = String(text || '').split('\n').map(function (x) { return x.replace(/\*\*/g, '').replace(/^#+\s*/, '').trim(); }).filter(Boolean), num = /^(\d+)[.)]\s*/;
+    var first = lines.findIndex(function (x) { return num.test(x); }); if (first < 0) return null;
+    var pre = lines.slice(0, first), out = [{ kind: 'cover', heading: pre[0] || 'Your title here', body: pre.slice(1).join(' '), align: 'center' }];
+    lines.slice(first).forEach(function (ln) {
+      if (num.test(ln)) { var p = ln.replace(num, '').split('|'); out.push({ kind: 'tip', heading: p[0].trim(), body: p.slice(1).join('|').trim(), align: 'center' }); }
+      else { var t = out[out.length - 1]; t.body = t.body ? t.body + ' ' + ln : ln; }
+    });
+    if (addEnd) out.push(endSlide());
+    return out;
+  }
+  function phStarter(slides) {
+    return { title: slides ? String(slides[0].heading).slice(0, 140) : 'Photo carousel', numbers: true, handle: false, swipe: false, swipeMode: 'off', caption: '', hashtags: '#NigeriansInUK #AuntieTobi',
+      look: { kind: 'photo', id: 'photo', name: 'Photo + text boxes', photo: Object.assign({}, PHOTO) },
+      slides: slides || [{ kind: 'cover', heading: '10 Dangerous Things Teenagers Have Started Considering Normal', body: 'For Parents Raising Children Aged 11–16.', align: 'center' },
+        { kind: 'tip', heading: 'Disrespecting Adults and Calling It Confidence.', body: 'Some teenagers have started believing that being outspoken means they can speak rudely to parents, teachers and other adults without consequences.', align: 'center' },
+        { kind: 'tip', heading: 'Lying to Parents to Protect Their Freedom.', body: 'Hiding important information, giving false explanations and deliberately keeping parents in the dark are becoming normalised among some teenagers.', align: 'center' }] };
+  }
   function swipeOf(car) {
     var m = car.swipeMode || (isSpec(car) ? (car.look.spec.swipe ? 'all' : 'off') : (car.swipe !== false ? 'cover' : 'off'));
     return { mode: m, style: car.swipeStyle || 'text', pos: car.swipePos || 'br' };
@@ -784,7 +868,7 @@
     // the looks' own swipe text is switched off — drawSwipe draws the one the user chose
     var car = Object.assign({}, car0, { swipe: false });
     if (isSpec(car0)) car.look = Object.assign({}, car0.look, { spec: Object.assign({}, car0.look.spec, { swipe: false }) });
-    var sl0 = car.slides[i], r = isWalk(car) ? drawWalk(ctx, car, i, wt) : isFtl(car) ? drawFtl(ctx, car, i) : sl0 && NEWK[sl0.kind] ? drawLayout(ctx, car, i) : isPurple(car) ? drawPurple(ctx, car, i) : isSpec(car) ? drawSpec(ctx, car, i) : drawWhite(ctx, car, i), sl = sl0;
+    var sl0 = car.slides[i], r = isPhoto(car) ? drawPhoto(ctx, car, i) : isWalk(car) ? drawWalk(ctx, car, i, wt) : isFtl(car) ? drawFtl(ctx, car, i) : sl0 && NEWK[sl0.kind] ? drawLayout(ctx, car, i) : isPurple(car) ? drawPurple(ctx, car, i) : isSpec(car) ? drawSpec(ctx, car, i) : drawWhite(ctx, car, i), sl = sl0;
     drawSwipe(ctx, car0, i);
     if (sl && sl.deco && sl.deco.length) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); sl.deco.forEach(function (d) { drawDeco(ctx, d); }); ctx.restore(); }
     return r;
@@ -961,11 +1045,11 @@
         '<label for="tnU">🔗 Link <span class="muted" style="font-weight:400">(optional)</span></label><input id="tnU" placeholder="https://">' +
         '<label for="tnN" style="margin-top:10px">Your notes or idea</label><textarea id="tnN" rows="7" placeholder="e.g. 5 small ways to make life in the UK feel less stressful"></textarea>' +
         '<div class="f2" style="margin-top:10px"><div><label for="tnC">Number of slides</label><select id="tnC">' + [5, 6, 7, 8, 9, 10].map(function (n) { return '<option' + (n === 7 ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></div><div></div></div></div>' +
-      '<div id="tnPaste" class="hidden"><p class="muted" style="margin:0 0 10px">One slide per line. The first line is the cover. Add body text after a <b>|</b> and put green words in <b>**double stars**</b>.</p>' +
+      '<div id="tnPaste" class="hidden"><p class="muted" style="margin:0 0 10px">One slide per line. The first line is the cover. Add body text after a <b>|</b> and put green words in <b>**double stars**</b>. For <b>📸 Photo + text boxes</b>, paste a numbered list straight from ChatGPT (title and subtitle first, then 1., 2., 3.…) and press that button.</p>' +
         '<textarea id="tnP" rows="9" placeholder="5 small ways to make life in the UK feel **less stressful!**\nPlan your **week on Sunday** | Check your shifts, bills and appointments for the week ahead.\nSet up **direct debits** | Never miss a bill again.\n..."></textarea></div>' +
       '<label class="chk" style="margin-top:10px"><input type="checkbox" id="tnE" checked> Add a “Save &amp; share” last slide</label>' +
       '<div class="err hidden" id="tnErr"></div>' +
-      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn ghost" id="tnX">Cancel</button><button class="btn ghost" id="tnFtl">🧵 Follow the line</button><button class="btn ghost" id="tnWalk">🚶 Walk-through</button><button class="btn ghost" id="tnBlank">Start blank</button><button class="btn primary" id="tnGo">✨ Write the slides</button></div>');
+      '<div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn ghost" id="tnX">Cancel</button><button class="btn ghost" id="tnFtl">🧵 Follow the line</button><button class="btn ghost" id="tnPh">📸 Photo + text boxes</button><button class="btn ghost" id="tnWalk">🚶 Walk-through</button><button class="btn ghost" id="tnBlank">Start blank</button><button class="btn primary" id="tnGo">✨ Write the slides</button></div>');
     var mode = 'ai', $ = function (q) { return s.querySelector(q); };
     Array.prototype.forEach.call(s.querySelectorAll('#tnTab [data-v]'), function (b) {
       b.onclick = function () {
@@ -978,6 +1062,7 @@
     $('#tnX').onclick = function () { s.remove(); };
     $('#tnFtl').onclick = function () { s.remove(); editor(ftlStarter(), true); };
     $('#tnWalk').onclick = function () { s.remove(); editor(wkStarter(), true); };
+    $('#tnPh').onclick = function () { var t = $('#tnP').value.trim(), sl = t ? (photoPaste(t, $('#tnE').checked) || fromPaste(t, $('#tnE').checked)) : null; s.remove(); editor(phStarter(sl && sl.length ? sl : null), true); };
     $('#tnBlank').onclick = function () {
       s.remove();
       var slides = [{ kind: 'cover', heading: 'Your hook goes **here!**', body: '', align: 'center' }, { kind: 'tip', heading: 'First **tip**', body: 'A short explanation of the tip.', align: 'left' }];
@@ -1083,6 +1168,8 @@
             '<div><label>Words side to side</label><select data-f="hpos"><option value="">Same as carousel</option>' + [['auto', 'Away from the person'], ['left', 'Left'], ['center', 'Centre'], ['right', 'Right']].map(function (o) { return '<option value="' + o[0] + '"' + (sl.hpos === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div></div>' : '') +
           (sl.kind === 'tip' ? '<div class="f2"><div><label>Number</label><select data-f="num"><option value="">Same as carousel</option><option value="on"' + (sl.num === 'on' ? ' selected' : '') + '>Show</option><option value="off"' + (sl.num === 'off' ? ' selected' : '') + '>Hide</option></select></div>' +
             (isPurple(car) ? '<div><label>Number circle sits</label><select data-f="npos"><option value="">Same as carousel</option>' + NPOS.map(function (o) { return '<option value="' + o[0] + '"' + (sl.npos === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' : '<div></div>') + '</div>' : '') +
+          (isPhoto(car) ? '<div class="f2"><div><label>' + (sl.kind === 'cover' ? 'Title box colour' : 'Box colour') + '</label><select data-f="pbox"><option value="">Same as carousel</option>' + PCOL.map(function (c) { return '<option value="' + c[0] + '"' + (sl.pbox === c[0] ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select></div>' +
+            (sl.kind === 'cover' ? '<div><label>Subtitle box colour</label><select data-f="psub"><option value="">Same as carousel</option>' + PCOL.map(function (c) { return '<option value="' + c[0] + '"' + (sl.psub === c[0] ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select></div>' : '<div></div>') + '</div>' : '') +
           (isWalk(car) ? '<label class="chk" style="margin-top:6px"><input type="checkbox" data-nowalk' + (sl.nowalk ? ' checked' : '') + '> 🚶 No walker on this slide</label>' : '') +
           (isFtl(car) && sl.kind !== 'ftlt' ? '<div class="f2"><div><label>Heading letters</label><select data-f="caps"><option value="">Same as carousel</option><option value="up"' + (sl.caps === 'up' ? ' selected' : '') + '>ABC All capitals</option><option value="as"' + (sl.caps === 'as' ? ' selected' : '') + '>Abc As I type it</option><option value="title"' + (sl.caps === 'title' ? ' selected' : '') + '>Abc Def Each Word</option></select></div><div></div></div>' : '') +
           '<div class="f2"><div><label>Heading size <span class="muted" data-pv="hs">' + pct(sl.hs) + '</span></label><input type="range" data-f="hs" min="50" max="160" step="5" value="' + Math.round((sl.hs || 1) * 100) + '"></div>' +
@@ -1090,7 +1177,7 @@
           '<button class="btn link" data-reset style="margin-top:4px">↺ Reset this slide’s options</button></details>' + picHtml(sl, i) + decoHtml(sl, i) + '</div>';
     }
     // ── 🎨 the look of the whole carousel ──
-    function sw(l) { var s = l.spec; if (l.purple) return 'linear-gradient(135deg,#fff 0 55%,#4B14A6 55%)'; if (l.ftl) return 'linear-gradient(135deg,#F2C6C9 0 55%,#5B4A8A 55%)'; if (l.walk) return 'linear-gradient(180deg,#9DB8C8 0 60%,#B9A27E 60%)'; return s ? 'linear-gradient(135deg,' + s.bg.c1 + ' 0 55%,' + s.accent + ' 55%)' : 'linear-gradient(135deg,#fff 0 55%,#057A44 55%)'; }
+    function sw(l) { var s = l.spec; if (l.purple) return 'linear-gradient(135deg,#fff 0 55%,#4B14A6 55%)'; if (l.ftl) return 'linear-gradient(135deg,#F2C6C9 0 55%,#5B4A8A 55%)'; if (l.walk) return 'linear-gradient(180deg,#9DB8C8 0 60%,#B9A27E 60%)'; if (l.photo) return 'linear-gradient(135deg,#8A8D91 0 55%,#E1251B 55%)'; return s ? 'linear-gradient(135deg,' + s.bg.c1 + ' 0 55%,' + s.accent + ' 55%)' : 'linear-gradient(135deg,#fff 0 55%,#057A44 55%)'; }
     function whitePanel() {
       return '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:10px"><label class="chk"><input type="checkbox" id="teN"' + (car.numbers !== false ? ' checked' : '') + '> Number the tips (01, 02…)</label>' +
         '<label class="chk"><input type="checkbox" id="teH"' + (car.handle !== false ? ' checked' : '') + '> Show @auntietobi_uk</label>' +
@@ -1135,13 +1222,13 @@
           '<div class="lbl">Where</div>' + g('pos', [['br', '↘ Bottom right'], ['bc', '↓ Bottom centre'], ['mr', '→ Middle right edge']])) +
         '<div class="muted" style="font-size:12.5px;margin-top:4px">Never shows on the last slide.</div></details>';
     }
-    function lookName() { return isSpec(car) ? car.look.name : isPurple(car) ? 'Bold Purple Pro' : isFtl(car) ? 'Follow the line' : isWalk(car) ? 'Walk-through' : 'Auntie Tobi White'; }
+    function lookName() { return isSpec(car) ? car.look.name : isPurple(car) ? 'Bold Purple Pro' : isFtl(car) ? 'Follow the line' : isWalk(car) ? 'Walk-through' : isPhoto(car) ? 'Photo + text boxes' : 'Auntie Tobi White'; }
     function renderLook() {
-      var curId = isSpec(car) ? (car.look.id || '') : isPurple(car) ? 'purple' : isFtl(car) ? 'ftl' : isWalk(car) ? 'walk' : 'white', box = $('#teLook'), opn = {}; Array.prototype.forEach.call(box.querySelectorAll('.lsec'), function (d) { var t = d.querySelector('summary'); if (t) opn[t.textContent.slice(0, 8)] = d.open; });
+      var curId = isSpec(car) ? (car.look.id || '') : isPurple(car) ? 'purple' : isFtl(car) ? 'ftl' : isWalk(car) ? 'walk' : isPhoto(car) ? 'photo' : 'white', box = $('#teLook'), opn = {}; Array.prototype.forEach.call(box.querySelectorAll('.lsec'), function (d) { var t = d.querySelector('summary'); if (t) opn[t.textContent.slice(0, 8)] = d.open; });
       box.innerHTML = '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>🎨 Look</b><span class="muted" style="font-size:13px">— now: <b>' + X.esc(lookName()) + '</b></span></div>' +
         '<div class="chipbar" style="margin-top:8px">' + LOOKS.map(function (l) { return '<button class="chip" data-look="' + l.id + '" aria-pressed="' + (curId === l.id) + '"><i class="lsw" style="background:' + sw(l) + '"></i>' + l.name + '</button>'; }).join('') +
         '<button class="chip" id="teMy">⭐ My styles</button><label class="chip" style="cursor:pointer;margin:0">🎨 Match a style…<input type="file" id="teRef" accept="image/jpeg,image/png,image/webp" multiple hidden></label>' + (isSpec(car) ? '<button class="chip" id="teSaveLook">💾 Save this look</button>' : '') + '</div>' +
-        '<div class="muted" id="teLookMsg" style="font-size:12.5px;margin-top:4px"></div>' + (isSpec(car) ? specPanel() : isPurple(car) ? purplePanel() : isFtl(car) ? ftlPanel() : isWalk(car) ? walkPanel() : whitePanel()) + swipePanel() +
+        '<div class="muted" id="teLookMsg" style="font-size:12.5px;margin-top:4px"></div>' + (isSpec(car) ? specPanel() : isPurple(car) ? purplePanel() : isFtl(car) ? ftlPanel() : isWalk(car) ? walkPanel() : isPhoto(car) ? photoPanel() : whitePanel()) + swipePanel() +
         '<div class="muted" style="font-size:12.5px;margin-top:8px">Put highlighted words in <b>**double stars**</b>. Press Enter in a heading to choose where a line breaks.</div>';
       Array.prototype.forEach.call(box.querySelectorAll('.lsec'), function (d) { var t = d.querySelector('summary'), k = t ? t.textContent.slice(0, 8) : ''; if (opn[k] !== undefined) d.open = opn[k]; });
       bindLook(); var tv = $('#teVid'); if (tv) tv.classList.toggle('hidden', !isWalk(car));
@@ -1149,7 +1236,7 @@
     function lookChanged(full) { mark(); if (full) renderLook(); fontsReady().then(function () { paint(); paintThumbs(); }); paint(); paintThumbs(); }
     function bindLook() {
       var box = $('#teLook'), q = function (s) { return box.querySelector(s); }, qa = function (s) { return Array.prototype.slice.call(box.querySelectorAll(s)); };
-      qa('[data-look]').forEach(function (b) { b.onclick = function () { var l = LOOKS.filter(function (x) { return x.id === b.dataset.look; })[0]; if (l.ftl) { toFtl(); lookChanged(true); paintSlides(); setSel(0); paintThumbs(); return; } if (l.walk) { toWalk(); lookChanged(true); paintSlides(); setSel(0); paintThumbs(); return; } car.look = l.purple ? { kind: 'purple', id: 'purple', name: 'Bold Purple Pro', purple: Object.assign({}, PURPLE) } : l.spec ? { kind: 'spec', id: l.id, name: l.name, styleId: '', spec: JSON.parse(JSON.stringify(l.spec)) } : null; lookChanged(true); paintSlides(); setSel(Math.min(sel, car.slides.length - 1)); }; });
+      qa('[data-look]').forEach(function (b) { b.onclick = function () { var l = LOOKS.filter(function (x) { return x.id === b.dataset.look; })[0]; if (l.ftl) { toFtl(); lookChanged(true); paintSlides(); setSel(0); paintThumbs(); return; } if (l.walk) { toWalk(); lookChanged(true); paintSlides(); setSel(0); paintThumbs(); return; } if (l.photo) { toPhoto(); lookChanged(true); paintSlides(); setSel(0); paintThumbs(); return; } car.look = l.purple ? { kind: 'purple', id: 'purple', name: 'Bold Purple Pro', purple: Object.assign({}, PURPLE) } : l.spec ? { kind: 'spec', id: l.id, name: l.name, styleId: '', spec: JSON.parse(JSON.stringify(l.spec)) } : null; lookChanged(true); paintSlides(); setSel(Math.min(sel, car.slides.length - 1)); }; });
       q('#teMy').onclick = mySheet;
       qa('[data-swp]').forEach(function (b) { b.onclick = function () { var o = swipeOf(car), k = b.dataset.swp; car.swipeMode = o.mode; car.swipeStyle = o.style; car.swipePos = o.pos; car['swipe' + k.charAt(0).toUpperCase() + k.slice(1)] = b.dataset.v; if (k === 'mode') car.swipe = b.dataset.v !== 'off'; lookChanged(true); }; });
       q('#teRef').onchange = async function () {
@@ -1171,6 +1258,7 @@
         if (isPurple(car)) bindPurple(q, qa);
         if (isFtl(car)) bindFtl(q, qa);
         if (isWalk(car)) bindWalk(q, qa);
+        if (isPhoto(car)) bindPhoto(q, qa);
         qa('#teSt [data-v]').forEach(function (b) { b.onclick = function () { car.style = b.dataset.v; qa('#teSt [data-v]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); lookChanged(); }; });
         var sizeUi = function () { q('#teHs').value = Math.round((car.hs || 1) * 100); q('#teBs').value = Math.round((car.bs || 1) * 100); q('#teHsV').textContent = pct(car.hs); q('#teBsV').textContent = pct(car.bs); };
         q('#teHs').oninput = function () { car.hs = Number(this.value) / 100; sizeUi(); lookChanged(); };
@@ -1527,6 +1615,32 @@
       }
       await enc.flush(); enc.close(); mux.finalize(); URL.revokeObjectURL(v.src);
       return new Blob([mux.target.buffer], { type: 'video/mp4' });
+    }
+    function toPhoto() { car.look = { kind: 'photo', id: 'photo', name: 'Photo + text boxes', photo: Object.assign({}, PHOTO, (car.look && car.look.photo) || {}) }; car.swipeMode = 'off'; car.swipe = false; car.slides.forEach(function (x) { if (x.kind === 'tip') x.align = 'center'; }); }
+    function photoPanel() {
+      var F = phOf(car), cols = function (k, l) {
+        return '<div style="margin-top:8px"><div class="lbl">' + l + '</div><div class="row" style="gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px">' +
+          PCOL.map(function (c) { return '<button class="chip" data-pcol="' + k + '" data-v="' + c[0] + '" aria-pressed="' + (String(F[k]).toUpperCase() === c[0]) + '"><i class="lsw" style="background:' + c[0] + ';box-shadow:inset 0 0 0 1px #ccc"></i>' + c[1] + '</button>'; }).join('') +
+          '<label class="sccol" style="margin:0"><input type="color" data-pcolx="' + k + '" value="' + F[k] + '"><span>Other colour</span></label></div></div>';
+      };
+      var rng = function (k, l, mn, mx, val) { return '<div><div class="lbl">' + l + '</div><input type="range" data-prng="' + k + '" min="' + mn + '" max="' + mx + '" step="1" value="' + val + '"></div>'; };
+      return '<details class="lsec" open style="margin-top:8px"><summary>📸 Photo</summary><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><label class="btn ghost sm" style="margin:0;cursor:pointer">📷 ' + (F.bg ? 'Change' : 'Upload') + ' the photo<input type="file" accept="image/*" id="phUp" hidden></label>' + (F.bg ? '<button class="btn ghost sm" id="phX">✕ Remove photo</button>' : '') + '</div>' +
+          (F.bg ? '<div class="f2" style="margin-top:6px">' + rng('z', 'Zoom', 100, 250, Math.round(F.z * 100)) + rng('fy', 'Move up / down', 0, 100, Math.round(F.fy * 100)) + '</div><div class="f2">' + rng('fx', 'Move left / right', 0, 100, Math.round(F.fx * 100)) + '<div></div></div>' : '') +
+          '<div class="muted" style="font-size:12.5px;margin-top:6px">The same photo goes on every slide. For a different photo on one slide, open 🖼️ Picture on that slide.</div></details>' +
+        '<details class="lsec" open><summary>🎨 Boxes</summary>' + cols('box', 'Text boxes (cover title and every point)') + cols('sub', 'Cover subtitle box') +
+          '<div class="muted" style="font-size:12.5px;margin-top:6px">The writing turns black or white by itself so it’s always easy to read. Each slide can have its own colours in ⚙️ Slide options.</div>' +
+          '<div class="row" style="gap:16px;flex-wrap:wrap;margin-top:8px"><label class="chk"><input type="checkbox" data-pchk="bang"' + (F.bang ? ' checked' : '') + '> ‼️ after the cover title</label><label class="chk"><input type="checkbox" id="teN"' + (car.numbers !== false ? ' checked' : '') + '> Number the points (1. 2. 3.)</label><label class="chk"><input type="checkbox" id="teH"' + (car.handle === true ? ' checked' : '') + '> Show @auntietobi_uk</label></div>' +
+          '<div class="f2" style="margin-top:6px">' + rng('ypos', 'Words up / down', 40, 97, Math.round(F.ypos * 100)) + '<div></div></div>' +
+          '<div class="f2"><div><div class="lbl">Heading size <span id="teHsV"></span></div><input type="range" id="teHs" min="60" max="140" step="5"></div><div><div class="lbl">Body text size <span id="teBsV"></span></div><input type="range" id="teBs" min="60" max="140" step="5"></div></div></details>';
+    }
+    function bindPhoto(q, qa) {
+      var F = car.look.photo = Object.assign({}, PHOTO, car.look.photo || {}), re = function (full) { car.look.photo = F; lookChanged(full); };
+      qa('[data-pcol]').forEach(function (b) { b.onclick = function () { F[b.dataset.pcol] = b.dataset.v; re(true); }; });
+      qa('[data-pcolx]').forEach(function (x) { x.oninput = function () { F[x.dataset.pcolx] = x.value.toUpperCase(); re(); }; x.onchange = function () { re(true); }; });
+      qa('[data-pchk]').forEach(function (x) { x.onchange = function () { F[x.dataset.pchk] = x.checked; re(); }; });
+      qa('[data-prng]').forEach(function (x) { x.oninput = function () { F[x.dataset.prng] = Number(x.value) / 100; re(); }; });
+      q('#phUp').onchange = function () { var f = this.files && this.files[0]; if (!f) return; q('#teLookMsg').textContent = 'Adding the photo…'; shrinkPic(f, 2000).then(function (d) { return X.api('img', { dataUrl: d }); }).then(function (r) { F.bg = r.id; F.z = 1; F.fx = 0.5; F.fy = 0.25; picImg(r.id); re(true); paintThumbs(); setTimeout(function () { paint(); paintThumbs(); }, 600); }).catch(function (e) { X.toast(e.message || 'Couldn’t add the photo'); q('#teLookMsg').textContent = ''; }); };
+      if (q('#phX')) q('#phX').onclick = function () { F.bg = ''; re(true); paintThumbs(); };
     }
     function toWalk() { car.look = { kind: 'walk', id: 'walk', name: 'Walk-through', walk: Object.assign({}, WALK, (car.look && car.look.walk) || {}) }; car.swipeMode = car.swipeMode || 'off'; }
     var LASTK = null;   // the line moved last (for ↺ Reset this line)
