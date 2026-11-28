@@ -750,7 +750,7 @@
 
   // ── 📸 Photo + text boxes: one person photo on every slide; words sit in "sticker" boxes (the cover: a title box + a coloured subtitle box) ──
   function isPhoto(car) { return !!(car.look && car.look.kind === 'photo'); }
-  var PHOTO = { bg: '', z: 1, fx: 0.5, fy: 0.25, box: '#FFFFFF', sub: '#E1251B', ypos: 0.9, bang: true, gap: 0,
+  var PHOTO = { bg: '', z: 1, fx: 0.5, fy: 0.25, box: '#FFFFFF', sub: '#E1251B', ypos: 0.9, bang: true, gap: 0, fade: 0, fadeCol: '#FFFFFF',
     who: 'a confident Nigerian woman in her 30s with a tall golden-blonde afro puff, wearing a navy blazer over a light blue shirt and small stud earrings' };
   var PGAP = [['0', 'None'], ['1', 'Small'], ['2', 'Medium'], ['3', 'Large']], PGAPX = [0, 22, 48, 85];
   function phGap(car, sl) { var g = sl && sl.pgap !== undefined && sl.pgap !== '' ? +sl.pgap : +phOf(car).gap; return PGAPX[clamp(g || 0, 0, 3)]; }
@@ -780,8 +780,11 @@
   }
   function phBg(ctx, car, sl) {
     var F = phOf(car), bp = boxPic(sl);
-    if (bp) { picDraw(ctx, bp, 0, 0, W, H, 0); return; }   // this slide has its own photo
-    if (F.bg && picImg(F.bg)) { picDraw(ctx, { img: F.bg, z: F.z, fx: F.fx, fy: F.fy }, 0, 0, W, H, 0); return; }
+    // 🌫️ see-through: the colour behind shows through the photo
+    var fd = sl && sl.pfade !== undefined && sl.pfade !== '' ? +sl.pfade : +F.fade || 0;
+    if ((bp || (F.bg && picImg(F.bg)))) { ctx.fillStyle = F.fadeCol || '#FFFFFF'; ctx.fillRect(0, 0, W, H); }
+    if (bp) { picDraw(ctx, bp.fade ? bp : Object.assign({}, bp, { fade: fd }), 0, 0, W, H, 0); return; }   // this slide has its own photo (its own Transparency wins)
+    if (F.bg && picImg(F.bg)) { picDraw(ctx, { img: F.bg, z: F.z, fx: F.fx, fy: F.fy, fade: fd }, 0, 0, W, H, 0); return; }
     var g = ctx.createRadialGradient(W / 2, H * 0.32, 60, W / 2, H * 0.5, H * 0.85); g.addColorStop(0, '#A3A6AA'); g.addColorStop(1, '#575A5E'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.font = '600 38px Poppins, Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('📷 Add your photo in 🎨 Look', W / 2, H * 0.3);
   }
@@ -1185,7 +1188,7 @@
           (sl.kind === 'tip' ? '<div class="f2"><div><label>Number</label><select data-f="num"><option value="">Same as carousel</option><option value="on"' + (sl.num === 'on' ? ' selected' : '') + '>Show</option><option value="off"' + (sl.num === 'off' ? ' selected' : '') + '>Hide</option></select></div>' +
             (isPurple(car) ? '<div><label>Number circle sits</label><select data-f="npos"><option value="">Same as carousel</option>' + NPOS.map(function (o) { return '<option value="' + o[0] + '"' + (sl.npos === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' : '<div></div>') + '</div>' : '') +
           (isPhoto(car) ? '<div class="f2"><div><label>' + (sl.kind === 'cover' ? 'Title box colour' : 'Box colour') + '</label><select data-f="pbox"><option value="">Same as carousel</option>' + PCOL.map(function (c) { return '<option value="' + c[0] + '"' + (sl.pbox === c[0] ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select></div>' +
-            '</div><div class="f2"><div><label>Gap between heading and message</label><select data-f="pgap"><option value="">Same as carousel</option>' + PGAP.map(function (g) { return '<option value="' + g[0] + '"' + (sl.pgap === g[0] ? ' selected' : '') + '>' + g[1] + '</option>'; }).join('') + '</select></div><div><label>Photo prompt</label><button class="btn ghost sm" data-phpr style="width:100%">📋 Copy this slide’s prompt</button></div>' +
+            '</div><div class="f2"><div><label>Gap between heading and message</label><select data-f="pgap"><option value="">Same as carousel</option>' + PGAP.map(function (g) { return '<option value="' + g[0] + '"' + (sl.pgap === g[0] ? ' selected' : '') + '>' + g[1] + '</option>'; }).join('') + '</select></div><div><label>Photo see-through</label><select data-f="pfade"><option value="">Same as carousel</option>' + [0, 0.25, 0.5, 0.75, 0.9].map(function (v) { return '<option value="' + v + '"' + (sl.pfade !== undefined && sl.pfade !== '' && +sl.pfade === v ? ' selected' : '') + '>' + Math.round(v * 100) + '%</option>'; }).join('') + '</select></div><div><label>Photo prompt</label><button class="btn ghost sm" data-phpr style="width:100%">📋 Copy this slide’s prompt</button></div>' +
             (sl.kind === 'cover' ? '<div><label>Subtitle box colour</label><select data-f="psub"><option value="">Same as carousel</option>' + PCOL.map(function (c) { return '<option value="' + c[0] + '"' + (sl.psub === c[0] ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select></div>' : '<div></div>') + '</div>' : '') +
           (isWalk(car) ? '<label class="chk" style="margin-top:6px"><input type="checkbox" data-nowalk' + (sl.nowalk ? ' checked' : '') + '> 🚶 No walker on this slide</label>' : '') +
           (isFtl(car) && sl.kind !== 'ftlt' ? '<div class="f2"><div><label>Heading letters</label><select data-f="caps"><option value="">Same as carousel</option><option value="up"' + (sl.caps === 'up' ? ' selected' : '') + '>ABC All capitals</option><option value="as"' + (sl.caps === 'as' ? ' selected' : '') + '>Abc As I type it</option><option value="title"' + (sl.caps === 'title' ? ' selected' : '') + '>Abc Def Each Word</option></select></div><div></div></div>' : '') +
@@ -1643,6 +1646,9 @@
       var rng = function (k, l, mn, mx, val) { return '<div><div class="lbl">' + l + '</div><input type="range" data-prng="' + k + '" min="' + mn + '" max="' + mx + '" step="1" value="' + val + '"></div>'; };
       return '<details class="lsec" open style="margin-top:8px"><summary>📸 Photo</summary><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><label class="btn ghost sm" style="margin:0;cursor:pointer">📷 ' + (F.bg ? 'Change' : 'Upload') + ' the photo<input type="file" accept="image/*" id="phUp" hidden></label>' + (F.bg ? '<button class="btn ghost sm" id="phX">✕ Remove photo</button>' : '') + '</div>' +
           (F.bg ? '<div class="f2" style="margin-top:6px">' + rng('z', 'Zoom', 100, 250, Math.round(F.z * 100)) + rng('fy', 'Move up / down', 0, 100, Math.round(F.fy * 100)) + '</div><div class="f2">' + rng('fx', 'Move left / right', 0, 100, Math.round(F.fx * 100)) + '<div></div></div>' : '') +
+          (F.bg ? '<div style="margin-top:8px"><div class="lbl">🌫️ Photo see-through <span class="muted" id="phFdV">' + Math.round((F.fade || 0) * 100) + '%</span></div><input type="range" id="phFd" min="0" max="90" step="1" value="' + Math.round((F.fade || 0) * 100) + '">' +
+            '<div class="lbl" style="margin-top:6px">Colour behind the photo</div><div class="row" style="gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px">' + PCOL.map(function (c) { return '<button class="chip" data-pfc="' + c[0] + '" aria-pressed="' + (String(F.fadeCol).toUpperCase() === c[0]) + '"><i class="lsw" style="background:' + c[0] + ';box-shadow:inset 0 0 0 1px #ccc"></i>' + c[1] + '</button>'; }).join('') +
+            '<label class="sccol" style="margin:0"><input type="color" id="phFcX" value="' + F.fadeCol + '"><span>Other colour</span></label></div></div>' : '') +
           '<div class="muted" style="font-size:12.5px;margin-top:6px">The same photo goes on every slide. For a different photo on one slide, open 🖼️ Picture on that slide.</div>' +
           '<div style="margin-top:10px"><div class="lbl">✨ Photo prompts — the same person on every slide</div><textarea id="phWho" rows="2" style="margin-top:4px" placeholder="Describe the person">' + X.esc(F.who) + '</textarea>' +
           '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><button class="btn primary sm" id="phPr">📋 Copy all photo prompts (' + car.slides.length + ')</button></div>' +
@@ -1660,6 +1666,9 @@
       qa('[data-pchk]').forEach(function (x) { x.onchange = function () { F[x.dataset.pchk] = x.checked; re(); }; });
       qa('[data-prng]').forEach(function (x) { x.oninput = function () { F[x.dataset.prng] = Number(x.value) / 100; re(); }; });
       qa('[data-pgap]').forEach(function (b) { b.onclick = function () { F.gap = +b.dataset.pgap; re(true); }; });
+      if (q('#phFd')) q('#phFd').oninput = function () { F.fade = Number(this.value) / 100; q('#phFdV').textContent = this.value + '%'; re(); };
+      qa('[data-pfc]').forEach(function (b) { b.onclick = function () { F.fadeCol = b.dataset.pfc; re(true); }; });
+      if (q('#phFcX')) { q('#phFcX').oninput = function () { F.fadeCol = this.value.toUpperCase(); re(); }; q('#phFcX').onchange = function () { re(true); }; }
       q('#phWho').oninput = function () { F.who = this.value.trim() || PHOTO.who; car.look.photo = F; mark(); };
       q('#phPr').onclick = function () { copyText(phPrompts(car), 'Copied ' + car.slides.length + ' photo prompts'); };
       q('#phUp').onchange = function () { var f = this.files && this.files[0]; if (!f) return; q('#teLookMsg').textContent = 'Adding the photo…'; shrinkPic(f, 2000).then(function (d) { return X.api('img', { dataUrl: d }); }).then(function (r) { F.bg = r.id; F.z = 1; F.fx = 0.5; F.fy = 0.25; picImg(r.id); re(true); paintThumbs(); setTimeout(function () { paint(); paintThumbs(); }, 600); }).catch(function (e) { X.toast(e.message || 'Couldn’t add the photo'); q('#teLookMsg').textContent = ''; }); };
