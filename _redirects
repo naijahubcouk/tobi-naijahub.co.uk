@@ -1,3 +1,10 @@
+# ── 🌸 Hello Periodz (helloperiodz.com) — Bloomly bundle page moved from GoHighLevel (Nov 2026). Only matches once helloperiodz.com + www are added as domains in Netlify. ──
+https://helloperiodz.com/*                      https://www.helloperiodz.com/:splat  301!
+https://www.helloperiodz.com/                   /bloomly-bundle  302!
+https://www.helloperiodz.com/bloomly-bundle     /helloperiodz-bloomly.html  200!
+https://www.helloperiodz.com/bloomly-bundle/    /helloperiodz-bloomly.html  200!
+https://www.helloperiodz.com/*                  /helloperiodz-404.html  404!
+
 # ── 🌐 Standalone test sites (Nov 2026). Only match once lifeinuktest / ukdrivingtheorytest .auntietobi.co.uk are added as domains in Netlify. ──
 https://lifeinuktest.auntietobi.co.uk/                   /lifeinuk.html  200!
 https://lifeinuktest.auntietobi.co.uk/practice           /lifeinuk.html  200!
