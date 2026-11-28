@@ -1127,6 +1127,9 @@
       '<div class="err hidden" id="teOver" style="margin-top:8px">This slide has too much text to fit — shorten it a little.</div>' +
       '<div class="note hidden" id="teShrunk" style="margin-top:8px">Some text on this slide was made a little smaller so it fits inside the frame.</div>' +
       '<div class="carthumbs" id="teThumbs"></div>' +
+      '<div class="card" style="margin-top:10px"><div style="font-weight:800;margin-bottom:6px">📤 Share</div>' +
+      '<button class="btn gold" id="teShare" style="width:100%">📤 Share carousel</button><button class="btn ghost" id="teShare1" style="width:100%;margin-top:8px">📤 Share this slide</button>' +
+      '<div class="muted" id="teShMsg" style="font-size:12px;margin-top:4px">Opens your phone’s share menu (Instagram, WhatsApp, Facebook…). The caption and hashtags are copied too — just paste.</div></div>' +
       '<div class="card" style="margin-top:10px"><div style="font-weight:800;margin-bottom:6px">⬇️ Download</div>' +
       '<button class="btn primary hidden" id="teVid" style="width:100%;margin-bottom:8px">🎬 All slides as videos (MP4) — for the walk</button>' +
       '<button class="btn primary" id="teAll" style="width:100%">⬇️ All slides as separate pictures</button><div class="muted" id="teAllMsg" style="font-size:12px;margin-top:4px"></div>' +
@@ -1885,6 +1888,31 @@
         } else { await downloadEach(files); m.textContent = savedMsg(files.length, 'pictures'); }
       } catch (x) { X.toast('Couldn’t make the pictures — please try again'); }
       b.disabled = false; b.textContent = lab;
+    };
+    // 📤 share straight to Instagram / WhatsApp…: all slides (or this one) + the caption copied to paste
+    var shReady = null;
+    async function shareFiles(b, lab, make, what) {
+      var m = $('#teShMsg'), cap = [car.caption, car.hashtags].filter(function (x) { return x && String(x).trim(); }).join('\n\n');
+      if (cap) { try { await navigator.clipboard.writeText(cap); } catch (e) {} }
+      if (shReady && shReady.b === b) { var fs = shReady.f; shReady = null; b.textContent = lab; try { await navigator.share({ files: fs }); m.textContent = '✅ Shared' + (cap ? ' — caption copied, just paste it.' : '.'); } catch (e) { if (e && e.name !== 'AbortError') m.textContent = 'Couldn’t share — try ⬇️ Download instead.'; } return; }
+      b.disabled = true; b.textContent = 'Preparing…';
+      try {
+        if (dirty) await save(); var files = await make();
+        var can = false; try { can = !!(navigator.canShare && navigator.canShare({ files: files })); } catch (e) {}
+        if (!can) { await downloadEach(files); m.textContent = 'This browser can’t share pictures, so ' + what + ' downloaded instead' + (cap ? ' (caption copied)' : '') + '. On your phone, 📤 Share opens Instagram, WhatsApp and more.'; }
+        else {
+          try { await navigator.share({ files: files }); m.textContent = '✅ Shared' + (cap ? ' — caption copied, just paste it.' : '.'); }
+          catch (e) { if (e && e.name === 'NotAllowedError') { shReady = { b: b, f: files }; b.disabled = false; b.textContent = '📲 Tap again to share'; return; } if (e && e.name !== 'AbortError') m.textContent = 'Couldn’t share — try ⬇️ Download instead.'; }
+        }
+      } catch (x) { X.toast('Couldn’t make the pictures — please try again'); }
+      b.disabled = false; b.textContent = lab;
+    }
+    $('#teShare').onclick = function () {
+      var bad = overList(); if (bad.length && !confirm('Slide ' + bad.join(', ') + (bad.length > 1 ? ' have' : ' has') + ' too much text to fit. Share anyway?')) return;
+      shareFiles(this, '📤 Share carousel', function () { return slideFiles(car); }, 'the slides were');
+    };
+    $('#teShare1').onclick = function () {
+      shareFiles(this, '📤 Share this slide', async function () { await fontsReady(); return [new File([await pngOf(car, sel)], slug(car.title) + '-' + pad(sel + 1) + '.png', { type: 'image/png' })]; }, 'the slide was');
     };
     $('#teOne').onclick = async function () {
       try { await fontsReady(); download(await pngOf(car, sel), slug(car.title) + '-' + pad(sel + 1) + '.png'); } catch (x) { X.toast('Couldn’t save the image — please try again'); }
